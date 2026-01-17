@@ -1,0 +1,52 @@
+{
+  "_fv": 69,
+  "_type": "overlay",
+  "definition": {
+    "priority": "NORMAL",
+    "components": [
+      {
+        "type": "label",
+        "data": {
+          "name": "label_proc_return_moveset_test",
+          "text": {
+            "fixedValue": "",
+            "name": "ReturnMovesetTEST"
+          },
+          "color": {
+            "value": -1,
+            "falpha": 0.0
+          },
+          "anchorPoint": "TOP_CENTER",
+          "x": 174,
+          "y": 6
+        }
+      },
+      {
+        "type": "label",
+        "data": {
+          "name": "label_proc_return_chant_test",
+          "text": {
+            "fixedValue": "",
+            "name": "ReturnChantTEST"
+          },
+          "color": {
+            "value": -1,
+            "falpha": 0.0
+          },
+          "anchorPoint": "TOP_CENTER",
+          "x": 174,
+          "y": 18
+        }
+      }
+    ],
+    "baseTexture": "",
+    "overlayTarget": "Ingame",
+    "gridSettings": {
+      "sx": 18,
+      "sy": 18,
+      "ox": 11,
+      "oy": 15,
+      "snapOnGrid": false
+    }
+  }
+}

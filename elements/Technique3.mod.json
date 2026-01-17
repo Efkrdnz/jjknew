@@ -1,0 +1,15 @@
+{
+  "_fv": 69,
+  "_type": "keybind",
+  "definition": {
+    "triggerKey": "C",
+    "keyBindingName": "Attack 3",
+    "keyBindingCategoryKey": "jjk",
+    "onKeyPressed": {
+      "name": "Technique3OnKeypress"
+    },
+    "onKeyReleased": {
+      "name": "Technique3OnKeyPressed"
+    }
+  }
+}

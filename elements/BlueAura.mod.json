@@ -1,0 +1,23 @@
+{
+  "_fv": 69,
+  "_type": "particle",
+  "definition": {
+    "texture": "blue_aura.png",
+    "animate": false,
+    "frameDuration": 2,
+    "width": 0.2,
+    "height": 0.2,
+    "scale": {
+      "fixedValue": 50.0
+    },
+    "speedFactor": 0.0,
+    "gravity": 0.0,
+    "maxAge": 20,
+    "maxAgeDiff": 0,
+    "angularVelocity": 0.314,
+    "angularAcceleration": 0.0,
+    "canCollide": true,
+    "alwaysShow": true,
+    "renderType": "TRANSLUCENT"
+  }
+}

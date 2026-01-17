@@ -1,0 +1,29 @@
+{
+  "hollowpurple": {
+    "subtitle": "subtitles.hollowpurple",
+    "sounds": [
+      {
+        "name": "jjk_strongest:hollow-purple",
+        "stream": false
+      }
+    ]
+  },
+  "kai": {
+    "subtitle": "subtitles.kai",
+    "sounds": [
+      {
+        "name": "jjk_strongest:slash",
+        "stream": false
+      }
+    ]
+  },
+  "blackflash": {
+    "subtitle": "subtitles.blackflash",
+    "sounds": [
+      {
+        "name": "jjk_strongest:kokusen",
+        "stream": false
+      }
+    ]
+  }
+}

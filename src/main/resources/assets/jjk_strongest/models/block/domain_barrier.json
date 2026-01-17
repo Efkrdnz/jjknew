@@ -1,0 +1,13 @@
+{
+  "parent": "block/cube",
+  "textures": {
+    "down": "jjk_strongest:block/domain_outer",
+    "up": "jjk_strongest:block/domain_outer",
+    "north": "jjk_strongest:block/domain_outer",
+    "east": "jjk_strongest:block/domain_outer",
+    "south": "jjk_strongest:block/domain_outer",
+    "west": "jjk_strongest:block/domain_outer",
+    "particle": "jjk_strongest:block/domain_outer"
+  },
+  "render_type": "solid"
+}

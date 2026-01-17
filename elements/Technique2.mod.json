@@ -1,0 +1,15 @@
+{
+  "_fv": 69,
+  "_type": "keybind",
+  "definition": {
+    "triggerKey": "X",
+    "keyBindingName": "Attack 2",
+    "keyBindingCategoryKey": "jjk",
+    "onKeyPressed": {
+      "name": "Technique2OnKeyPress"
+    },
+    "onKeyReleased": {
+      "name": "Technique2OnKeyPressed"
+    }
+  }
+}

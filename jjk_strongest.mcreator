@@ -1,0 +1,4707 @@
+{
+  "mod_elements": [
+    {
+      "name": "Passive",
+      "type": "keybind",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "passive",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/network/PassiveMessage.java"
+        ]
+      },
+      "path": "~/PowerSystem"
+    },
+    {
+      "name": "Technique1",
+      "type": "keybind",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "technique_1",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/network/Technique1Message.java"
+        ]
+      },
+      "path": "~/PowerSystem/Z"
+    },
+    {
+      "name": "Technique2",
+      "type": "keybind",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "technique_2",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/network/Technique2Message.java"
+        ]
+      },
+      "path": "~/PowerSystem/X"
+    },
+    {
+      "name": "Technique3",
+      "type": "keybind",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "technique_3",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/network/Technique3Message.java"
+        ]
+      },
+      "path": "~/PowerSystem/C"
+    },
+    {
+      "name": "Technique4",
+      "type": "keybind",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "technique_4",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/network/Technique4Message.java"
+        ]
+      },
+      "path": "~/PowerSystem/V"
+    },
+    {
+      "name": "Technique5",
+      "type": "keybind",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "technique_5",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/network/Technique5Message.java"
+        ]
+      },
+      "path": "~/PowerSystem"
+    },
+    {
+      "name": "Infinity",
+      "type": "potioneffect",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "infinity",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/potion/InfinityMobEffect.java"
+        ]
+      },
+      "path": "~/Effects/Infinity"
+    },
+    {
+      "name": "InfinityOnEffectActiveTick",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "infinity_on_effect_active_tick",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/InfinityOnEffectActiveTickProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          },
+          {
+            "name": "x",
+            "type": "number"
+          },
+          {
+            "name": "y",
+            "type": "number"
+          },
+          {
+            "name": "z",
+            "type": "number"
+          },
+          {
+            "name": "world",
+            "type": "world"
+          }
+        ]
+      },
+      "path": "~/Effects/Infinity"
+    },
+    {
+      "name": "BeforeInfinity",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "before_infinity",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/BeforeInfinityProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "damagesource",
+            "type": "damagesource"
+          },
+          {
+            "name": "entity",
+            "type": "entity"
+          },
+          {
+            "name": "sourceentity",
+            "type": "entity"
+          },
+          {
+            "name": "x",
+            "type": "number"
+          },
+          {
+            "name": "y",
+            "type": "number"
+          },
+          {
+            "name": "z",
+            "type": "number"
+          },
+          {
+            "name": "world",
+            "type": "world"
+          }
+        ]
+      },
+      "path": "~/EntityAttacked"
+    },
+    {
+      "name": "InfinityParticle",
+      "type": "particle",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "infinity_particle",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/client/particle/InfinityParticleParticle.java",
+          "src/main/resources/assets/jjk_strongest/particles/infinity_particle.json"
+        ]
+      },
+      "path": "~/Techniques and Assets/Gojo/Infinity"
+    },
+    {
+      "name": "LapseBlueOnEntityTickUpdate",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "lapse_blue_on_entity_tick_update",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/LapseBlueOnEntityTickUpdateProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          },
+          {
+            "name": "x",
+            "type": "number"
+          },
+          {
+            "name": "y",
+            "type": "number"
+          },
+          {
+            "name": "z",
+            "type": "number"
+          },
+          {
+            "name": "world",
+            "type": "world"
+          }
+        ]
+      },
+      "path": "~/Techniques and Assets/Gojo/LapseBlue"
+    },
+    {
+      "name": "LapseBlue",
+      "type": "animatedentity",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "lapse_blue",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/entity/model/LapseBlueModel.java",
+          "src/main/java/net/mcreator/jjkstrongest/entity/layer/LapseBlueLayer.java",
+          "src/main/java/net/mcreator/jjkstrongest/entity/LapseBlueEntity.java",
+          "src/main/resources/assets/jjk_strongest/models/item/lapse_blue_spawn_egg.json",
+          "src/main/java/net/mcreator/jjkstrongest/client/renderer/LapseBlueRenderer.java"
+        ]
+      },
+      "path": "~/Techniques and Assets/Gojo/LapseBlue"
+    },
+    {
+      "name": "LapseBlueOnInitialEntitySpawn",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "lapse_blue_on_initial_entity_spawn",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/LapseBlueOnInitialEntitySpawnProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          }
+        ]
+      },
+      "path": "~/Techniques and Assets/Gojo/LapseBlue"
+    },
+    {
+      "name": "Technique1OnKeyPressed",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "technique_1_on_key_pressed",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/Technique1OnKeyPressedProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          }
+        ]
+      },
+      "path": "~/PowerSystem/Z"
+    },
+    {
+      "name": "ReversalRed",
+      "type": "animatedentity",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "reversal_red",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/entity/ReversalRedEntity.java",
+          "src/main/java/net/mcreator/jjkstrongest/client/renderer/ReversalRedRenderer.java",
+          "src/main/java/net/mcreator/jjkstrongest/entity/layer/ReversalRedLayer.java",
+          "src/main/resources/assets/jjk_strongest/models/item/reversal_red_spawn_egg.json",
+          "src/main/java/net/mcreator/jjkstrongest/entity/model/ReversalRedModel.java"
+        ]
+      },
+      "path": "~/Techniques and Assets/Gojo/ReversalRed"
+    },
+    {
+      "name": "DisableHealthBar",
+      "type": "code",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "disable_health_bar",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/DisableHealthBar.java"
+        ]
+      },
+      "path": "~/CustomElements"
+    },
+    {
+      "name": "ReturnHealth",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "return_health",
+      "metadata": {
+        "return_type": "string",
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/ReturnHealthProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Health",
+      "type": "overlay",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "health",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/client/screens/HealthOverlay.java"
+        ]
+      },
+      "path": "~/Overlays"
+    },
+    {
+      "name": "ReversalRedOnEntityTickUpdate",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "reversal_red_on_entity_tick_update",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/ReversalRedOnEntityTickUpdateProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          },
+          {
+            "name": "x",
+            "type": "number"
+          },
+          {
+            "name": "y",
+            "type": "number"
+          },
+          {
+            "name": "z",
+            "type": "number"
+          },
+          {
+            "name": "world",
+            "type": "world"
+          }
+        ]
+      },
+      "path": "~/Techniques and Assets/Gojo/ReversalRed"
+    },
+    {
+      "name": "ReversalRedOnInitialEntitySpawn",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "reversal_red_on_initial_entity_spawn",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/ReversalRedOnInitialEntitySpawnProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          }
+        ]
+      },
+      "path": "~/Techniques and Assets/Gojo/ReversalRed"
+    },
+    {
+      "name": "ReversalRedRightClickedOnEntity",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "reversal_red_right_clicked_on_entity",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/ReversalRedRightClickedOnEntityProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          },
+          {
+            "name": "sourceentity",
+            "type": "entity"
+          }
+        ]
+      },
+      "path": "~/Techniques and Assets/Gojo/ReversalRed"
+    },
+    {
+      "name": "Technique2OnKeyPressed",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "technique_2_on_key_pressed",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/Technique2OnKeyPressedProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          }
+        ]
+      },
+      "path": "~/PowerSystem/X"
+    },
+    {
+      "name": "ReversalRedPlayerCollidesWithThisEntity",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "reversal_red_player_collides_with_this_entity",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/ReversalRedPlayerCollidesWithThisEntityProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          },
+          {
+            "name": "sourceentity",
+            "type": "entity"
+          }
+        ]
+      },
+      "path": "~/Techniques and Assets/Gojo/ReversalRed"
+    },
+    {
+      "name": "RedDragEntities",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "red_drag_entities",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/RedDragEntitiesProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          },
+          {
+            "name": "x",
+            "type": "number"
+          },
+          {
+            "name": "y",
+            "type": "number"
+          },
+          {
+            "name": "z",
+            "type": "number"
+          },
+          {
+            "name": "world",
+            "type": "world"
+          }
+        ]
+      },
+      "path": "~/Techniques and Assets/Gojo/ReversalRed"
+    },
+    {
+      "name": "ReversalRedEntityIsHurt",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "reversal_red_entity_is_hurt",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/ReversalRedEntityIsHurtProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          },
+          {
+            "name": "sourceentity",
+            "type": "entity"
+          },
+          {
+            "name": "x",
+            "type": "number"
+          },
+          {
+            "name": "y",
+            "type": "number"
+          },
+          {
+            "name": "z",
+            "type": "number"
+          },
+          {
+            "name": "world",
+            "type": "world"
+          }
+        ]
+      },
+      "path": "~/Techniques and Assets/Gojo/ReversalRed"
+    },
+    {
+      "name": "CustomPortal",
+      "type": "block",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "custom_portal",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/block/CustomPortalBlock.java",
+          "src/main/resources/assets/jjk_strongest/models/block/custom_portal.json",
+          "src/main/resources/assets/jjk_strongest/models/item/custom_portal.json",
+          "src/main/java/net/mcreator/jjkstrongest/block/entity/CustomPortalBlockEntity.java",
+          "src/main/resources/assets/jjk_strongest/blockstates/custom_portal.json",
+          "src/main/resources/data/jjk_strongest/loot_tables/blocks/custom_portal.json"
+        ]
+      },
+      "path": "~/Techniques and Assets/Gojo/Infinite Void/banishment"
+    },
+    {
+      "name": "Technique1OnKeyPress",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "technique_1_on_key_press",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/Technique1OnKeyPressProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          }
+        ]
+      },
+      "path": "~/PowerSystem/Z"
+    },
+    {
+      "name": "ChantOnTick",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "chant_on_tick",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/ChantOnTickProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          },
+          {
+            "name": "x",
+            "type": "number"
+          },
+          {
+            "name": "y",
+            "type": "number"
+          },
+          {
+            "name": "z",
+            "type": "number"
+          },
+          {
+            "name": "world",
+            "type": "world"
+          }
+        ]
+      },
+      "path": "~/OnPlayerTick/Chants"
+    },
+    {
+      "name": "Technique2OnKeyPress",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "technique_2_on_key_press",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/Technique2OnKeyPressProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          }
+        ]
+      },
+      "path": "~/PowerSystem/X"
+    },
+    {
+      "name": "SorcererSukuna",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "sorcerer_sukuna",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/SorcererSukunaProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "arguments",
+            "type": "cmdcontext"
+          }
+        ]
+      },
+      "path": "~/Commands"
+    },
+    {
+      "name": "SorcererGojo",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "sorcerer_gojo",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/SorcererGojoProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "arguments",
+            "type": "cmdcontext"
+          }
+        ]
+      },
+      "path": "~/Commands"
+    },
+    {
+      "name": "Jjk",
+      "type": "command",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "jjk",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/command/JjkCommand.java"
+        ]
+      },
+      "path": "~/Commands"
+    },
+    {
+      "name": "HollowPurpleCharge",
+      "type": "animatedentity",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "hollow_purple_charge",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/entity/layer/HollowPurpleChargeLayer.java",
+          "src/main/java/net/mcreator/jjkstrongest/entity/model/HollowPurpleChargeModel.java",
+          "src/main/java/net/mcreator/jjkstrongest/entity/HollowPurpleChargeEntity.java",
+          "src/main/java/net/mcreator/jjkstrongest/client/renderer/HollowPurpleChargeRenderer.java"
+        ]
+      },
+      "path": "~/Techniques and Assets/Gojo/HollowPurple"
+    },
+    {
+      "name": "HollowPurpleChargeOnEntityTickUpdate",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "hollow_purple_charge_on_entity_tick_update",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/HollowPurpleChargeOnEntityTickUpdateProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          },
+          {
+            "name": "world",
+            "type": "world"
+          }
+        ]
+      },
+      "path": "~/Techniques and Assets/Gojo/HollowPurple"
+    },
+    {
+      "name": "HollowPurpleProjectile",
+      "type": "animatedentity",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "hollow_purple_projectile",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/entity/model/HollowPurpleProjectileModel.java",
+          "src/main/java/net/mcreator/jjkstrongest/entity/layer/HollowPurpleProjectileLayer.java",
+          "src/main/java/net/mcreator/jjkstrongest/entity/HollowPurpleProjectileEntity.java",
+          "src/main/java/net/mcreator/jjkstrongest/client/renderer/HollowPurpleProjectileRenderer.java"
+        ]
+      },
+      "path": "~/Techniques and Assets/Gojo/HollowPurple"
+    },
+    {
+      "name": "Technique3OnKeypress",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "technique_3_on_keypress",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/Technique3OnKeypressProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          },
+          {
+            "name": "y",
+            "type": "number"
+          },
+          {
+            "name": "world",
+            "type": "world"
+          }
+        ]
+      },
+      "path": "~/PowerSystem/C"
+    },
+    {
+      "name": "Technique3OnKeyPressed",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "technique_3_on_key_pressed",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/Technique3OnKeyPressedProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          },
+          {
+            "name": "x",
+            "type": "number"
+          },
+          {
+            "name": "y",
+            "type": "number"
+          },
+          {
+            "name": "z",
+            "type": "number"
+          },
+          {
+            "name": "world",
+            "type": "world"
+          }
+        ]
+      },
+      "path": "~/PowerSystem/C"
+    },
+    {
+      "name": "HollowPurpleProjectileOnEntityTickUpdate",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "hollow_purple_projectile_on_entity_tick_update",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/HollowPurpleProjectileOnEntityTickUpdateProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          },
+          {
+            "name": "x",
+            "type": "number"
+          },
+          {
+            "name": "y",
+            "type": "number"
+          },
+          {
+            "name": "z",
+            "type": "number"
+          },
+          {
+            "name": "world",
+            "type": "world"
+          }
+        ]
+      },
+      "path": "~/Techniques and Assets/Gojo/HollowPurple"
+    },
+    {
+      "name": "PurpleCharging",
+      "type": "potioneffect",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "purple_charging",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/potion/PurpleChargingMobEffect.java"
+        ]
+      },
+      "path": "~/Techniques and Assets/Gojo/HollowPurple"
+    },
+    {
+      "name": "InfiniteHollow",
+      "type": "animatedentity",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "infinite_hollow",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/client/renderer/InfiniteHollowRenderer.java",
+          "src/main/java/net/mcreator/jjkstrongest/entity/model/InfiniteHollowModel.java",
+          "src/main/java/net/mcreator/jjkstrongest/entity/layer/InfiniteHollowLayer.java",
+          "src/main/java/net/mcreator/jjkstrongest/entity/InfiniteHollowEntity.java"
+        ]
+      },
+      "path": "~/Techniques and Assets/Gojo/HollowPurple/InfiniteHollow"
+    },
+    {
+      "name": "InfiniteHollowDetection",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "infinite_hollow_detection",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/InfiniteHollowDetectionProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          },
+          {
+            "name": "x",
+            "type": "number"
+          },
+          {
+            "name": "y",
+            "type": "number"
+          },
+          {
+            "name": "z",
+            "type": "number"
+          },
+          {
+            "name": "world",
+            "type": "world"
+          }
+        ]
+      },
+      "path": "~/Techniques and Assets/Gojo/HollowPurple/InfiniteHollow"
+    },
+    {
+      "name": "InfiniteHollowOnEntityTickUpdate",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "infinite_hollow_on_entity_tick_update",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/InfiniteHollowOnEntityTickUpdateProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          },
+          {
+            "name": "x",
+            "type": "number"
+          },
+          {
+            "name": "y",
+            "type": "number"
+          },
+          {
+            "name": "z",
+            "type": "number"
+          },
+          {
+            "name": "world",
+            "type": "world"
+          }
+        ]
+      },
+      "path": "~/Techniques and Assets/Gojo/HollowPurple/InfiniteHollow"
+    },
+    {
+      "name": "ReturnPurpleSize",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "return_purple_size",
+      "metadata": {
+        "return_type": "number",
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/ReturnPurpleSizeProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          }
+        ]
+      },
+      "path": "~/Techniques and Assets/Gojo/HollowPurple"
+    },
+    {
+      "name": "FallingBlockEntity",
+      "type": "mixin",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "falling_block_entity",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/mixins/FallingBlockEntityMixin.java"
+        ]
+      }
+    },
+    {
+      "name": "LapseBlueParticles",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "lapse_blue_particles",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/LapseBlueParticlesProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Techniques and Assets/Gojo/LapseBlue"
+    },
+    {
+      "name": "WorldSlashScreenFlash",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "world_slash_screen_flash",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/WorldSlashScreenFlashProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Techniques and Assets/Sukuna/World Cutting Slash"
+    },
+    {
+      "name": "WorldSlashExecute",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "world_slash_execute",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/WorldSlashExecuteProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Techniques and Assets/Sukuna/World Cutting Slash"
+    },
+    {
+      "name": "WorldSlashLineRender",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "world_slash_line_render",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/WorldSlashLineRenderProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Techniques and Assets/Sukuna/World Cutting Slash"
+    },
+    {
+      "name": "SparkBlueReturn",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "spark_blue_return",
+      "metadata": {
+        "return_type": "logic",
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/SparkBlueReturnProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          }
+        ]
+      },
+      "path": "~/Overlays/Returns"
+    },
+    {
+      "name": "SparkBlueReturn2",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "spark_blue_return_2",
+      "metadata": {
+        "return_type": "logic",
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/SparkBlueReturn2Procedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          }
+        ]
+      },
+      "path": "~/Overlays/Returns"
+    },
+    {
+      "name": "SparkBlueReturn3",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "spark_blue_return_3",
+      "metadata": {
+        "return_type": "logic",
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/SparkBlueReturn3Procedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          }
+        ]
+      },
+      "path": "~/Overlays/Returns"
+    },
+    {
+      "name": "SparkRedReturn",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "spark_red_return",
+      "metadata": {
+        "return_type": "logic",
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/SparkRedReturnProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          }
+        ]
+      },
+      "path": "~/Overlays/Returns"
+    },
+    {
+      "name": "SparkRedReturn2",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "spark_red_return_2",
+      "metadata": {
+        "return_type": "logic",
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/SparkRedReturn2Procedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          }
+        ]
+      },
+      "path": "~/Overlays/Returns"
+    },
+    {
+      "name": "SparkRedReturn3",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "spark_red_return_3",
+      "metadata": {
+        "return_type": "logic",
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/SparkRedReturn3Procedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          }
+        ]
+      },
+      "path": "~/Overlays/Returns"
+    },
+    {
+      "name": "SparkPurpleReturn",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "spark_purple_return",
+      "metadata": {
+        "return_type": "logic",
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/SparkPurpleReturnProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          }
+        ]
+      },
+      "path": "~/Overlays/Returns"
+    },
+    {
+      "name": "SparkPurpleReturn2",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "spark_purple_return_2",
+      "metadata": {
+        "return_type": "logic",
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/SparkPurpleReturn2Procedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          }
+        ]
+      },
+      "path": "~/Overlays/Returns"
+    },
+    {
+      "name": "SparkPurpleReturn3",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "spark_purple_return_3",
+      "metadata": {
+        "return_type": "logic",
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/SparkPurpleReturn3Procedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          }
+        ]
+      },
+      "path": "~/Overlays/Returns"
+    },
+    {
+      "name": "WCSClientSideLineRenderer",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "wcs_client_side_line_renderer",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/WCSClientSideLineRendererProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Techniques and Assets/Sukuna/World Cutting Slash"
+    },
+    {
+      "name": "Abilitymenu",
+      "type": "keybind",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "abilitymenu",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/network/AbilitymenuMessage.java"
+        ]
+      },
+      "path": "~/Radial Menu"
+    },
+    {
+      "name": "HandleRadialMenu",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "handle_radial_menu",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/HandleRadialMenuProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Radial Menu"
+    },
+    {
+      "name": "ReturnMovesetTEST",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "return_moveset_test",
+      "metadata": {
+        "return_type": "string",
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/ReturnMovesetTESTProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          }
+        ]
+      },
+      "path": "~/Radial Menu"
+    },
+    {
+      "name": "MovesetDisplayTEST",
+      "type": "overlay",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "moveset_display_test",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/client/screens/MovesetDisplayTESTOverlay.java"
+        ]
+      },
+      "path": "~/Overlays"
+    },
+    {
+      "name": "HandleAbilitySelection",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "handle_ability_selection",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/HandleAbilitySelectionProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Radial Menu"
+    },
+    {
+      "name": "RTCToggle",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "rtc_toggle",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/RTCToggleProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "arguments",
+            "type": "cmdcontext"
+          }
+        ]
+      },
+      "path": "~/Commands"
+    },
+    {
+      "name": "CharacterRadialScreen",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "character_radial_screen",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/CharacterRadialScreenProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Radial Menu"
+    },
+    {
+      "name": "LimitlessChantedColors",
+      "type": "overlay",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "limitless_chanted_colors",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/client/screens/LimitlessChantedColorsOverlay.java"
+        ]
+      },
+      "path": "~/Overlays"
+    },
+    {
+      "name": "Red01",
+      "type": "particle",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "red_01",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/client/particle/Red01Particle.java",
+          "src/main/resources/assets/jjk_strongest/particles/red_01.json"
+        ]
+      },
+      "path": "~/Techniques and Assets/Gojo/ReversalRed"
+    },
+    {
+      "name": "Red02",
+      "type": "particle",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "red_02",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/client/particle/Red02Particle.java",
+          "src/main/resources/assets/jjk_strongest/particles/red_02.json"
+        ]
+      },
+      "path": "~/Techniques and Assets/Gojo/ReversalRed"
+    },
+    {
+      "name": "Red03",
+      "type": "particle",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "red_03",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/client/particle/Red03Particle.java",
+          "src/main/resources/assets/jjk_strongest/particles/red_03.json"
+        ]
+      },
+      "path": "~/Techniques and Assets/Gojo/ReversalRed"
+    },
+    {
+      "name": "MeleePunch",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "melee_punch",
+      "metadata": {
+        "dependencies": []
+      },
+      "path": "~/Techniques and Assets/Melee"
+    },
+    {
+      "name": "MeleeUppercut",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "melee_uppercut",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/MeleeUppercutProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Techniques and Assets/Melee"
+    },
+    {
+      "name": "MeleeBarrage",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "melee_barrage",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/MeleeBarrageProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Techniques and Assets/Melee"
+    },
+    {
+      "name": "MeleeJumpSlam",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "melee_jump_slam",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/MeleeJumpSlamProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Techniques and Assets/Melee"
+    },
+    {
+      "name": "MeleeOntick",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "melee_ontick",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/MeleeOntickProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          },
+          {
+            "name": "world",
+            "type": "world"
+          }
+        ]
+      },
+      "path": "~/Techniques and Assets/Melee"
+    },
+    {
+      "name": "Technique4OnKeyPressed",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "technique_4_on_key_pressed",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/Technique4OnKeyPressedProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          }
+        ]
+      },
+      "path": "~/PowerSystem/V"
+    },
+    {
+      "name": "PunchImpact",
+      "type": "particle",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "punch_impact",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/client/particle/PunchImpactParticle.java",
+          "src/main/resources/assets/jjk_strongest/particles/punch_impact.json"
+        ]
+      },
+      "path": "~/Techniques and Assets/Melee"
+    },
+    {
+      "name": "Technique4OnKeyReleased",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "technique_4_on_key_released",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/Technique4OnKeyReleasedProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          },
+          {
+            "name": "x",
+            "type": "number"
+          },
+          {
+            "name": "y",
+            "type": "number"
+          },
+          {
+            "name": "z",
+            "type": "number"
+          },
+          {
+            "name": "world",
+            "type": "world"
+          }
+        ]
+      },
+      "path": "~/PowerSystem/V"
+    },
+    {
+      "name": "ReturnChantTEST",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "return_chant_test",
+      "metadata": {
+        "return_type": "string",
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/ReturnChantTESTProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          }
+        ]
+      },
+      "path": "~/Overlays/Returns"
+    },
+    {
+      "name": "ExplosionCustom",
+      "type": "particle",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "explosion_custom",
+      "metadata": {
+        "files": [
+          "src/main/resources/assets/jjk_strongest/particles/explosion_custom.json",
+          "src/main/java/net/mcreator/jjkstrongest/client/particle/ExplosionCustomParticle.java"
+        ]
+      },
+      "path": "~/extra assets/particle"
+    },
+    {
+      "name": "RedFlightHandler",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "red_flight_handler",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/RedFlightHandlerProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Techniques and Assets/Gojo/ReversalRed"
+    },
+    {
+      "name": "CustomSlashVisualiser",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "custom_slash_visualiser",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/CustomSlashVisualiserProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          }
+        ]
+      },
+      "path": "~/Techniques and Assets/Sukuna/World Cutting Slash"
+    },
+    {
+      "name": "BindingVowRecognize",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "binding_vow_recognize",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/BindingVowRecognizeProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "arguments",
+            "type": "cmdcontext"
+          },
+          {
+            "name": "entity",
+            "type": "entity"
+          }
+        ]
+      },
+      "path": "~/Binding Vow"
+    },
+    {
+      "name": "Vow",
+      "type": "command",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "vow",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/command/VowCommand.java"
+        ]
+      },
+      "path": "~/Commands"
+    },
+    {
+      "name": "Purple01",
+      "type": "particle",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "purple_01",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/client/particle/Purple01Particle.java",
+          "src/main/resources/assets/jjk_strongest/particles/purple_01.json"
+        ]
+      },
+      "path": "~/Techniques and Assets/Gojo/HollowPurple"
+    },
+    {
+      "name": "Purple02",
+      "type": "particle",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "purple_02",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/client/particle/Purple02Particle.java",
+          "src/main/resources/assets/jjk_strongest/particles/purple_02.json"
+        ]
+      },
+      "path": "~/Techniques and Assets/Gojo/HollowPurple"
+    },
+    {
+      "name": "HealthDisplayOverlayIngame",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "health_display_overlay_ingame",
+      "metadata": {
+        "return_type": "logic",
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/HealthDisplayOverlayIngameProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          }
+        ]
+      },
+      "path": "~/Overlays"
+    },
+    {
+      "name": "Blueparticle1",
+      "type": "particle",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "blueparticle_1",
+      "metadata": {
+        "files": [
+          "src/main/resources/assets/jjk_strongest/particles/blueparticle_1.json",
+          "src/main/java/net/mcreator/jjkstrongest/client/particle/Blueparticle1Particle.java"
+        ]
+      },
+      "path": "~/Techniques and Assets/Gojo/LapseBlue"
+    },
+    {
+      "name": "Blueparticle2",
+      "type": "particle",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "blueparticle_2",
+      "metadata": {
+        "files": [
+          "src/main/resources/assets/jjk_strongest/particles/blueparticle_2.json",
+          "src/main/java/net/mcreator/jjkstrongest/client/particle/Blueparticle2Particle.java"
+        ]
+      },
+      "path": "~/Techniques and Assets/Gojo/LapseBlue"
+    },
+    {
+      "name": "Blueparticle3",
+      "type": "particle",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "blueparticle_3",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/client/particle/Blueparticle3Particle.java",
+          "src/main/resources/assets/jjk_strongest/particles/blueparticle_3.json"
+        ]
+      },
+      "path": "~/Techniques and Assets/Gojo/LapseBlue"
+    },
+    {
+      "name": "BlueParticleExecute",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "blue_particle_execute",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/BlueParticleExecuteProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          },
+          {
+            "name": "world",
+            "type": "world"
+          }
+        ]
+      },
+      "path": "~/Techniques and Assets/Gojo/LapseBlue"
+    },
+    {
+      "name": "BlueAura",
+      "type": "particle",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "blue_aura",
+      "metadata": {
+        "files": [
+          "src/main/resources/assets/jjk_strongest/particles/blue_aura.json",
+          "src/main/java/net/mcreator/jjkstrongest/client/particle/BlueAuraParticle.java"
+        ]
+      },
+      "path": "~/Techniques and Assets/Gojo/LapseBlue"
+    },
+    {
+      "name": "BlueDust",
+      "type": "particle",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "blue_dust",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/client/particle/BlueDustParticle.java",
+          "src/main/resources/assets/jjk_strongest/particles/blue_dust.json"
+        ]
+      },
+      "path": "~/Techniques and Assets/Gojo/LapseBlue"
+    },
+    {
+      "name": "Zone",
+      "type": "potioneffect",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "zone",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/potion/ZoneMobEffect.java"
+        ]
+      },
+      "path": "~/Effects/Zone"
+    },
+    {
+      "name": "ReturnOutputDismantle",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "return_output_dismantle",
+      "metadata": {
+        "return_type": "number",
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/ReturnOutputDismantleProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          },
+          {
+            "name": "world",
+            "type": "world"
+          }
+        ]
+      },
+      "path": "~/Outputs"
+    },
+    {
+      "name": "InfinityStoreVelocity",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "infinity_store_velocity",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/InfinityStoreVelocityProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Effects/Infinity"
+    },
+    {
+      "name": "InfinityLockRotation",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "infinity_lock_rotation",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/InfinityLockRotationProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Effects/Infinity"
+    },
+    {
+      "name": "InfinityCheckWallCrush",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "infinity_check_wall_crush",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/InfinityCheckWallCrushProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Effects/Infinity"
+    },
+    {
+      "name": "InfinityProcessCrush",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "infinity_process_crush",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/InfinityProcessCrushProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Effects/Infinity"
+    },
+    {
+      "name": "InfinityOnEffectExpire",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "infinity_on_effect_expire",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/InfinityOnEffectExpireProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Effects/Infinity"
+    },
+    {
+      "name": "InfinityFreezeProjectile",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "infinity_freeze_projectile",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/InfinityFreezeProjectileProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Effects/Infinity"
+    },
+    {
+      "name": "MaxHealthSetOnTick",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "max_health_set_on_tick",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/MaxHealthSetOnTickProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          },
+          {
+            "name": "world",
+            "type": "world"
+          }
+        ]
+      },
+      "path": "~/OnPlayerTick/Player Health ADJ"
+    },
+    {
+      "name": "FirstPersonRenderer",
+      "type": "mixin",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "first_person_renderer",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/mixins/FirstPersonRendererMixin.java"
+        ]
+      },
+      "path": "~/FPS"
+    },
+    {
+      "name": "ArmAnimationEditor",
+      "type": "gui",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "arm_animation_editor",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/world/inventory/ArmAnimationEditorMenu.java",
+          "src/main/java/net/mcreator/jjkstrongest/client/gui/ArmAnimationEditorScreen.java"
+        ]
+      },
+      "path": "~/FPS"
+    },
+    {
+      "name": "OpenArmGui",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "open_arm_gui",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/OpenArmGuiProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          },
+          {
+            "name": "x",
+            "type": "number"
+          },
+          {
+            "name": "y",
+            "type": "number"
+          },
+          {
+            "name": "z",
+            "type": "number"
+          },
+          {
+            "name": "world",
+            "type": "world"
+          }
+        ]
+      },
+      "path": "~/FPS"
+    },
+    {
+      "name": "Jjkgui",
+      "type": "command",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "jjkgui",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/command/JjkguiCommand.java"
+        ]
+      },
+      "path": "~/FPS"
+    },
+    {
+      "name": "ArmAnimationData",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "arm_animation_data",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/ArmAnimationDataProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/FPS"
+    },
+    {
+      "name": "ArmAnimationRegistry",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "arm_animation_registry",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/ArmAnimationRegistryProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/FPS"
+    },
+    {
+      "name": "PlayArmAnimation",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "play_arm_animation",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/PlayArmAnimationProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/FPS"
+    },
+    {
+      "name": "ReleaseArmAnimation",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "release_arm_animation",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/ReleaseArmAnimationProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/FPS"
+    },
+    {
+      "name": "StopArmAnimation",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "stop_arm_animation",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/StopArmAnimationProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/FPS"
+    },
+    {
+      "name": "GetCurrentArmPose",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "get_current_arm_pose",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/GetCurrentArmPoseProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/FPS"
+    },
+    {
+      "name": "ArmAnimationTick",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "arm_animation_tick",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/ArmAnimationTickProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/FPS"
+    },
+    {
+      "name": "Freezeframe",
+      "type": "code",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "freezeframe",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/Freezeframe.java"
+        ]
+      },
+      "path": "~/Screen Effects/Screen Freeze"
+    },
+    {
+      "name": "RaycastDismantleAdvanced",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "raycast_dismantle_advanced",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/RaycastDismantleAdvancedProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Techniques and Assets/Sukuna/Dismantle"
+    },
+    {
+      "name": "BarrageSlashSpam",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "barrage_slash_spam",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/BarrageSlashSpamProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Techniques and Assets/Sukuna/Dismantle/Barrage"
+    },
+    {
+      "name": "DismantleBarageOnTick",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "dismantle_barage_on_tick",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/DismantleBarageOnTickProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "world",
+            "type": "world"
+          }
+        ]
+      },
+      "path": "~/Techniques and Assets/Sukuna/Dismantle/Barrage"
+    },
+    {
+      "name": "Hold2UseOnTick",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "hold_2_use_on_tick",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/Hold2UseOnTickProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          }
+        ]
+      },
+      "path": "~/OnPlayerTick/Chants"
+    },
+    {
+      "name": "DismantleBarrageOnTickAlternative",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "dismantle_barrage_on_tick_alternative",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/DismantleBarrageOnTickAlternativeProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Techniques and Assets/Sukuna/Dismantle/Barrage"
+    },
+    {
+      "name": "ImpactFrameState",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "impact_frame_state",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/ImpactFrameStateProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Screen Effects/Shader Stuff/Impact Charged"
+    },
+    {
+      "name": "ImpactFrameShader",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "impact_frame_shader",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/ImpactFrameShaderProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Screen Effects/Shader Stuff/Impact Charged"
+    },
+    {
+      "name": "ImpactFrameTick",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "impact_frame_tick",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/ImpactFrameTickProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Screen Effects/Shader Stuff/Impact Charged"
+    },
+    {
+      "name": "TriggerChargedImpact",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "trigger_charged_impact",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/TriggerChargedImpactProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Screen Effects/Shader Stuff/Impact Charged"
+    },
+    {
+      "name": "ScreenShakeState",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "screen_shake_state",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/ScreenShakeStateProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Screen Effects/Screen Shake"
+    },
+    {
+      "name": "ScreenShakeCe",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "screen_shake_ce",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/ScreenShakeCeProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Screen Effects/Screen Shake"
+    },
+    {
+      "name": "TriggerScreenShake",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "trigger_screen_shake",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/TriggerScreenShakeProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Screen Effects/Screen Shake"
+    },
+    {
+      "name": "CleaveDistortionState",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "cleave_distortion_state",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/CleaveDistortionStateProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Screen Effects/Shader Stuff/Cleave Distortion"
+    },
+    {
+      "name": "CleaveDistortionShader",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "cleave_distortion_shader",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/CleaveDistortionShaderProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Screen Effects/Shader Stuff/Cleave Distortion"
+    },
+    {
+      "name": "CleaveDistortionTick",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "cleave_distortion_tick",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/CleaveDistortionTickProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Screen Effects/Shader Stuff/Cleave Distortion"
+    },
+    {
+      "name": "TriggerCleaveDistortion",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "trigger_cleave_distortion",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/TriggerCleaveDistortionProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Screen Effects/Shader Stuff/Cleave Distortion"
+    },
+    {
+      "name": "Shadertest",
+      "type": "command",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "shadertest",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/command/ShadertestCommand.java"
+        ]
+      },
+      "path": "~/Screen Effects/Shader Stuff/Cleave Distortion"
+    },
+    {
+      "name": "TestCleaveDistortion",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "test_cleave_distortion",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/TestCleaveDistortionProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Screen Effects/Shader Stuff/Cleave Distortion"
+    },
+    {
+      "name": "CancelAttackDuringAnimation",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "cancel_attack_during_animation",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/CancelAttackDuringAnimationProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/FPS"
+    },
+    {
+      "name": "DisableSwing",
+      "type": "mixin",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "disable_swing",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/mixins/DisableSwingMixin.java"
+        ]
+      }
+    },
+    {
+      "name": "CleaveHoldStart",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "cleave_hold_start",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/CleaveHoldStartProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Techniques and Assets/Sukuna/Cleave"
+    },
+    {
+      "name": "CleaveHoldTick",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "cleave_hold_tick",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/CleaveHoldTickProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Techniques and Assets/Sukuna/Cleave"
+    },
+    {
+      "name": "CleaveHoldExecute",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "cleave_hold_execute",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/CleaveHoldExecuteProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Techniques and Assets/Sukuna/Cleave"
+    },
+    {
+      "name": "CleaveHoldCancel",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "cleave_hold_cancel",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/CleaveHoldCancelProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Techniques and Assets/Sukuna/Cleave"
+    },
+    {
+      "name": "CleaveForcePlayerLook",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "cleave_force_player_look",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/CleaveForcePlayerLookProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Techniques and Assets/Sukuna/Cleave"
+    },
+    {
+      "name": "ValidateMarkedEntities",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "validate_marked_entities",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/ValidateMarkedEntitiesProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Marking System"
+    },
+    {
+      "name": "ExecuteMarkAbility",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "execute_mark_ability",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/ExecuteMarkAbilityProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Marking System"
+    },
+    {
+      "name": "SukunaMarkSlashSingle",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "sukuna_mark_slash_single",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/SukunaMarkSlashSingleProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Marking System/Sukuna"
+    },
+    {
+      "name": "SukunaMarkSlashBarrage",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "sukuna_mark_slash_barrage",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/SukunaMarkSlashBarrageProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Marking System/Sukuna"
+    },
+    {
+      "name": "GojoMarkTeleport",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "gojo_mark_teleport",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/GojoMarkTeleportProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Marking System/Gojo"
+    },
+    {
+      "name": "MarkEntityOnHit",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "mark_entity_on_hit",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/MarkEntityOnHitProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Marking System"
+    },
+    {
+      "name": "GojoMarkPull",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "gojo_mark_pull",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/GojoMarkPullProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Marking System/Gojo"
+    },
+    {
+      "name": "RenderMarkedEntities",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "render_marked_entities",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/RenderMarkedEntitiesProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Marking System"
+    },
+    {
+      "name": "InterceptRightClick",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "intercept_right_click",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/InterceptRightClickProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Marking System"
+    },
+    {
+      "name": "WhenEntityIsAttacked",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "when_entity_is_attacked",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/WhenEntityIsAttackedProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "damagesource",
+            "type": "damagesource"
+          },
+          {
+            "name": "entity",
+            "type": "entity"
+          },
+          {
+            "name": "immediatesourceentity",
+            "type": "entity"
+          },
+          {
+            "name": "sourceentity",
+            "type": "entity"
+          }
+        ]
+      },
+      "path": "~/When Attacked"
+    },
+    {
+      "name": "OnMarkTick",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "on_mark_tick",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/OnMarkTickProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          }
+        ]
+      },
+      "path": "~/OnPlayerTick/Mark"
+    },
+    {
+      "name": "TestExecuteMark",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "test_execute_mark",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/TestExecuteMarkProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Marking System/Test"
+    },
+    {
+      "name": "MarkExecuteOnKeyPressed",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "mark_execute_on_key_pressed",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/MarkExecuteOnKeyPressedProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          }
+        ]
+      },
+      "path": "~/Marking System/Test"
+    },
+    {
+      "name": "MarkExecute",
+      "type": "keybind",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "mark_execute",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/network/MarkExecuteMessage.java"
+        ]
+      },
+      "path": "~/Marking System/Test"
+    },
+    {
+      "name": "OnRightClickAir",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "on_right_click_air",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/OnRightClickAirProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Marking System"
+    },
+    {
+      "name": "OnRightClickBlock",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "on_right_click_block",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/OnRightClickBlockProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Marking System"
+    },
+    {
+      "name": "BlackFlashLightning",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "black_flash_lightning",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/BlackFlashLightningProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Black Flash Logic"
+    },
+    {
+      "name": "BlackFlashShaderState",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "black_flash_shader_state",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/BlackFlashShaderStateProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Screen Effects/Shader Stuff/Blackflash Shatter"
+    },
+    {
+      "name": "BlackFlashShader",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "black_flash_shader",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/BlackFlashShaderProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Screen Effects/Shader Stuff/Blackflash Shatter"
+    },
+    {
+      "name": "BlackFlashShaderTick",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "black_flash_shader_tick",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/BlackFlashShaderTickProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Screen Effects/Shader Stuff/Blackflash Shatter"
+    },
+    {
+      "name": "TriggerBlackFlashShader",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "trigger_black_flash_shader",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/TriggerBlackFlashShaderProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Screen Effects/Shader Stuff/Blackflash Shatter"
+    },
+    {
+      "name": "BlackFlashClientSync",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "black_flash_client_sync",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/BlackFlashClientSyncProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Screen Effects/Shader Stuff/Blackflash Shatter"
+    },
+    {
+      "name": "ShaderTestBF",
+      "type": "command",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "shader_test_bf",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/command/ShaderTestBFCommand.java"
+        ]
+      },
+      "path": "~/Screen Effects/Shader Stuff/Blackflash Shatter"
+    },
+    {
+      "name": "BlackFlashCheck",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "black_flash_check",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/BlackFlashCheckProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          },
+          {
+            "name": "sourceentity",
+            "type": "entity"
+          }
+        ]
+      },
+      "path": "~/Black Flash Logic"
+    },
+    {
+      "name": "BlackFlashExecute",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "black_flash_execute",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/BlackFlashExecuteProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Black Flash Logic"
+    },
+    {
+      "name": "BFTestItem",
+      "type": "item",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "bf_test_item",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/item/BFTestItemItem.java",
+          "src/main/resources/assets/jjk_strongest/models/item/bf_test_item.json"
+        ]
+      },
+      "path": "~/Black Flash Logic"
+    },
+    {
+      "name": "Jujutsu",
+      "type": "damagetype",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "jujutsu",
+      "metadata": {
+        "files": [
+          "src/main/resources/data/jjk_strongest/damage_type/jujutsu.json"
+        ]
+      },
+      "path": "~/Tags"
+    },
+    {
+      "name": "ParticleBlackFlash",
+      "type": "particle",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "particle_black_flash",
+      "metadata": {
+        "files": [
+          "src/main/resources/assets/jjk_strongest/particles/particle_black_flash.json",
+          "src/main/java/net/mcreator/jjkstrongest/client/particle/ParticleBlackFlashParticle.java"
+        ]
+      },
+      "path": "~/Black Flash Logic"
+    },
+    {
+      "name": "ReturnOutputGeneral",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "return_output_general",
+      "metadata": {
+        "return_type": "number",
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/ReturnOutputGeneralProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          },
+          {
+            "name": "world",
+            "type": "world"
+          }
+        ]
+      },
+      "path": "~/Outputs"
+    },
+    {
+      "name": "BlackFlashDraw",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "black_flash_draw",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/BlackFlashDrawProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "end_x",
+            "type": "number"
+          },
+          {
+            "name": "end_y",
+            "type": "number"
+          },
+          {
+            "name": "end_z",
+            "type": "number"
+          },
+          {
+            "name": "start_x",
+            "type": "number"
+          },
+          {
+            "name": "start_y",
+            "type": "number"
+          },
+          {
+            "name": "start_z",
+            "type": "number"
+          },
+          {
+            "name": "world",
+            "type": "world"
+          }
+        ]
+      },
+      "path": "~/Black Flash Logic/SparkingPath"
+    },
+    {
+      "name": "BlackFlashParticleScatterExecute",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "black_flash_particle_scatter_execute",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/BlackFlashParticleScatterExecuteProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Black Flash Logic/SparkingPath"
+    },
+    {
+      "name": "HollowPurpleChargeLightningDraw",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "hollow_purple_charge_lightning_draw",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/HollowPurpleChargeLightningDrawProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Techniques and Assets/Gojo/HollowPurple"
+    },
+    {
+      "name": "ParticleHPCharge",
+      "type": "particle",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "particle_hp_charge",
+      "metadata": {
+        "files": [
+          "src/main/resources/assets/jjk_strongest/particles/particle_hp_charge.json",
+          "src/main/java/net/mcreator/jjkstrongest/client/particle/ParticleHPChargeParticle.java"
+        ]
+      },
+      "path": "~/Techniques and Assets/Gojo/HollowPurple"
+    },
+    {
+      "name": "ParticleHPCharge2",
+      "type": "particle",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "particle_hp_charge_2",
+      "metadata": {
+        "files": [
+          "src/main/resources/assets/jjk_strongest/particles/particle_hp_charge_2.json",
+          "src/main/java/net/mcreator/jjkstrongest/client/particle/ParticleHPCharge2Particle.java"
+        ]
+      },
+      "path": "~/Techniques and Assets/Gojo/HollowPurple"
+    },
+    {
+      "name": "HollowPurpleChargeLightningExecute",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "hollow_purple_charge_lightning_execute",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/HollowPurpleChargeLightningExecuteProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Techniques and Assets/Gojo/HollowPurple"
+    },
+    {
+      "name": "ChargeRingShape",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "charge_ring_shape",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/ChargeRingShapeProcedure.java"
+        ],
+        "dependencies": [],
+        "return_type": "shape"
+      },
+      "path": "~/OnPlayerTick/Chants"
+    },
+    {
+      "name": "ChargeIndicatorOverlay",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "charge_indicator_overlay",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/ChargeIndicatorOverlayProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/OnPlayerTick/Chants"
+    },
+    {
+      "name": "ChantOverlayRender",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "chant_overlay_render",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/ChantOverlayRenderProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/OnPlayerTick/Chants"
+    },
+    {
+      "name": "JjkShaderManager",
+      "type": "code",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "jjk_shader_manager",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/JjkShaderManager.java"
+        ]
+      },
+      "path": "~/Techniques and Assets/Sukuna/Slash Effect/new"
+    },
+    {
+      "name": "SpawnDismantleSlash",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "spawn_dismantle_slash",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/SpawnDismantleSlashProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Techniques and Assets/Sukuna/Slash Effect/new"
+    },
+    {
+      "name": "DismantleProjectile",
+      "type": "projectile",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "dismantle_projectile",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/entity/DismantleProjectileEntity.java",
+          "src/main/java/net/mcreator/jjkstrongest/client/renderer/DismantleProjectileRenderer.java"
+        ]
+      },
+      "path": "~/Techniques and Assets/Sukuna/Slash Effect/new"
+    },
+    {
+      "name": "TestDismantle",
+      "type": "item",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "test_dismantle",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/item/TestDismantleItem.java",
+          "src/main/resources/assets/jjk_strongest/models/item/test_dismantle.json"
+        ]
+      },
+      "path": "~/Techniques and Assets/Sukuna/Slash Effect/new"
+    },
+    {
+      "name": "TestDismantleRightclicked",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "test_dismantle_rightclicked",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/TestDismantleRightclickedProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          },
+          {
+            "name": "y",
+            "type": "number"
+          },
+          {
+            "name": "z",
+            "type": "number"
+          },
+          {
+            "name": "world",
+            "type": "world"
+          }
+        ]
+      },
+      "path": "~/Techniques and Assets/Sukuna/Slash Effect/new"
+    },
+    {
+      "name": "SukunaMarkSlashBarrageTick",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "sukuna_mark_slash_barrage_tick",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/SukunaMarkSlashBarrageTickProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Marking System/Sukuna"
+    },
+    {
+      "name": "SlashBarrageTickMark",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "slash_barrage_tick_mark",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/SlashBarrageTickMarkProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          },
+          {
+            "name": "world",
+            "type": "world"
+          }
+        ]
+      },
+      "path": "~/Marking System/Sukuna"
+    },
+    {
+      "name": "BFEntity",
+      "type": "livingentity",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "bf_entity",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/client/renderer/BFEntityRenderer.java",
+          "src/main/java/net/mcreator/jjkstrongest/entity/BFEntityEntity.java"
+        ]
+      },
+      "path": "~/Black Flash Logic/Method2"
+    },
+    {
+      "name": "SpawnBlackFlashLightning",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "spawn_black_flash_lightning",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/SpawnBlackFlashLightningProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          },
+          {
+            "name": "world",
+            "type": "world"
+          }
+        ]
+      },
+      "path": "~/Black Flash Logic/Method2"
+    },
+    {
+      "name": "BlackFlashLightningClientRenderer",
+      "type": "code",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "black_flash_lightning_client_renderer",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/BlackFlashLightningClientRenderer.java"
+        ]
+      },
+      "path": "~/Black Flash Logic/Method2"
+    },
+    {
+      "name": "PurpleChargeLightningRenderer",
+      "type": "code",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "purple_charge_lightning_renderer",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/PurpleChargeLightningRenderer.java"
+        ]
+      },
+      "path": "~/Techniques and Assets/Gojo/HollowPurple"
+    },
+    {
+      "name": "MalevolentShrine",
+      "type": "livingentity",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "malevolent_shrine",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/entity/MalevolentShrineEntity.java",
+          "src/main/java/net/mcreator/jjkstrongest/client/renderer/MalevolentShrineRenderer.java",
+          "src/main/resources/data/jjk_strongest/forge/biome_modifier/malevolent_shrine_biome_modifier.json"
+        ]
+      },
+      "path": "~/Techniques and Assets/Sukuna/Shrine"
+    },
+    {
+      "name": "MalevolentShrineSummon",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "malevolent_shrine_summon",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/MalevolentShrineSummonProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Techniques and Assets/Sukuna/Shrine"
+    },
+    {
+      "name": "MalevolentShrineTick",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "malevolent_shrine_tick",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/MalevolentShrineTickProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Techniques and Assets/Sukuna/Shrine"
+    },
+    {
+      "name": "MalevolentShrineTickingEvent",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "malevolent_shrine_ticking_event",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/MalevolentShrineTickingEventProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          },
+          {
+            "name": "x",
+            "type": "number"
+          },
+          {
+            "name": "y",
+            "type": "number"
+          },
+          {
+            "name": "z",
+            "type": "number"
+          },
+          {
+            "name": "world",
+            "type": "world"
+          }
+        ]
+      },
+      "path": "~/Techniques and Assets/Sukuna/Shrine"
+    },
+    {
+      "name": "SpawnMalevolentShrineSlash",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "spawn_malevolent_shrine_slash",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/SpawnMalevolentShrineSlashProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Techniques and Assets/Sukuna/Shrine"
+    },
+    {
+      "name": "MalevolentShrineTickBlockBreaking",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "malevolent_shrine_tick_block_breaking",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/MalevolentShrineTickBlockBreakingProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          },
+          {
+            "name": "x",
+            "type": "number"
+          },
+          {
+            "name": "y",
+            "type": "number"
+          },
+          {
+            "name": "z",
+            "type": "number"
+          },
+          {
+            "name": "world",
+            "type": "world"
+          }
+        ]
+      },
+      "path": "~/Techniques and Assets/Sukuna/Shrine"
+    },
+    {
+      "name": "SkyColorOverrideDomain",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "sky_color_override_domain",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/SkyColorOverrideDomainProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          },
+          {
+            "name": "world",
+            "type": "world"
+          }
+        ]
+      },
+      "path": "~/Techniques and Assets/Sukuna/Shrine"
+    },
+    {
+      "name": "DomainUV",
+      "type": "livingentity",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "domain_uv",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/client/renderer/DomainUVRenderer.java",
+          "src/main/java/net/mcreator/jjkstrongest/entity/DomainUVEntity.java"
+        ]
+      },
+      "path": "~/Techniques and Assets/Gojo/Infinite Void"
+    },
+    {
+      "name": "SetupDimension",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "setup_dimension",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/SetupDimensionProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Techniques and Assets/Gojo/Infinite Void"
+    },
+    {
+      "name": "DomainSkyboxRender",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "domain_skybox_render",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/DomainSkyboxRenderProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Techniques and Assets/Gojo/Infinite Void"
+    },
+    {
+      "name": "DomainBarrier",
+      "type": "block",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "domain_barrier",
+      "metadata": {
+        "files": [
+          "src/main/resources/data/jjk_strongest/loot_tables/blocks/domain_barrier.json",
+          "src/main/resources/assets/jjk_strongest/models/item/domain_barrier.json",
+          "src/main/resources/assets/jjk_strongest/models/block/domain_barrier.json",
+          "src/main/resources/assets/jjk_strongest/blockstates/domain_barrier.json",
+          "src/main/java/net/mcreator/jjkstrongest/block/DomainBarrierBlock.java"
+        ]
+      },
+      "path": "~/Techniques and Assets/Gojo/Infinite Void"
+    },
+    {
+      "name": "DomainExpansionStart",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "domain_expansion_start",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/DomainExpansionStartProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "caster",
+            "type": "entity"
+          },
+          {
+            "name": "domainType",
+            "type": "number"
+          },
+          {
+            "name": "x",
+            "type": "number"
+          },
+          {
+            "name": "y",
+            "type": "number"
+          },
+          {
+            "name": "z",
+            "type": "number"
+          },
+          {
+            "name": "world",
+            "type": "world"
+          }
+        ]
+      },
+      "path": "~/Techniques and Assets/Gojo/Infinite Void"
+    },
+    {
+      "name": "DomainUVEntityTick",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "domain_uv_entity_tick",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/DomainUVEntityTickProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          },
+          {
+            "name": "world",
+            "type": "world"
+          }
+        ]
+      },
+      "path": "~/Techniques and Assets/Gojo/Infinite Void"
+    },
+    {
+      "name": "DomainCollapseManual",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "domain_collapse_manual",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/DomainCollapseManualProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Techniques and Assets/Gojo/Infinite Void"
+    },
+    {
+      "name": "DomainUVPostLinesPhase",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "domain_uv_post_lines_phase",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/DomainUVPostLinesPhaseProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Techniques and Assets/Gojo/Infinite Void"
+    },
+    {
+      "name": "DomainUVLineFlash",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "domain_uv_line_flash",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/DomainUVLineFlashProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Techniques and Assets/Gojo/Infinite Void"
+    },
+    {
+      "name": "DomainUVLinesClientRenderer",
+      "type": "code",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "domain_uv_lines_client_renderer",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/DomainUVLinesClientRenderer.java"
+        ]
+      },
+      "path": "~/Techniques and Assets/Gojo/Infinite Void"
+    },
+    {
+      "name": "DomainScreenEffectRenderer",
+      "type": "overlay",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "domain_screen_effect_renderer",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/client/screens/DomainScreenEffectRendererOverlay.java"
+        ]
+      },
+      "path": "~/Techniques and Assets/Gojo/Infinite Void"
+    },
+    {
+      "name": "DomainScreenEffectRenderer2",
+      "type": "overlay",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "domain_screen_effect_renderer_2",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/client/screens/DomainScreenEffectRenderer2Overlay.java"
+        ]
+      },
+      "path": "~/Techniques and Assets/Gojo/Infinite Void"
+    },
+    {
+      "name": "DomainEffectTick",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "domain_effect_tick",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/DomainEffectTickProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          }
+        ]
+      },
+      "path": "~/Techniques and Assets/Gojo/Infinite Void"
+    },
+    {
+      "name": "RenderRedFirstPerson",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "render_red_first_person",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/RenderRedFirstPersonProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Techniques and Assets/Gojo/ReversalRed"
+    },
+    {
+      "name": "RedFirstPersonRenderHook",
+      "type": "code",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "red_first_person_render_hook",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/RedFirstPersonRenderHook.java"
+        ]
+      }
+    },
+    {
+      "name": "RenderBlueFirstPerson",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "render_blue_first_person",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/RenderBlueFirstPersonProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Techniques and Assets/Gojo/LapseBlue"
+    },
+    {
+      "name": "RenderFlameArrowFirstPerson",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "render_flame_arrow_first_person",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/RenderFlameArrowFirstPersonProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Techniques and Assets/Sukuna/Furnace"
+    },
+    {
+      "name": "FlameArrowWhileProjectileFlyingTick",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "flame_arrow_while_projectile_flying_tick",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/FlameArrowWhileProjectileFlyingTickProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "immediatesourceentity",
+            "type": "entity"
+          },
+          {
+            "name": "x",
+            "type": "number"
+          },
+          {
+            "name": "y",
+            "type": "number"
+          },
+          {
+            "name": "z",
+            "type": "number"
+          },
+          {
+            "name": "world",
+            "type": "world"
+          }
+        ]
+      },
+      "path": "~/Techniques and Assets/Sukuna/Furnace"
+    },
+    {
+      "name": "FlameArrow",
+      "type": "projectile",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "flame_arrow",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/client/renderer/FlameArrowRenderer.java",
+          "src/main/java/net/mcreator/jjkstrongest/entity/FlameArrowEntity.java"
+        ]
+      },
+      "path": "~/Techniques and Assets/Sukuna/Furnace"
+    },
+    {
+      "name": "FlameArrowShootExecute",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "flame_arrow_shoot_execute",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/FlameArrowShootExecuteProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          }
+        ]
+      },
+      "path": "~/Techniques and Assets/Sukuna/Furnace"
+    },
+    {
+      "name": "FlameArrowExplosion",
+      "type": "livingentity",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "flame_arrow_explosion",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/entity/FlameArrowExplosionEntity.java",
+          "src/main/java/net/mcreator/jjkstrongest/client/renderer/FlameArrowExplosionRenderer.java"
+        ]
+      },
+      "path": "~/Techniques and Assets/Sukuna/Furnace"
+    },
+    {
+      "name": "FlameArrowExplosionOnEntityTickUpdate",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "flame_arrow_explosion_on_entity_tick_update",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/FlameArrowExplosionOnEntityTickUpdateProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          },
+          {
+            "name": "x",
+            "type": "number"
+          },
+          {
+            "name": "y",
+            "type": "number"
+          },
+          {
+            "name": "z",
+            "type": "number"
+          },
+          {
+            "name": "world",
+            "type": "world"
+          }
+        ]
+      },
+      "path": "~/Techniques and Assets/Sukuna/Furnace"
+    },
+    {
+      "name": "FlameArrowProjectileHitsLivingEntity",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "flame_arrow_projectile_hits_living_entity",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/FlameArrowProjectileHitsLivingEntityProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          },
+          {
+            "name": "immediatesourceentity",
+            "type": "entity"
+          },
+          {
+            "name": "x",
+            "type": "number"
+          },
+          {
+            "name": "y",
+            "type": "number"
+          },
+          {
+            "name": "z",
+            "type": "number"
+          },
+          {
+            "name": "world",
+            "type": "world"
+          }
+        ]
+      },
+      "path": "~/Techniques and Assets/Sukuna/Furnace"
+    },
+    {
+      "name": "FlameArrowProjectileHitsBlock",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "flame_arrow_projectile_hits_block",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/FlameArrowProjectileHitsBlockProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          },
+          {
+            "name": "immediatesourceentity",
+            "type": "entity"
+          },
+          {
+            "name": "x",
+            "type": "number"
+          },
+          {
+            "name": "y",
+            "type": "number"
+          },
+          {
+            "name": "z",
+            "type": "number"
+          },
+          {
+            "name": "world",
+            "type": "world"
+          }
+        ]
+      },
+      "path": "~/Techniques and Assets/Sukuna/Furnace"
+    }
+  ],
+  "variable_elements": [
+    {
+      "name": "sorcerer",
+      "type": "string",
+      "scope": "player_persistent",
+      "value": "\"\""
+    },
+    {
+      "name": "wcs_x1",
+      "type": "number",
+      "scope": "player_lifetime",
+      "value": "0"
+    },
+    {
+      "name": "wcs_y1",
+      "type": "number",
+      "scope": "player_lifetime",
+      "value": "0"
+    },
+    {
+      "name": "wcs_z1",
+      "type": "number",
+      "scope": "player_lifetime",
+      "value": "0"
+    },
+    {
+      "name": "wcs_x2",
+      "type": "number",
+      "scope": "player_lifetime",
+      "value": "0"
+    },
+    {
+      "name": "wcs_y2",
+      "type": "number",
+      "scope": "player_lifetime",
+      "value": "0"
+    },
+    {
+      "name": "wcs_z2",
+      "type": "number",
+      "scope": "player_lifetime",
+      "value": "0"
+    },
+    {
+      "name": "charge_red",
+      "type": "number",
+      "scope": "player_lifetime",
+      "value": "0"
+    },
+    {
+      "name": "charge_blue",
+      "type": "number",
+      "scope": "player_lifetime",
+      "value": "0"
+    },
+    {
+      "name": "charge_purple",
+      "type": "number",
+      "scope": "player_lifetime",
+      "value": "0"
+    },
+    {
+      "name": "current_moveset",
+      "type": "string",
+      "scope": "player_lifetime",
+      "value": "\"\""
+    },
+    {
+      "name": "RTC_unlocked",
+      "type": "logic",
+      "scope": "player_persistent",
+      "value": "false"
+    },
+    {
+      "name": "gojo_blue_unlocked",
+      "type": "logic",
+      "scope": "player_persistent",
+      "value": "true"
+    },
+    {
+      "name": "wcs_power",
+      "type": "number",
+      "scope": "player_persistent",
+      "value": "0"
+    },
+    {
+      "name": "dismantle_barrage",
+      "type": "logic",
+      "scope": "player_lifetime",
+      "value": "false"
+    },
+    {
+      "name": "red_flight",
+      "type": "logic",
+      "scope": "player_lifetime",
+      "value": "false"
+    },
+    {
+      "name": "Output",
+      "type": "number",
+      "scope": "player_persistent",
+      "value": "1.0"
+    },
+    {
+      "name": "Output_Dismantle",
+      "type": "number",
+      "scope": "player_persistent",
+      "value": "1.0"
+    },
+    {
+      "name": "Output_Cleave",
+      "type": "number",
+      "scope": "player_persistent",
+      "value": "1.0"
+    },
+    {
+      "name": "Output_Flame",
+      "type": "number",
+      "scope": "player_persistent",
+      "value": "1.0"
+    },
+    {
+      "name": "Output_Blue",
+      "type": "number",
+      "scope": "player_persistent",
+      "value": "1.0"
+    },
+    {
+      "name": "Output_Red",
+      "type": "number",
+      "scope": "player_persistent",
+      "value": "1.0"
+    },
+    {
+      "name": "Output_Purple",
+      "type": "number",
+      "scope": "player_persistent",
+      "value": "1.0"
+    },
+    {
+      "name": "Output_Domain",
+      "type": "number",
+      "scope": "player_persistent",
+      "value": "1.0"
+    },
+    {
+      "name": "Output_HollowPurple",
+      "type": "number",
+      "scope": "player_persistent",
+      "value": "1.0"
+    },
+    {
+      "name": "Output_WorldSlash",
+      "type": "number",
+      "scope": "player_persistent",
+      "value": "1.0"
+    },
+    {
+      "name": "vow_overtime",
+      "type": "logic",
+      "scope": "player_persistent",
+      "value": "false"
+    },
+    {
+      "name": "vow_recoil",
+      "type": "logic",
+      "scope": "player_persistent",
+      "value": "false"
+    },
+    {
+      "name": "vow_wcsact",
+      "type": "logic",
+      "scope": "player_persistent",
+      "value": "false"
+    },
+    {
+      "name": "vow_dismantleimbue",
+      "type": "logic",
+      "scope": "player_persistent",
+      "value": "false"
+    },
+    {
+      "name": "vow_RTChealbrain",
+      "type": "logic",
+      "scope": "player_persistent",
+      "value": "false"
+    },
+    {
+      "name": "vow_trueform",
+      "type": "logic",
+      "scope": "player_persistent",
+      "value": "false"
+    },
+    {
+      "name": "vow_executioner",
+      "type": "logic",
+      "scope": "player_persistent",
+      "value": "false"
+    },
+    {
+      "name": "vow_adaptivecleave",
+      "type": "logic",
+      "scope": "player_persistent",
+      "value": "false"
+    },
+    {
+      "name": "vow_shreddingbarrage",
+      "type": "logic",
+      "scope": "player_persistent",
+      "value": "false"
+    },
+    {
+      "name": "vow_bladeresonance",
+      "type": "logic",
+      "scope": "player_persistent",
+      "value": "false"
+    },
+    {
+      "name": "vow_smolderingbuildup",
+      "type": "logic",
+      "scope": "player_persistent",
+      "value": "false"
+    },
+    {
+      "name": "vow_concentratedinferno",
+      "type": "logic",
+      "scope": "player_persistent",
+      "value": "false"
+    },
+    {
+      "name": "vow_desperateflames",
+      "type": "logic",
+      "scope": "player_persistent",
+      "value": "false"
+    },
+    {
+      "name": "vow_pyroclasm",
+      "type": "logic",
+      "scope": "player_persistent",
+      "value": "false"
+    },
+    {
+      "name": "vow_meditativeopening",
+      "type": "logic",
+      "scope": "player_persistent",
+      "value": "false"
+    },
+    {
+      "name": "vow_emptyhandshrine",
+      "type": "logic",
+      "scope": "player_persistent",
+      "value": "false"
+    },
+    {
+      "name": "vow_overwhelmingmalevolence",
+      "type": "logic",
+      "scope": "player_persistent",
+      "value": "false"
+    },
+    {
+      "name": "vow_shrinesupremacy",
+      "type": "logic",
+      "scope": "player_persistent",
+      "value": "false"
+    },
+    {
+      "name": "vow_overextendedmalice",
+      "type": "logic",
+      "scope": "player_persistent",
+      "value": "false"
+    },
+    {
+      "name": "vow_distanceamplification",
+      "type": "logic",
+      "scope": "player_persistent",
+      "value": "false"
+    },
+    {
+      "name": "vow_stationaryperfection",
+      "type": "logic",
+      "scope": "player_persistent",
+      "value": "false"
+    },
+    {
+      "name": "vow_calculatedwarp",
+      "type": "logic",
+      "scope": "player_persistent",
+      "value": "false"
+    },
+    {
+      "name": "vow_overworlddominance",
+      "type": "logic",
+      "scope": "player_persistent",
+      "value": "false"
+    },
+    {
+      "name": "vow_unencumberedfocus",
+      "type": "logic",
+      "scope": "player_persistent",
+      "value": "false"
+    },
+    {
+      "name": "vow_pressuredexcellence",
+      "type": "logic",
+      "scope": "player_persistent",
+      "value": "false"
+    },
+    {
+      "name": "vow_fairweatherfighter",
+      "type": "logic",
+      "scope": "player_persistent",
+      "value": "false"
+    },
+    {
+      "name": "infinity_crush",
+      "type": "logic",
+      "scope": "player_lifetime",
+      "value": "false"
+    },
+    {
+      "name": "arm_translate_x",
+      "type": "number",
+      "scope": "player_lifetime",
+      "value": "0"
+    },
+    {
+      "name": "arm_translate_y",
+      "type": "number",
+      "scope": "player_lifetime",
+      "value": "0"
+    },
+    {
+      "name": "arm_translate_z",
+      "type": "number",
+      "scope": "player_lifetime",
+      "value": "0"
+    },
+    {
+      "name": "arm_rotate_x",
+      "type": "number",
+      "scope": "player_lifetime",
+      "value": "0"
+    },
+    {
+      "name": "arm_rotate_y",
+      "type": "number",
+      "scope": "player_lifetime",
+      "value": "0"
+    },
+    {
+      "name": "arm_rotate_z",
+      "type": "number",
+      "scope": "player_lifetime",
+      "value": "0"
+    },
+    {
+      "name": "current_arm_animation",
+      "type": "string",
+      "scope": "player_persistent",
+      "value": "\"\""
+    },
+    {
+      "name": "arm_anim_holding",
+      "type": "number",
+      "scope": "player_persistent",
+      "value": "0"
+    },
+    {
+      "name": "arm_anim_playing",
+      "type": "logic",
+      "scope": "player_persistent",
+      "value": "false"
+    },
+    {
+      "name": "arm_anim_progress",
+      "type": "number",
+      "scope": "player_persistent",
+      "value": "0"
+    },
+    {
+      "name": "arm_anim_start_tick",
+      "type": "number",
+      "scope": "player_persistent",
+      "value": "0"
+    },
+    {
+      "name": "using_red",
+      "type": "logic",
+      "scope": "player_lifetime",
+      "value": "false"
+    },
+    {
+      "name": "marked_entities",
+      "type": "string",
+      "scope": "player_persistent",
+      "value": "\"\""
+    },
+    {
+      "name": "marked_timestamps",
+      "type": "string",
+      "scope": "player_persistent",
+      "value": "\"\""
+    },
+    {
+      "name": "blue_fist_toggle",
+      "type": "logic",
+      "scope": "player_persistent",
+      "value": "false"
+    },
+    {
+      "name": "cleave_melee_toggle",
+      "type": "logic",
+      "scope": "player_persistent",
+      "value": "false"
+    },
+    {
+      "name": "domain_image_1",
+      "type": "number",
+      "scope": "player_lifetime",
+      "value": "0"
+    },
+    {
+      "name": "domain_image_2",
+      "type": "number",
+      "scope": "player_lifetime",
+      "value": "0"
+    },
+    {
+      "name": "fa_tx",
+      "type": "number",
+      "scope": "player_lifetime",
+      "value": "0"
+    },
+    {
+      "name": "fa_ty",
+      "type": "number",
+      "scope": "player_lifetime",
+      "value": "0"
+    },
+    {
+      "name": "fa_tz",
+      "type": "number",
+      "scope": "player_lifetime",
+      "value": "0"
+    },
+    {
+      "name": "fa_rx",
+      "type": "number",
+      "scope": "player_lifetime",
+      "value": "0"
+    },
+    {
+      "name": "fa_ry",
+      "type": "number",
+      "scope": "player_lifetime",
+      "value": "0"
+    },
+    {
+      "name": "fa_rz",
+      "type": "number",
+      "scope": "player_lifetime",
+      "value": "0"
+    },
+    {
+      "name": "fa_scale",
+      "type": "number",
+      "scope": "player_lifetime",
+      "value": "0"
+    },
+    {
+      "name": "fa_alpha",
+      "type": "number",
+      "scope": "player_lifetime",
+      "value": "0"
+    },
+    {
+      "name": "fa_cross_yaw",
+      "type": "number",
+      "scope": "player_lifetime",
+      "value": "0"
+    },
+    {
+      "name": "fa_flip",
+      "type": "number",
+      "scope": "player_lifetime",
+      "value": "0"
+    }
+  ],
+  "sound_elements": [
+    {
+      "name": "hollowpurple",
+      "files": [
+        "hollow-purple"
+      ],
+      "category": "player",
+      "subtitle": "Imaginary Technique Purple!!!"
+    },
+    {
+      "name": "kai",
+      "files": [
+        "slash"
+      ],
+      "category": "neutral",
+      "subtitle": "invisible slash"
+    },
+    {
+      "name": "blackflash",
+      "files": [
+        "kokusen"
+      ],
+      "category": "neutral",
+      "subtitle": "blackflash"
+    }
+  ],
+  "tag_elements": {
+    "ENTITIES:minecraft:technique": [
+      "CUSTOM:LapseBlue",
+      "CUSTOM:ReversalRed",
+      "CUSTOM:HollowPurpleProjectile",
+      "CUSTOM:HollowPurpleCharge",
+      "CUSTOM:InfiniteHollow",
+      "CUSTOM:BFEntity",
+      "CUSTOM:DismantleProjectile",
+      "CUSTOM:DomainUV",
+      "CUSTOM:FlameArrow",
+      "CUSTOM:MalevolentShrine"
+    ]
+  },
+  "tab_element_order": {},
+  "language_map": {
+    "en_us": {
+      "effect.jjk_strongest.purple_charging": "purplecharging",
+      "item.jjk_strongest.infinite_hollow_spawn_egg": "Infinite Hollow Spawn Egg",
+      "subtitles.hollowpurple": "Imaginary Technique Purple!!!",
+      "subtitles.blackflash": "blackflash",
+      "entity.jjk_strongest.lapse_blue": "Lapse Blue",
+      "item.jjk_strongest.bf_test_item": "BF Test Item",
+      "entity.jjk_strongest.reversal_red": "Reversal Red",
+      "block.jjk_strongest.domain_barrier": "Domain Barrier",
+      "entity.jjk_strongest.domain_uv": "Domain UV",
+      "key.jjk_strongest.mark_execute": "Mark Execute",
+      "death.attack.jujutsu.item": "%1$s was killed by %2$s with jujutsu",
+      "subtitles.kai": "invisible slash",
+      "entity.jjk_strongest.malevolent_shrine": "Malevolent Shrine",
+      "key.jjk_strongest.technique_5": "Attack 5",
+      "key.jjk_strongest.passive": "moveset",
+      "key.jjk_strongest.technique_3": "Attack 3",
+      "key.jjk_strongest.abilitymenu": "Ability Menu",
+      "entity.jjk_strongest.infinite_hollow": "Infinite Hollow",
+      "key.jjk_strongest.technique_4": "Attack 4",
+      "key.jjk_strongest.technique_1": "Attack 1",
+      "key.jjk_strongest.technique_2": "Attack 2",
+      "item.jjk_strongest.test_dismantle": "Test Dismantle",
+      "item.jjk_strongest.reversal_red_spawn_egg": "Reversal Red Spawn Egg",
+      "entity.jjk_strongest.hollow_purple_charge": "Hollow Purple Charge",
+      "entity.jjk_strongest.hollow_purple_projectile": "Hollow Purple Projectile",
+      "item.jjk_strongest.hollow_purple_charge_spawn_egg": "Hollow Purple Charge Spawn Egg",
+      "death.attack.jujutsu.player": "%1$s died whilst trying to escape %2$s",
+      "item.jjk_strongest.lapse_blue_spawn_egg": "Lapse Blue Spawn Egg",
+      "item.jjk_strongest.hollow_purple_projectile_spawn_egg": "Hollow Purple Projectile Spawn Egg",
+      "effect.jjk_strongest.infinity": "Infinity",
+      "entity.jjk_strongest.flame_arrow_explosion": "Flame Arrow Explosion",
+      "death.attack.jujutsu": "%1$s was killed with jujutsu",
+      "block.jjk_strongest.custom_portal": "Custom Portal",
+      "entity.jjk_strongest.bf_entity": "BF Entity",
+      "effect.jjk_strongest.zone": "Zone Boost"
+    }
+  },
+  "foldersRoot": {
+    "name": "~",
+    "children": [
+      {
+        "name": "PowerSystem",
+        "children": [
+          {
+            "name": "Z",
+            "children": []
+          },
+          {
+            "name": "X",
+            "children": []
+          },
+          {
+            "name": "C",
+            "children": []
+          },
+          {
+            "name": "V",
+            "children": []
+          }
+        ]
+      },
+      {
+        "name": "Effects",
+        "children": [
+          {
+            "name": "Zone",
+            "children": []
+          },
+          {
+            "name": "Infinity",
+            "children": []
+          }
+        ]
+      },
+      {
+        "name": "EntityAttacked",
+        "children": []
+      },
+      {
+        "name": "Techniques and Assets",
+        "children": [
+          {
+            "name": "Gojo",
+            "children": [
+              {
+                "name": "LapseBlue",
+                "children": []
+              },
+              {
+                "name": "Infinity",
+                "children": []
+              },
+              {
+                "name": "ReversalRed",
+                "children": []
+              },
+              {
+                "name": "Infinite Void",
+                "children": [
+                  {
+                    "name": "banishment",
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "HollowPurple",
+                "children": [
+                  {
+                    "name": "InfiniteHollow",
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "Sukuna",
+            "children": [
+              {
+                "name": "World Cutting Slash",
+                "children": []
+              },
+              {
+                "name": "Dismantle",
+                "children": [
+                  {
+                    "name": "Barrage",
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Slash Effect",
+                "children": [
+                  {
+                    "name": "old",
+                    "children": []
+                  },
+                  {
+                    "name": "new",
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Cleave",
+                "children": []
+              },
+              {
+                "name": "Shrine",
+                "children": []
+              },
+              {
+                "name": "Furnace",
+                "children": []
+              }
+            ]
+          },
+          {
+            "name": "Melee",
+            "children": []
+          }
+        ]
+      },
+      {
+        "name": "Tags",
+        "children": []
+      },
+      {
+        "name": "CustomElements",
+        "children": []
+      },
+      {
+        "name": "Overlays",
+        "children": [
+          {
+            "name": "Returns",
+            "children": []
+          }
+        ]
+      },
+      {
+        "name": "OnPlayerTick",
+        "children": [
+          {
+            "name": "Chants",
+            "children": []
+          },
+          {
+            "name": "Player Health ADJ",
+            "children": []
+          },
+          {
+            "name": "Mark",
+            "children": []
+          }
+        ]
+      },
+      {
+        "name": "Commands",
+        "children": []
+      },
+      {
+        "name": "Radial Menu",
+        "children": []
+      },
+      {
+        "name": "extra assets",
+        "children": [
+          {
+            "name": "particle",
+            "children": []
+          }
+        ]
+      },
+      {
+        "name": "Binding Vow",
+        "children": []
+      },
+      {
+        "name": "Slicing",
+        "children": []
+      },
+      {
+        "name": "Outputs",
+        "children": []
+      },
+      {
+        "name": "FPS",
+        "children": []
+      },
+      {
+        "name": "Screen Effects",
+        "children": [
+          {
+            "name": "Screen Freeze",
+            "children": []
+          },
+          {
+            "name": "Shader Stuff",
+            "children": [
+              {
+                "name": "Impact Charged",
+                "children": []
+              },
+              {
+                "name": "Cleave Distortion",
+                "children": []
+              },
+              {
+                "name": "Blackflash Shatter",
+                "children": []
+              },
+              {
+                "name": "Reversal Red",
+                "children": []
+              }
+            ]
+          },
+          {
+            "name": "Screen Shake",
+            "children": []
+          }
+        ]
+      },
+      {
+        "name": "Marking System",
+        "children": [
+          {
+            "name": "Sukuna",
+            "children": []
+          },
+          {
+            "name": "Gojo",
+            "children": []
+          },
+          {
+            "name": "Test",
+            "children": []
+          }
+        ]
+      },
+      {
+        "name": "When Attacked",
+        "children": []
+      },
+      {
+        "name": "Black Flash Logic",
+        "children": [
+          {
+            "name": "SparkingPath",
+            "children": []
+          },
+          {
+            "name": "Method2",
+            "children": []
+          }
+        ]
+      }
+    ]
+  },
+  "workspaceSettings": {
+    "modid": "jjk_strongest",
+    "modName": "JJK Strongest",
+    "version": "1.0.0",
+    "author": "efkrdnz, MCreator",
+    "websiteURL": "https://mcreator.net",
+    "license": "Academic Free License v3.0",
+    "serverSideOnly": false,
+    "requiredMods": [],
+    "dependencies": [],
+    "dependants": [],
+    "mcreatorDependencies": [
+      "geckolib"
+    ],
+    "currentGenerator": "forge-1.20.1",
+    "credits": "Created using mod maker MCreator - https://mcreator.net/about",
+    "modElementsPackage": "net.mcreator.jjkstrongest"
+  },
+  "mcreatorVersion": 202400342716
+}

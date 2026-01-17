@@ -1,0 +1,12 @@
+{
+  "_fv": 69,
+  "_type": "keybind",
+  "definition": {
+    "triggerKey": "MOUSE_RIGHT",
+    "keyBindingName": "Mark Execute",
+    "keyBindingCategoryKey": "misc",
+    "onKeyPressed": {
+      "name": "MarkExecuteOnKeyPressed"
+    }
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "_fv": 69,
+  "_type": "keybind",
+  "definition": {
+    "triggerKey": "R",
+    "keyBindingName": "Ability Menu",
+    "keyBindingCategoryKey": "jjk"
+  }
+}

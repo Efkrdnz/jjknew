@@ -1,0 +1,10 @@
+{
+  "_fv": 69,
+  "_type": "command",
+  "definition": {
+    "commandName": "shader:test:cleave",
+    "type": "CLIENTSIDE",
+    "permissionLevel": "No requirement",
+    "argsxml": "<xml xmlns=\"https://developers.google.com/blockly/xml\"><block type=\"args_start\" deletable=\"false\" x=\"40\" y=\"40\"><next><block type=\"old_command\"><field name=\"procedure\">TriggerCleaveDistortion</field></block></next></block></xml>"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "_fv": 69,
+  "_type": "keybind",
+  "definition": {
+    "triggerKey": "V",
+    "keyBindingName": "Attack 4",
+    "keyBindingCategoryKey": "jjk",
+    "onKeyPressed": {
+      "name": "Technique4OnKeyPressed"
+    },
+    "onKeyReleased": {
+      "name": "Technique4OnKeyReleased"
+    }
+  }
+}

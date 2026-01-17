@@ -1,0 +1,26 @@
+{
+  "targets": [
+    "swap"
+  ],
+  "passes": [
+    {
+      "name": "impact_darken",
+      "intarget": "minecraft:main",
+      "outtarget": "swap",
+      "program": "impact_darken",
+      "uniforms": [
+        {
+          "name": "DarkenAmount",
+          "values": [
+            0.85
+          ]
+        }
+      ]
+    },
+    {
+      "name": "blit",
+      "intarget": "swap",
+      "outtarget": "minecraft:main"
+    }
+  ]
+}

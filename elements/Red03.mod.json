@@ -1,0 +1,23 @@
+{
+  "_fv": 69,
+  "_type": "particle",
+  "definition": {
+    "texture": "red3.png",
+    "animate": false,
+    "frameDuration": 2,
+    "width": 0.2,
+    "height": 0.2,
+    "scale": {
+      "fixedValue": 100.0
+    },
+    "speedFactor": 1.01,
+    "gravity": 0.0,
+    "maxAge": 3,
+    "maxAgeDiff": 0,
+    "angularVelocity": 0.314,
+    "angularAcceleration": 0.0,
+    "canCollide": true,
+    "alwaysShow": true,
+    "renderType": "TRANSLUCENT"
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "_fv": 69,
+  "_type": "potioneffect",
+  "definition": {
+    "effectName": "Infinity",
+    "icon": "infinity.png",
+    "color": {
+      "value": -6684673,
+      "falpha": 0.0
+    },
+    "isInstant": false,
+    "mobEffectCategory": "NEUTRAL",
+    "renderStatusInInventory": false,
+    "renderStatusInHUD": true,
+    "isCuredByMilk": true,
+    "isProtectedByTotem": true,
+    "isCuredbyHoney": false,
+    "onActiveTick": {
+      "name": "InfinityOnEffectActiveTick"
+    },
+    "onExpired": {
+      "name": "InfinityOnEffectExpire"
+    }
+  }
+}
