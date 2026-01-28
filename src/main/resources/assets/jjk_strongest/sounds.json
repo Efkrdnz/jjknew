@@ -25,5 +25,23 @@
         "stream": false
       }
     ]
+  },
+  "sukuna_domain_ost": {
+    "subtitle": "subtitles.sukuna_domain_ost",
+    "sounds": [
+      {
+        "name": "jjk_strongest:sukuna_domain_ost",
+        "stream": false
+      }
+    ]
+  },
+  "sukuna_domain_act": {
+    "subtitle": "subtitles.sukuna_domain_act",
+    "sounds": [
+      {
+        "name": "jjk_strongest:sukuna_shrine_activation",
+        "stream": false
+      }
+    ]
   }
 }

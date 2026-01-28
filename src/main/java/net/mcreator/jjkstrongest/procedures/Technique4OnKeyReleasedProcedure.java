@@ -7,10 +7,13 @@ import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.GameType;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.network.chat.Component;
@@ -19,6 +22,7 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.BlockPos;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.CommandSource;
+import net.minecraft.client.Minecraft;
 
 import net.mcreator.jjkstrongest.network.JjkStrongestModVariables;
 
@@ -34,46 +38,80 @@ public class Technique4OnKeyReleasedProcedure {
 		}
 		if (((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).sorcerer).equals("sukuna")) {
 			if (((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).current_moveset).equals("sukuna_wcs")) {
-				{
-					double _setval = 100;
-					entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
-						capability.wcs_power = _setval;
-						capability.syncPlayerVariables(entity);
-					});
+				if (new Object() {
+					public boolean checkGamemode(Entity _ent) {
+						if (_ent instanceof ServerPlayer _serverPlayer) {
+							return _serverPlayer.gameMode.getGameModeForPlayer() == GameType.CREATIVE;
+						} else if (_ent.level().isClientSide() && _ent instanceof Player _player) {
+							return Minecraft.getInstance().getConnection().getPlayerInfo(_player.getGameProfile().getId()) != null
+									&& Minecraft.getInstance().getConnection().getPlayerInfo(_player.getGameProfile().getId()).getGameMode() == GameType.CREATIVE;
+						}
+						return false;
+					}
+				}.checkGamemode(entity) || (entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).wcs_chant_progress == 3) {
+					{
+						double _setval = 100;
+						entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+							capability.wcs_power = _setval;
+							capability.syncPlayerVariables(entity);
+						});
+					}
+					{
+						double _setval = entity.getX() + 125 * entity.getLookAngle().x;
+						entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+							capability.wcs_x2 = _setval;
+							capability.syncPlayerVariables(entity);
+						});
+					}
+					{
+						double _setval = entity.getY() + entity.getBbHeight() + 125 * entity.getLookAngle().y;
+						entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+							capability.wcs_y2 = _setval;
+							capability.syncPlayerVariables(entity);
+						});
+					}
+					{
+						double _setval = entity.getZ() + 125 * entity.getLookAngle().z;
+						entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+							capability.wcs_z2 = _setval;
+							capability.syncPlayerVariables(entity);
+						});
+					}
+					WorldSlashExecuteProcedure.execute(world, entity);
+					{
+						double _setval = 0;
+						entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+							capability.wcs_power = _setval;
+							capability.syncPlayerVariables(entity);
+						});
+					}
+					ReleaseArmAnimationProcedure.execute(entity);
+					{
+						double _setval = 0;
+						entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+							capability.wcs_chant_progress = _setval;
+							capability.syncPlayerVariables(entity);
+						});
+					}
 				}
-				{
-					double _setval = entity.getX() + 125 * entity.getLookAngle().x;
-					entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
-						capability.wcs_x2 = _setval;
-						capability.syncPlayerVariables(entity);
-					});
-				}
-				{
-					double _setval = entity.getY() + entity.getBbHeight() + 125 * entity.getLookAngle().y;
-					entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
-						capability.wcs_y2 = _setval;
-						capability.syncPlayerVariables(entity);
-					});
-				}
-				{
-					double _setval = entity.getZ() + 125 * entity.getLookAngle().z;
-					entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
-						capability.wcs_z2 = _setval;
-						capability.syncPlayerVariables(entity);
-					});
-				}
-				WorldSlashExecuteProcedure.execute(world, entity);
-				{
-					double _setval = 0;
-					entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
-						capability.wcs_power = _setval;
-						capability.syncPlayerVariables(entity);
-					});
-				}
-				ReleaseArmAnimationProcedure.execute(entity);
 			} else if (((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).current_moveset).equals("sukuna_shrine")) {
 				ReleaseArmAnimationProcedure.execute(entity);
 				MalevolentShrineSummonProcedure.execute(entity.level(), entity);
+				{
+					double _setval = 1;
+					entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+						capability.domain_image_2 = _setval;
+						capability.syncPlayerVariables(entity);
+					});
+				}
+				if (world instanceof Level _level) {
+					if (!_level.isClientSide()) {
+						_level.playSound(null, BlockPos.containing(x, y, z), ForgeRegistries.SOUND_EVENTS.getValue(new ResourceLocation("jjk_strongest:sukuna_domain_act")), SoundSource.PLAYERS, 1, 1);
+					} else {
+						_level.playLocalSound(x, y, z, ForgeRegistries.SOUND_EVENTS.getValue(new ResourceLocation("jjk_strongest:sukuna_domain_act")), SoundSource.PLAYERS, 1, 1, false);
+					}
+				}
+				TriggerScreenShakeProcedure.execute((Level) world, entity, 5, 3.0f);
 			}
 			{
 				double _setval = 0;

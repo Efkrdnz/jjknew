@@ -15,6 +15,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.Minecraft;
 
+import net.mcreator.jjkstrongest.procedures.ReturnBoolGojoProcedure;
 import net.mcreator.jjkstrongest.network.JjkStrongestModVariables;
 
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -43,7 +44,7 @@ public class DomainScreenEffectRendererOverlay {
 		RenderSystem.setShader(GameRenderer::getPositionTexShader);
 		RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
 		RenderSystem.setShaderColor(1, 1, 1, (float) (entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).domain_image_1);
-		if (true) {
+		if (ReturnBoolGojoProcedure.execute(entity)) {
 			event.getGuiGraphics().blit(new ResourceLocation("jjk_strongest:textures/screens/unlimited_void_hand_1.png"), w / 2 + -50, h / 2 + -98, 0, 0, 100, 100, 100, 100);
 		}
 		RenderSystem.depthMask(true);

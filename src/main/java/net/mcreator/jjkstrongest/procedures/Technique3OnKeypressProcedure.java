@@ -94,6 +94,8 @@ public class Technique3OnKeypressProcedure {
 			} else if (((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).current_moveset).equals("sukuna_fuga")) {
 				entity.getPersistentData().putString("chanting", "flame_arrow");
 				PlayArmAnimationProcedure.execute(entity, "fuga_hold", true);
+			} else if (((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).current_moveset).equals("sukuna_wcs")) {
+				entity.getPersistentData().putString("chanting", "wcs3");
 			}
 		}
 		if (((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).current_moveset).contains("melee")) {

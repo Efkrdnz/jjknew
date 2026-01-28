@@ -146,10 +146,6 @@
             "type": "entity"
           },
           {
-            "name": "sourceentity",
-            "type": "entity"
-          },
-          {
             "name": "x",
             "type": "number"
           },
@@ -177,8 +173,8 @@
       "registry_name": "infinity_particle",
       "metadata": {
         "files": [
-          "src/main/java/net/mcreator/jjkstrongest/client/particle/InfinityParticleParticle.java",
-          "src/main/resources/assets/jjk_strongest/particles/infinity_particle.json"
+          "src/main/resources/assets/jjk_strongest/particles/infinity_particle.json",
+          "src/main/java/net/mcreator/jjkstrongest/client/particle/InfinityParticleParticle.java"
         ]
       },
       "path": "~/Techniques and Assets/Gojo/Infinity"
@@ -228,9 +224,9 @@
         "files": [
           "src/main/java/net/mcreator/jjkstrongest/entity/model/LapseBlueModel.java",
           "src/main/java/net/mcreator/jjkstrongest/entity/layer/LapseBlueLayer.java",
-          "src/main/java/net/mcreator/jjkstrongest/entity/LapseBlueEntity.java",
           "src/main/resources/assets/jjk_strongest/models/item/lapse_blue_spawn_egg.json",
-          "src/main/java/net/mcreator/jjkstrongest/client/renderer/LapseBlueRenderer.java"
+          "src/main/java/net/mcreator/jjkstrongest/client/renderer/LapseBlueRenderer.java",
+          "src/main/java/net/mcreator/jjkstrongest/entity/LapseBlueEntity.java"
         ]
       },
       "path": "~/Techniques and Assets/Gojo/LapseBlue"
@@ -281,11 +277,11 @@
       "registry_name": "reversal_red",
       "metadata": {
         "files": [
-          "src/main/java/net/mcreator/jjkstrongest/entity/ReversalRedEntity.java",
-          "src/main/java/net/mcreator/jjkstrongest/client/renderer/ReversalRedRenderer.java",
-          "src/main/java/net/mcreator/jjkstrongest/entity/layer/ReversalRedLayer.java",
           "src/main/resources/assets/jjk_strongest/models/item/reversal_red_spawn_egg.json",
-          "src/main/java/net/mcreator/jjkstrongest/entity/model/ReversalRedModel.java"
+          "src/main/java/net/mcreator/jjkstrongest/entity/model/ReversalRedModel.java",
+          "src/main/java/net/mcreator/jjkstrongest/client/renderer/ReversalRedRenderer.java",
+          "src/main/java/net/mcreator/jjkstrongest/entity/ReversalRedEntity.java",
+          "src/main/java/net/mcreator/jjkstrongest/entity/layer/ReversalRedLayer.java"
         ]
       },
       "path": "~/Techniques and Assets/Gojo/ReversalRed"
@@ -536,12 +532,12 @@
       "registry_name": "custom_portal",
       "metadata": {
         "files": [
-          "src/main/java/net/mcreator/jjkstrongest/block/CustomPortalBlock.java",
           "src/main/resources/assets/jjk_strongest/models/block/custom_portal.json",
-          "src/main/resources/assets/jjk_strongest/models/item/custom_portal.json",
+          "src/main/resources/data/jjk_strongest/loot_tables/blocks/custom_portal.json",
           "src/main/java/net/mcreator/jjkstrongest/block/entity/CustomPortalBlockEntity.java",
           "src/main/resources/assets/jjk_strongest/blockstates/custom_portal.json",
-          "src/main/resources/data/jjk_strongest/loot_tables/blocks/custom_portal.json"
+          "src/main/java/net/mcreator/jjkstrongest/block/CustomPortalBlock.java",
+          "src/main/resources/assets/jjk_strongest/models/item/custom_portal.json"
         ]
       },
       "path": "~/Techniques and Assets/Gojo/Infinite Void/banishment"
@@ -678,10 +674,10 @@
       "registry_name": "hollow_purple_charge",
       "metadata": {
         "files": [
-          "src/main/java/net/mcreator/jjkstrongest/entity/layer/HollowPurpleChargeLayer.java",
           "src/main/java/net/mcreator/jjkstrongest/entity/model/HollowPurpleChargeModel.java",
-          "src/main/java/net/mcreator/jjkstrongest/entity/HollowPurpleChargeEntity.java",
-          "src/main/java/net/mcreator/jjkstrongest/client/renderer/HollowPurpleChargeRenderer.java"
+          "src/main/java/net/mcreator/jjkstrongest/entity/layer/HollowPurpleChargeLayer.java",
+          "src/main/java/net/mcreator/jjkstrongest/client/renderer/HollowPurpleChargeRenderer.java",
+          "src/main/java/net/mcreator/jjkstrongest/entity/HollowPurpleChargeEntity.java"
         ]
       },
       "path": "~/Techniques and Assets/Gojo/HollowPurple"
@@ -718,9 +714,9 @@
       "metadata": {
         "files": [
           "src/main/java/net/mcreator/jjkstrongest/entity/model/HollowPurpleProjectileModel.java",
+          "src/main/java/net/mcreator/jjkstrongest/client/renderer/HollowPurpleProjectileRenderer.java",
           "src/main/java/net/mcreator/jjkstrongest/entity/layer/HollowPurpleProjectileLayer.java",
-          "src/main/java/net/mcreator/jjkstrongest/entity/HollowPurpleProjectileEntity.java",
-          "src/main/java/net/mcreator/jjkstrongest/client/renderer/HollowPurpleProjectileRenderer.java"
+          "src/main/java/net/mcreator/jjkstrongest/entity/HollowPurpleProjectileEntity.java"
         ]
       },
       "path": "~/Techniques and Assets/Gojo/HollowPurple"
@@ -843,10 +839,10 @@
       "registry_name": "infinite_hollow",
       "metadata": {
         "files": [
-          "src/main/java/net/mcreator/jjkstrongest/client/renderer/InfiniteHollowRenderer.java",
+          "src/main/java/net/mcreator/jjkstrongest/entity/InfiniteHollowEntity.java",
           "src/main/java/net/mcreator/jjkstrongest/entity/model/InfiniteHollowModel.java",
           "src/main/java/net/mcreator/jjkstrongest/entity/layer/InfiniteHollowLayer.java",
-          "src/main/java/net/mcreator/jjkstrongest/entity/InfiniteHollowEntity.java"
+          "src/main/java/net/mcreator/jjkstrongest/client/renderer/InfiniteHollowRenderer.java"
         ]
       },
       "path": "~/Techniques and Assets/Gojo/HollowPurple/InfiniteHollow"
@@ -1345,8 +1341,8 @@
       "registry_name": "red_02",
       "metadata": {
         "files": [
-          "src/main/java/net/mcreator/jjkstrongest/client/particle/Red02Particle.java",
-          "src/main/resources/assets/jjk_strongest/particles/red_02.json"
+          "src/main/resources/assets/jjk_strongest/particles/red_02.json",
+          "src/main/java/net/mcreator/jjkstrongest/client/particle/Red02Particle.java"
         ]
       },
       "path": "~/Techniques and Assets/Gojo/ReversalRed"
@@ -1359,8 +1355,8 @@
       "registry_name": "red_03",
       "metadata": {
         "files": [
-          "src/main/java/net/mcreator/jjkstrongest/client/particle/Red03Particle.java",
-          "src/main/resources/assets/jjk_strongest/particles/red_03.json"
+          "src/main/resources/assets/jjk_strongest/particles/red_03.json",
+          "src/main/java/net/mcreator/jjkstrongest/client/particle/Red03Particle.java"
         ]
       },
       "path": "~/Techniques and Assets/Gojo/ReversalRed"
@@ -1634,8 +1630,8 @@
       "registry_name": "purple_02",
       "metadata": {
         "files": [
-          "src/main/java/net/mcreator/jjkstrongest/client/particle/Purple02Particle.java",
-          "src/main/resources/assets/jjk_strongest/particles/purple_02.json"
+          "src/main/resources/assets/jjk_strongest/particles/purple_02.json",
+          "src/main/java/net/mcreator/jjkstrongest/client/particle/Purple02Particle.java"
         ]
       },
       "path": "~/Techniques and Assets/Gojo/HollowPurple"
@@ -2611,6 +2607,10 @@
           {
             "name": "entity",
             "type": "entity"
+          },
+          {
+            "name": "world",
+            "type": "world"
           }
         ]
       },
@@ -2968,8 +2968,8 @@
       "registry_name": "particle_hp_charge",
       "metadata": {
         "files": [
-          "src/main/resources/assets/jjk_strongest/particles/particle_hp_charge.json",
-          "src/main/java/net/mcreator/jjkstrongest/client/particle/ParticleHPChargeParticle.java"
+          "src/main/java/net/mcreator/jjkstrongest/client/particle/ParticleHPChargeParticle.java",
+          "src/main/resources/assets/jjk_strongest/particles/particle_hp_charge.json"
         ]
       },
       "path": "~/Techniques and Assets/Gojo/HollowPurple"
@@ -3056,7 +3056,7 @@
           "src/main/java/net/mcreator/jjkstrongest/JjkShaderManager.java"
         ]
       },
-      "path": "~/Techniques and Assets/Sukuna/Slash Effect/new"
+      "path": "~/Techniques and Assets"
     },
     {
       "name": "SpawnDismantleSlash",
@@ -3239,9 +3239,8 @@
       "registry_name": "malevolent_shrine",
       "metadata": {
         "files": [
-          "src/main/java/net/mcreator/jjkstrongest/entity/MalevolentShrineEntity.java",
           "src/main/java/net/mcreator/jjkstrongest/client/renderer/MalevolentShrineRenderer.java",
-          "src/main/resources/data/jjk_strongest/forge/biome_modifier/malevolent_shrine_biome_modifier.json"
+          "src/main/java/net/mcreator/jjkstrongest/entity/MalevolentShrineEntity.java"
         ]
       },
       "path": "~/Techniques and Assets/Sukuna/Shrine"
@@ -3432,10 +3431,10 @@
       "metadata": {
         "files": [
           "src/main/resources/data/jjk_strongest/loot_tables/blocks/domain_barrier.json",
-          "src/main/resources/assets/jjk_strongest/models/item/domain_barrier.json",
           "src/main/resources/assets/jjk_strongest/models/block/domain_barrier.json",
-          "src/main/resources/assets/jjk_strongest/blockstates/domain_barrier.json",
-          "src/main/java/net/mcreator/jjkstrongest/block/DomainBarrierBlock.java"
+          "src/main/resources/assets/jjk_strongest/models/item/domain_barrier.json",
+          "src/main/java/net/mcreator/jjkstrongest/block/DomainBarrierBlock.java",
+          "src/main/resources/assets/jjk_strongest/blockstates/domain_barrier.json"
         ]
       },
       "path": "~/Techniques and Assets/Gojo/Infinite Void"
@@ -3566,19 +3565,6 @@
       "metadata": {
         "files": [
           "src/main/java/net/mcreator/jjkstrongest/client/screens/DomainScreenEffectRendererOverlay.java"
-        ]
-      },
-      "path": "~/Techniques and Assets/Gojo/Infinite Void"
-    },
-    {
-      "name": "DomainScreenEffectRenderer2",
-      "type": "overlay",
-      "compiles": true,
-      "locked_code": true,
-      "registry_name": "domain_screen_effect_renderer_2",
-      "metadata": {
-        "files": [
-          "src/main/java/net/mcreator/jjkstrongest/client/screens/DomainScreenEffectRenderer2Overlay.java"
         ]
       },
       "path": "~/Techniques and Assets/Gojo/Infinite Void"
@@ -3850,6 +3836,389 @@
         ]
       },
       "path": "~/Techniques and Assets/Sukuna/Furnace"
+    },
+    {
+      "name": "WCSProgression",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "wcs_progression",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/WCSProgressionProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          }
+        ]
+      },
+      "path": "~/OnPlayerTick/Chants/WCS"
+    },
+    {
+      "name": "WCSProgressionIndicator",
+      "type": "overlay",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "wcs_progression_indicator",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/client/screens/WCSProgressionIndicatorOverlay.java"
+        ]
+      },
+      "path": "~/OnPlayerTick/Chants/WCS"
+    },
+    {
+      "name": "WCSProgressionReturn",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "wcs_progression_return",
+      "metadata": {
+        "return_type": "logic",
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/WCSProgressionReturnProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          }
+        ]
+      },
+      "path": "~/OnPlayerTick/Chants/WCS"
+    },
+    {
+      "name": "WCSProgressionReturn2",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "wcs_progression_return_2",
+      "metadata": {
+        "return_type": "logic",
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/WCSProgressionReturn2Procedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          }
+        ]
+      },
+      "path": "~/OnPlayerTick/Chants/WCS"
+    },
+    {
+      "name": "WCSProgressionReturn3",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "wcs_progression_return_3",
+      "metadata": {
+        "return_type": "logic",
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/WCSProgressionReturn3Procedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          }
+        ]
+      },
+      "path": "~/OnPlayerTick/Chants/WCS"
+    },
+    {
+      "name": "WCSProgressionReturn1",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "wcs_progression_return_1",
+      "metadata": {
+        "return_type": "logic",
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/WCSProgressionReturn1Procedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          }
+        ]
+      },
+      "path": "~/OnPlayerTick/Chants/WCS"
+    },
+    {
+      "name": "DomainCastOverlayGojo",
+      "type": "overlay",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "domain_cast_overlay_gojo",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/client/screens/DomainCastOverlayGojoOverlay.java"
+        ]
+      },
+      "path": "~/Techniques and Assets/Gojo/Infinite Void"
+    },
+    {
+      "name": "DomainCastOverlaySukuna",
+      "type": "overlay",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "domain_cast_overlay_sukuna",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/client/screens/DomainCastOverlaySukunaOverlay.java"
+        ]
+      },
+      "path": "~/Techniques and Assets/Sukuna/Shrine"
+    },
+    {
+      "name": "ReturnBoolGojo",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "return_bool_gojo",
+      "metadata": {
+        "return_type": "logic",
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/ReturnBoolGojoProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          }
+        ]
+      },
+      "path": "~/Techniques and Assets"
+    },
+    {
+      "name": "ReturnBookSukuna",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "return_book_sukuna",
+      "metadata": {
+        "return_type": "logic",
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/ReturnBookSukunaProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          }
+        ]
+      },
+      "path": "~/Techniques and Assets"
+    },
+    {
+      "name": "MalevolentShrineSlashRenderer",
+      "type": "code",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "malevolent_shrine_slash_renderer",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/MalevolentShrineSlashRenderer.java"
+        ]
+      }
+    },
+    {
+      "name": "MalevolentShrineSlashManager",
+      "type": "code",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "malevolent_shrine_slash_manager",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/MalevolentShrineSlashManager.java"
+        ]
+      }
+    },
+    {
+      "name": "MalevolentShrineClientTicker",
+      "type": "code",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "malevolent_shrine_client_ticker",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/MalevolentShrineClientTicker.java"
+        ]
+      }
+    },
+    {
+      "name": "SpawnDomainSlashPacket",
+      "type": "code",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "spawn_domain_slash_packet",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/SpawnDomainSlashPacket.java"
+        ]
+      }
+    },
+    {
+      "name": "DomainSlashNetworkHandler",
+      "type": "code",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "domain_slash_network_handler",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/DomainSlashNetworkHandler.java"
+        ]
+      }
+    },
+    {
+      "name": "SkyBoxOverrideShrine",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "sky_box_override_shrine",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/SkyBoxOverrideShrineProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          },
+          {
+            "name": "world",
+            "type": "world"
+          }
+        ]
+      },
+      "path": "~/Techniques and Assets/Sukuna/Shrine"
+    },
+    {
+      "name": "ShrineScreenshake",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "shrine_screenshake",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/ShrineScreenshakeProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          },
+          {
+            "name": "x",
+            "type": "number"
+          },
+          {
+            "name": "y",
+            "type": "number"
+          },
+          {
+            "name": "z",
+            "type": "number"
+          },
+          {
+            "name": "world",
+            "type": "world"
+          }
+        ]
+      },
+      "path": "~/Techniques and Assets/Sukuna/Shrine"
+    },
+    {
+      "name": "DomainsDamageCancel",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "domains_damage_cancel",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/DomainsDamageCancelProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          }
+        ]
+      },
+      "path": "~/Techniques and Assets"
+    },
+    {
+      "name": "HollowPurpleBig",
+      "type": "livingentity",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "hollow_purple_big",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/entity/HollowPurpleBigEntity.java",
+          "src/main/java/net/mcreator/jjkstrongest/client/renderer/HollowPurpleBigRenderer.java"
+        ]
+      },
+      "path": "~/Techniques and Assets/Gojo/HollowPurple"
+    },
+    {
+      "name": "RenderHollowPurpleSphere",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "render_hollow_purple_sphere",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/RenderHollowPurpleSphereProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Techniques and Assets/Gojo/HollowPurple"
+    },
+    {
+      "name": "RenderPurpleChargeOverlay",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "render_purple_charge_overlay",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/RenderPurpleChargeOverlayProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Techniques and Assets/Gojo/HollowPurple"
+    },
+    {
+      "name": "PurpleChargeOverlayRenderer",
+      "type": "code",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "purple_charge_overlay_renderer",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/PurpleChargeOverlayRenderer.java"
+        ]
+      }
+    },
+    {
+      "name": "RenderPurpleChargeFirstPerson",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": true,
+      "registry_name": "render_purple_charge_first_person",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/jjkstrongest/procedures/RenderPurpleChargeFirstPersonProcedure.java"
+        ],
+        "dependencies": []
+      },
+      "path": "~/Techniques and Assets/Gojo/HollowPurple"
     }
   ],
   "variable_elements": [
@@ -4280,61 +4649,7 @@
       "value": "0"
     },
     {
-      "name": "fa_tx",
-      "type": "number",
-      "scope": "player_lifetime",
-      "value": "0"
-    },
-    {
-      "name": "fa_ty",
-      "type": "number",
-      "scope": "player_lifetime",
-      "value": "0"
-    },
-    {
-      "name": "fa_tz",
-      "type": "number",
-      "scope": "player_lifetime",
-      "value": "0"
-    },
-    {
-      "name": "fa_rx",
-      "type": "number",
-      "scope": "player_lifetime",
-      "value": "0"
-    },
-    {
-      "name": "fa_ry",
-      "type": "number",
-      "scope": "player_lifetime",
-      "value": "0"
-    },
-    {
-      "name": "fa_rz",
-      "type": "number",
-      "scope": "player_lifetime",
-      "value": "0"
-    },
-    {
-      "name": "fa_scale",
-      "type": "number",
-      "scope": "player_lifetime",
-      "value": "0"
-    },
-    {
-      "name": "fa_alpha",
-      "type": "number",
-      "scope": "player_lifetime",
-      "value": "0"
-    },
-    {
-      "name": "fa_cross_yaw",
-      "type": "number",
-      "scope": "player_lifetime",
-      "value": "0"
-    },
-    {
-      "name": "fa_flip",
+      "name": "wcs_chant_progress",
       "type": "number",
       "scope": "player_lifetime",
       "value": "0"
@@ -4364,6 +4679,22 @@
       ],
       "category": "neutral",
       "subtitle": "blackflash"
+    },
+    {
+      "name": "sukuna_domain_ost",
+      "files": [
+        "sukuna_domain_ost"
+      ],
+      "category": "ambient",
+      "subtitle": "Malevolent Shrine"
+    },
+    {
+      "name": "sukuna_domain_act",
+      "files": [
+        "sukuna_shrine_activation"
+      ],
+      "category": "neutral",
+      "subtitle": "Domain Expansion"
     }
   ],
   "tag_elements": {
@@ -4388,6 +4719,7 @@
       "subtitles.hollowpurple": "Imaginary Technique Purple!!!",
       "subtitles.blackflash": "blackflash",
       "entity.jjk_strongest.lapse_blue": "Lapse Blue",
+      "entity.jjk_strongest.hollow_purple_big": "Hollow Purple Big",
       "item.jjk_strongest.bf_test_item": "BF Test Item",
       "entity.jjk_strongest.reversal_red": "Reversal Red",
       "block.jjk_strongest.domain_barrier": "Domain Barrier",
@@ -4408,6 +4740,8 @@
       "item.jjk_strongest.reversal_red_spawn_egg": "Reversal Red Spawn Egg",
       "entity.jjk_strongest.hollow_purple_charge": "Hollow Purple Charge",
       "entity.jjk_strongest.hollow_purple_projectile": "Hollow Purple Projectile",
+      "subtitles.sukuna_domain_ost": "Malevolent Shrine",
+      "subtitles.sukuna_domain_act": "Domain Expansion",
       "item.jjk_strongest.hollow_purple_charge_spawn_egg": "Hollow Purple Charge Spawn Egg",
       "death.attack.jujutsu.player": "%1$s died whilst trying to escape %2$s",
       "item.jjk_strongest.lapse_blue_spawn_egg": "Lapse Blue Spawn Egg",
@@ -4570,7 +4904,12 @@
         "children": [
           {
             "name": "Chants",
-            "children": []
+            "children": [
+              {
+                "name": "WCS",
+                "children": []
+              }
+            ]
           },
           {
             "name": "Player Health ADJ",
@@ -4601,10 +4940,6 @@
       },
       {
         "name": "Binding Vow",
-        "children": []
-      },
-      {
-        "name": "Slicing",
         "children": []
       },
       {

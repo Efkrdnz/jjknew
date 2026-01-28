@@ -15,13 +15,14 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.Minecraft;
 
+import net.mcreator.jjkstrongest.procedures.ReturnBoolGojoProcedure;
 import net.mcreator.jjkstrongest.network.JjkStrongestModVariables;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.platform.GlStateManager;
 
 @Mod.EventBusSubscriber({Dist.CLIENT})
-public class DomainScreenEffectRenderer2Overlay {
+public class DomainCastOverlayGojoOverlay {
 	@SubscribeEvent(priority = EventPriority.NORMAL)
 	public static void eventHandler(RenderGuiEvent.Pre event) {
 		int w = event.getWindow().getGuiScaledWidth();
@@ -43,7 +44,7 @@ public class DomainScreenEffectRenderer2Overlay {
 		RenderSystem.setShader(GameRenderer::getPositionTexShader);
 		RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
 		RenderSystem.setShaderColor(1, 1, 1, (float) (entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).domain_image_2);
-		if (true) {
+		if (ReturnBoolGojoProcedure.execute(entity)) {
 			event.getGuiGraphics().blit(new ResourceLocation("jjk_strongest:textures/screens/unlimited_void_hand_2.png"), w / 2 + -50, h / 2 + -98, 0, 0, 100, 100, 100, 100);
 		}
 		RenderSystem.depthMask(true);

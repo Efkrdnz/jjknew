@@ -15,6 +15,7 @@ import net.mcreator.jjkstrongest.client.renderer.LapseBlueRenderer;
 import net.mcreator.jjkstrongest.client.renderer.InfiniteHollowRenderer;
 import net.mcreator.jjkstrongest.client.renderer.HollowPurpleProjectileRenderer;
 import net.mcreator.jjkstrongest.client.renderer.HollowPurpleChargeRenderer;
+import net.mcreator.jjkstrongest.client.renderer.HollowPurpleBigRenderer;
 import net.mcreator.jjkstrongest.client.renderer.FlameArrowRenderer;
 import net.mcreator.jjkstrongest.client.renderer.FlameArrowExplosionRenderer;
 import net.mcreator.jjkstrongest.client.renderer.DomainUVRenderer;
@@ -36,5 +37,6 @@ public class JjkStrongestModEntityRenderers {
 		event.registerEntityRenderer(JjkStrongestModEntities.DOMAIN_UV.get(), DomainUVRenderer::new);
 		event.registerEntityRenderer(JjkStrongestModEntities.FLAME_ARROW.get(), FlameArrowRenderer::new);
 		event.registerEntityRenderer(JjkStrongestModEntities.FLAME_ARROW_EXPLOSION.get(), FlameArrowExplosionRenderer::new);
+		event.registerEntityRenderer(JjkStrongestModEntities.HOLLOW_PURPLE_BIG.get(), HollowPurpleBigRenderer::new);
 	}
 }

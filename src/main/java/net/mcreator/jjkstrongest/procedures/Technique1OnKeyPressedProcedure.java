@@ -20,11 +20,13 @@ public class Technique1OnKeyPressedProcedure {
 				ReleaseArmAnimationProcedure.execute(entity);
 				entity.getPersistentData().putString("chanting", "");
 				CleaveHoldCancelProcedure.execute(entity);
+			} else if (((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).current_moveset).equals("sukuna_wcs")) {
+				entity.getPersistentData().putString("chanting", "");
 			}
 		}
 		if (((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).sorcerer).equals("gojo")) {
 			if (((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).current_moveset).equals("gojo_limitless")) {
-				if (entity instanceof LivingEntity _livEnt2 && _livEnt2.hasEffect(JjkStrongestModMobEffects.INFINITY.get())) {
+				if (entity instanceof LivingEntity _livEnt3 && _livEnt3.hasEffect(JjkStrongestModMobEffects.INFINITY.get())) {
 					if (entity instanceof LivingEntity _entity)
 						_entity.removeEffect(JjkStrongestModMobEffects.INFINITY.get());
 				} else {

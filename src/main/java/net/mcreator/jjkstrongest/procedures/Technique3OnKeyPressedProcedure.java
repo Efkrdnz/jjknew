@@ -21,8 +21,8 @@ import net.mcreator.jjkstrongest.network.JjkStrongestModVariables;
 import net.mcreator.jjkstrongest.init.JjkStrongestModMobEffects;
 import net.mcreator.jjkstrongest.init.JjkStrongestModEntities;
 import net.mcreator.jjkstrongest.entity.LapseBlueEntity;
-import net.mcreator.jjkstrongest.entity.HollowPurpleProjectileEntity;
 import net.mcreator.jjkstrongest.entity.HollowPurpleChargeEntity;
+import net.mcreator.jjkstrongest.entity.HollowPurpleBigEntity;
 
 import java.util.Comparator;
 
@@ -173,16 +173,17 @@ public class Technique3OnKeyPressedProcedure {
 						if (entity instanceof Player _player && !_player.level().isClientSide())
 							_player.displayClientMessage(Component.literal("dismissed"), false);
 						entity.getPersistentData().putString("chanting", "");
+						ReleaseArmAnimationProcedure.execute(entity);
 					} else {
 						ReleaseArmAnimationProcedure.execute(entity);
 						if (world instanceof ServerLevel _serverLevel) {
-							Entity entityinstance = JjkStrongestModEntities.HOLLOW_PURPLE_PROJECTILE.get().create(_serverLevel, null, null,
+							Entity entityinstance = JjkStrongestModEntities.HOLLOW_PURPLE_BIG.get().create(_serverLevel, null, null,
 									BlockPos.containing(entity.getX() + entity.getLookAngle().x * 3, entity.getY() + 1.6 + entity.getLookAngle().y * 3, entity.getZ() + entity.getLookAngle().z * 3), MobSpawnType.MOB_SUMMONED, false, false);
 							if (entityinstance != null) {
 								entityinstance.setYRot(world.getRandom().nextFloat() * 360.0F);
 								entityinstance.getPersistentData().putDouble("TechniquePower", (entity.getPersistentData().getDouble("TechniquePower")));
-								if (entityinstance instanceof HollowPurpleProjectileEntity _datEntSetI)
-									_datEntSetI.getEntityData().set(HollowPurpleProjectileEntity.DATA_size10, (int) (10 * entity.getPersistentData().getDouble("TechniquePower")));
+								if (entityinstance instanceof HollowPurpleBigEntity _datEntSetI)
+									_datEntSetI.getEntityData().set(HollowPurpleBigEntity.DATA_size10, (int) (10 * entity.getPersistentData().getDouble("TechniquePower")));
 								entityinstance.getPersistentData().putString("caster", (entity.getDisplayName().getString()));
 								_serverLevel.addFreshEntity(entityinstance);
 							}
@@ -242,6 +243,8 @@ public class Technique3OnKeyPressedProcedure {
 				ReleaseArmAnimationProcedure.execute(entity);
 				entity.getPersistentData().putString("chanting", "");
 				FlameArrowShootExecuteProcedure.execute(entity);
+			} else if (((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).current_moveset).equals("sukuna_wcs")) {
+				entity.getPersistentData().putString("chanting", "");
 			}
 			{
 				double _setval = 0;

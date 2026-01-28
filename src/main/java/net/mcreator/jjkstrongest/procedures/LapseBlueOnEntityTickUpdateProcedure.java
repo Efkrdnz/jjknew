@@ -29,6 +29,7 @@ public class LapseBlueOnEntityTickUpdateProcedure {
 		if (entity == null)
 			return;
 		double attraction = 0;
+		boolean move = !entity.getPersistentData().getBoolean("stay");
 		entity.setNoGravity(true);
 		entity.setDeltaMovement(new Vec3(0, 0, 0));
 		entity.getPersistentData().putDouble("BlueLife", (entity.getPersistentData().getDouble("BlueLife") + 1));

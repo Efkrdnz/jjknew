@@ -31,6 +31,8 @@ public class Technique2OnKeyPressProcedure {
 				});
 			}
 			PlayArmAnimationProcedure.execute(entity, "dismantle", true);
+		} else if (((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).current_moveset).equals("sukuna_wcs")) {
+			entity.getPersistentData().putString("chanting", "wcs2");
 		}
 	}
 }

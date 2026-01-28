@@ -96,6 +96,8 @@ public class Technique1OnKeyPressProcedure {
 			entity.getPersistentData().putString("chanting", "cleave");
 			PlayArmAnimationProcedure.execute(entity, "cleave", true);
 			CleaveHoldStartProcedure.execute(entity.level(), entity);
+		} else if (((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).current_moveset).equals("sukuna_wcs")) {
+			entity.getPersistentData().putString("chanting", "wcs1");
 		}
 	}
 }

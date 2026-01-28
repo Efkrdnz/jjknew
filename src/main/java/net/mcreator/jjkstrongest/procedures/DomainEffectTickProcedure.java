@@ -29,7 +29,7 @@ public class DomainEffectTickProcedure {
 			return;
 		if ((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).domain_image_1 > 0) {
 			{
-				double _setval = Math.min(1, Math.max((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).domain_image_1, 0)) - 0.05;
+				double _setval = Math.min(1, Math.max((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).domain_image_1, 0)) - 0.025;
 				entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
 					capability.domain_image_1 = _setval;
 					capability.syncPlayerVariables(entity);
@@ -38,7 +38,7 @@ public class DomainEffectTickProcedure {
 		}
 		if ((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).domain_image_2 > 0) {
 			{
-				double _setval = Math.min(1, Math.max((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).domain_image_2, 0)) - 0.1;
+				double _setval = Math.min(1, Math.max((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).domain_image_2, 0)) - 0.05;
 				entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
 					capability.domain_image_2 = _setval;
 					capability.syncPlayerVariables(entity);

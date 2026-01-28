@@ -22,6 +22,7 @@ import net.mcreator.jjkstrongest.entity.LapseBlueEntity;
 import net.mcreator.jjkstrongest.entity.InfiniteHollowEntity;
 import net.mcreator.jjkstrongest.entity.HollowPurpleProjectileEntity;
 import net.mcreator.jjkstrongest.entity.HollowPurpleChargeEntity;
+import net.mcreator.jjkstrongest.entity.HollowPurpleBigEntity;
 import net.mcreator.jjkstrongest.entity.FlameArrowExplosionEntity;
 import net.mcreator.jjkstrongest.entity.FlameArrowEntity;
 import net.mcreator.jjkstrongest.entity.DomainUVEntity;
@@ -55,6 +56,8 @@ public class JjkStrongestModEntities {
 			EntityType.Builder.<FlameArrowEntity>of(FlameArrowEntity::new, MobCategory.MISC).setCustomClientFactory(FlameArrowEntity::new).setShouldReceiveVelocityUpdates(true).setTrackingRange(64).setUpdateInterval(1).sized(0.5f, 0.5f));
 	public static final RegistryObject<EntityType<FlameArrowExplosionEntity>> FLAME_ARROW_EXPLOSION = register("flame_arrow_explosion", EntityType.Builder.<FlameArrowExplosionEntity>of(FlameArrowExplosionEntity::new, MobCategory.MONSTER)
 			.setShouldReceiveVelocityUpdates(true).setTrackingRange(64).setUpdateInterval(3).setCustomClientFactory(FlameArrowExplosionEntity::new).fireImmune().sized(0.1f, 0.1f));
+	public static final RegistryObject<EntityType<HollowPurpleBigEntity>> HOLLOW_PURPLE_BIG = register("hollow_purple_big", EntityType.Builder.<HollowPurpleBigEntity>of(HollowPurpleBigEntity::new, MobCategory.MONSTER)
+			.setShouldReceiveVelocityUpdates(true).setTrackingRange(64).setUpdateInterval(3).setCustomClientFactory(HollowPurpleBigEntity::new).fireImmune().sized(0.6f, 0.6f));
 
 	private static <T extends Entity> RegistryObject<EntityType<T>> register(String registryname, EntityType.Builder<T> entityTypeBuilder) {
 		return REGISTRY.register(registryname, () -> (EntityType<T>) entityTypeBuilder.build(registryname));
@@ -72,6 +75,7 @@ public class JjkStrongestModEntities {
 			MalevolentShrineEntity.init();
 			DomainUVEntity.init();
 			FlameArrowExplosionEntity.init();
+			HollowPurpleBigEntity.init();
 		});
 	}
 
@@ -86,5 +90,6 @@ public class JjkStrongestModEntities {
 		event.put(MALEVOLENT_SHRINE.get(), MalevolentShrineEntity.createAttributes().build());
 		event.put(DOMAIN_UV.get(), DomainUVEntity.createAttributes().build());
 		event.put(FLAME_ARROW_EXPLOSION.get(), FlameArrowExplosionEntity.createAttributes().build());
+		event.put(HOLLOW_PURPLE_BIG.get(), HollowPurpleBigEntity.createAttributes().build());
 	}
 }

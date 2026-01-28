@@ -64,7 +64,7 @@ public class SkyColorOverrideDomainProcedure {
 			return;
 		if (entity instanceof Player) {
 			if (!world.getEntitiesOfClass(MalevolentShrineEntity.class, AABB.ofSize(new Vec3((entity.getX()), (entity.getY()), (entity.getZ())), 200, 200, 200), e -> true).isEmpty()) {
-				setColor((float) 0.5, 255 << 24 | 222 << 16 | 0 << 8 | 0);
+				setColor((float) 1.5, 255 << 24 | 222 << 16 | 0 << 8 | 0);
 			}
 		}
 	}

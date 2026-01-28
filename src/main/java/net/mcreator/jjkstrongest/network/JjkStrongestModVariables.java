@@ -140,16 +140,7 @@ public class JjkStrongestModVariables {
 				clone.using_red = original.using_red;
 				clone.domain_image_1 = original.domain_image_1;
 				clone.domain_image_2 = original.domain_image_2;
-				clone.fa_tx = original.fa_tx;
-				clone.fa_ty = original.fa_ty;
-				clone.fa_tz = original.fa_tz;
-				clone.fa_rx = original.fa_rx;
-				clone.fa_ry = original.fa_ry;
-				clone.fa_rz = original.fa_rz;
-				clone.fa_scale = original.fa_scale;
-				clone.fa_alpha = original.fa_alpha;
-				clone.fa_cross_yaw = original.fa_cross_yaw;
-				clone.fa_flip = original.fa_flip;
+				clone.wcs_chant_progress = original.wcs_chant_progress;
 			}
 		}
 	}
@@ -256,16 +247,7 @@ public class JjkStrongestModVariables {
 		public boolean cleave_melee_toggle = false;
 		public double domain_image_1 = 0;
 		public double domain_image_2 = 0;
-		public double fa_tx = 0;
-		public double fa_ty = 0;
-		public double fa_tz = 0;
-		public double fa_rx = 0;
-		public double fa_ry = 0;
-		public double fa_rz = 0;
-		public double fa_scale = 0;
-		public double fa_alpha = 0;
-		public double fa_cross_yaw = 0;
-		public double fa_flip = 0;
+		public double wcs_chant_progress = 0;
 
 		public void syncPlayerVariables(Entity entity) {
 			if (entity instanceof ServerPlayer serverPlayer)
@@ -345,16 +327,7 @@ public class JjkStrongestModVariables {
 			nbt.putBoolean("cleave_melee_toggle", cleave_melee_toggle);
 			nbt.putDouble("domain_image_1", domain_image_1);
 			nbt.putDouble("domain_image_2", domain_image_2);
-			nbt.putDouble("fa_tx", fa_tx);
-			nbt.putDouble("fa_ty", fa_ty);
-			nbt.putDouble("fa_tz", fa_tz);
-			nbt.putDouble("fa_rx", fa_rx);
-			nbt.putDouble("fa_ry", fa_ry);
-			nbt.putDouble("fa_rz", fa_rz);
-			nbt.putDouble("fa_scale", fa_scale);
-			nbt.putDouble("fa_alpha", fa_alpha);
-			nbt.putDouble("fa_cross_yaw", fa_cross_yaw);
-			nbt.putDouble("fa_flip", fa_flip);
+			nbt.putDouble("wcs_chant_progress", wcs_chant_progress);
 			return nbt;
 		}
 
@@ -431,16 +404,7 @@ public class JjkStrongestModVariables {
 			cleave_melee_toggle = nbt.getBoolean("cleave_melee_toggle");
 			domain_image_1 = nbt.getDouble("domain_image_1");
 			domain_image_2 = nbt.getDouble("domain_image_2");
-			fa_tx = nbt.getDouble("fa_tx");
-			fa_ty = nbt.getDouble("fa_ty");
-			fa_tz = nbt.getDouble("fa_tz");
-			fa_rx = nbt.getDouble("fa_rx");
-			fa_ry = nbt.getDouble("fa_ry");
-			fa_rz = nbt.getDouble("fa_rz");
-			fa_scale = nbt.getDouble("fa_scale");
-			fa_alpha = nbt.getDouble("fa_alpha");
-			fa_cross_yaw = nbt.getDouble("fa_cross_yaw");
-			fa_flip = nbt.getDouble("fa_flip");
+			wcs_chant_progress = nbt.getDouble("wcs_chant_progress");
 		}
 	}
 
@@ -536,16 +500,7 @@ public class JjkStrongestModVariables {
 					variables.cleave_melee_toggle = message.data.cleave_melee_toggle;
 					variables.domain_image_1 = message.data.domain_image_1;
 					variables.domain_image_2 = message.data.domain_image_2;
-					variables.fa_tx = message.data.fa_tx;
-					variables.fa_ty = message.data.fa_ty;
-					variables.fa_tz = message.data.fa_tz;
-					variables.fa_rx = message.data.fa_rx;
-					variables.fa_ry = message.data.fa_ry;
-					variables.fa_rz = message.data.fa_rz;
-					variables.fa_scale = message.data.fa_scale;
-					variables.fa_alpha = message.data.fa_alpha;
-					variables.fa_cross_yaw = message.data.fa_cross_yaw;
-					variables.fa_flip = message.data.fa_flip;
+					variables.wcs_chant_progress = message.data.wcs_chant_progress;
 				}
 			});
 			context.setPacketHandled(true);

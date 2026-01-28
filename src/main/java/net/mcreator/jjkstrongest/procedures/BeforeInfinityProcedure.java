@@ -17,8 +17,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.core.BlockPos;
 
 import net.mcreator.jjkstrongest.init.JjkStrongestModMobEffects;
-import net.mcreator.jjkstrongest.entity.ReversalRedEntity;
-import net.mcreator.jjkstrongest.entity.LapseBlueEntity;
 
 import javax.annotation.Nullable;
 
@@ -27,45 +25,29 @@ public class BeforeInfinityProcedure {
 	@SubscribeEvent
 	public static void onEntityAttacked(LivingAttackEvent event) {
 		if (event != null && event.getEntity() != null) {
-			execute(event, event.getEntity().level(), event.getEntity().getX(), event.getEntity().getY(), event.getEntity().getZ(), event.getSource(), event.getEntity(), event.getSource().getEntity());
+			execute(event, event.getEntity().level(), event.getEntity().getX(), event.getEntity().getY(), event.getEntity().getZ(), event.getSource(), event.getEntity());
 		}
 	}
 
-	public static void execute(LevelAccessor world, double x, double y, double z, DamageSource damagesource, Entity entity, Entity sourceentity) {
-		execute(null, world, x, y, z, damagesource, entity, sourceentity);
+	public static void execute(LevelAccessor world, double x, double y, double z, DamageSource damagesource, Entity entity) {
+		execute(null, world, x, y, z, damagesource, entity);
 	}
 
-	private static void execute(@Nullable Event event, LevelAccessor world, double x, double y, double z, DamageSource damagesource, Entity entity, Entity sourceentity) {
-		if (damagesource == null || entity == null || sourceentity == null)
+	private static void execute(@Nullable Event event, LevelAccessor world, double x, double y, double z, DamageSource damagesource, Entity entity) {
+		if (damagesource == null || entity == null)
 			return;
-		if (entity instanceof LivingEntity _livEnt0 && _livEnt0.hasEffect(JjkStrongestModMobEffects.INFINITY.get())) {
-			if (event != null && event.isCancelable()) {
-				event.setCanceled(true);
-			} else if (event != null && event.hasResult()) {
-				event.setResult(Event.Result.DENY);
-			}
-			if (world instanceof Level _level) {
-				if (!_level.isClientSide()) {
-					_level.playSound(null, BlockPos.containing(x, y, z), ForgeRegistries.SOUND_EVENTS.getValue(new ResourceLocation("block.amethyst_block.step")), SoundSource.NEUTRAL, 1, 1);
-				} else {
-					_level.playLocalSound(x, y, z, ForgeRegistries.SOUND_EVENTS.getValue(new ResourceLocation("block.amethyst_block.step")), SoundSource.NEUTRAL, 1, 1, false);
-				}
-			}
-		}
 		if (!damagesource.is(DamageTypes.GENERIC_KILL)) {
-			if (entity instanceof LapseBlueEntity) {
+			if (entity instanceof LivingEntity _livEnt1 && _livEnt1.hasEffect(JjkStrongestModMobEffects.INFINITY.get())) {
 				if (event != null && event.isCancelable()) {
 					event.setCanceled(true);
 				} else if (event != null && event.hasResult()) {
 					event.setResult(Event.Result.DENY);
 				}
-			}
-			if (entity instanceof ReversalRedEntity) {
-				if (!(entity.getPersistentData().getString("caster")).equals(sourceentity.getDisplayName().getString())) {
-					if (event != null && event.isCancelable()) {
-						event.setCanceled(true);
-					} else if (event != null && event.hasResult()) {
-						event.setResult(Event.Result.DENY);
+				if (world instanceof Level _level) {
+					if (!_level.isClientSide()) {
+						_level.playSound(null, BlockPos.containing(x, y, z), ForgeRegistries.SOUND_EVENTS.getValue(new ResourceLocation("block.amethyst_block.step")), SoundSource.NEUTRAL, 1, 1);
+					} else {
+						_level.playLocalSound(x, y, z, ForgeRegistries.SOUND_EVENTS.getValue(new ResourceLocation("block.amethyst_block.step")), SoundSource.NEUTRAL, 1, 1, false);
 					}
 				}
 			}

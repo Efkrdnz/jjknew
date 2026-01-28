@@ -8,6 +8,7 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraft.client.Minecraft;
 
 import net.mcreator.jjkstrongest.procedures.RenderRedFirstPersonProcedure;
+import net.mcreator.jjkstrongest.procedures.RenderPurpleChargeFirstPersonProcedure;
 import net.mcreator.jjkstrongest.procedures.RenderFlameArrowFirstPersonProcedure;
 import net.mcreator.jjkstrongest.procedures.RenderBlueFirstPersonProcedure;
 import net.mcreator.jjkstrongest.client.renderer.RedFirstPersonRenderHook;
@@ -24,5 +25,6 @@ public class RedFirstPersonRenderHook {
 		RenderRedFirstPersonProcedure.execute(mc, mc.player, event.getPoseStack(), event.getHand(), event.getPartialTick());
 		RenderBlueFirstPersonProcedure.execute(mc, mc.player, event.getPoseStack(), event.getHand(), event.getPartialTick());
 		RenderFlameArrowFirstPersonProcedure.execute(mc, mc.player, event.getPoseStack(), event.getHand(), event.getPartialTick());
+		RenderPurpleChargeFirstPersonProcedure.execute(mc, mc.player, event.getPoseStack(), event.getHand(), event.getPartialTick());
 	}
 }

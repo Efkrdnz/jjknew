@@ -1,144 +1,181 @@
 package net.mcreator.jjkstrongest.procedures;
 
+import org.checkerframework.checker.units.qual.g;
+
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.core.particles.ParticleTypes;
 
+import net.mcreator.jjkstrongest.network.SpawnDomainSlashPacket;
+import net.mcreator.jjkstrongest.network.DomainSlashNetworkHandler;
+
 import java.util.UUID;
 import java.util.List;
-import java.util.Comparator;
 
 public class MalevolentShrineTickProcedure {
-	// main tick logic for malevolent shrine domain
+	private static final int MAX_LIFETIME = 600;
+	private static final int STARTUP_DELAY = 40;
+	private static final double RADIUS = 100.0;
+	private static final double RADIUS_SQ = RADIUS * RADIUS;
+	private static final int DAMAGE_INTERVAL = 4;
+	private static final int OWNER_CHECK_INTERVAL = 20;
+	private static final int BASE_SLASH_COUNT = 60;
+	private static final int SLASH_VARIANCE = 20;
+
 	public static void execute(Level world, double x, double y, double z, Entity domainEntity) {
 		if (world == null || domainEntity == null || world.isClientSide())
 			return;
-		// get domain data
-		int lifetimeTicks = domainEntity.getPersistentData().getInt("domainLifetimeTicks");
-		String ownerUUIDStr = domainEntity.getPersistentData().getString("ownerUUID");
-		// increment lifetime
+		CompoundTag data = domainEntity.getPersistentData();
+		int lifetimeTicks = data.getInt("domainLifetimeTicks");
 		lifetimeTicks++;
-		domainEntity.getPersistentData().putInt("domainLifetimeTicks", lifetimeTicks);
-		// check if domain should collapse (20 seconds = 400 ticks)
-		if (lifetimeTicks >= 400) {
+		data.putInt("domainLifetimeTicks", lifetimeTicks);
+		// check collapse
+		if (lifetimeTicks >= MAX_LIFETIME) {
 			domainEntity.discard();
 			return;
 		}
-		// get owner player
-		Entity owner = null;
-		if (!ownerUUIDStr.isEmpty()) {
-			try {
-				UUID ownerUUID = UUID.fromString(ownerUUIDStr);
-				if (world instanceof ServerLevel serverLevel) {
-					owner = serverLevel.getEntity(ownerUUID);
-				}
-			} catch (Exception e) {
-			}
-		}
-		// check if owner is out of range (force collapse)
-		if (owner != null) {
-			double distSq = owner.distanceToSqr(x, y, z);
-			if (distSq > 100 * 100) {
+		// check owner only every 20 ticks
+		if (lifetimeTicks % OWNER_CHECK_INTERVAL == 0) {
+			if (!validateOwner(world, data, x, y, z)) {
 				domainEntity.discard();
 				return;
 			}
-		} else {
-			// owner not found - collapse domain
+		}
+		// wait for startup
+		if (lifetimeTicks < STARTUP_DELAY)
+			return;
+		Entity owner = getOwner(world, data);
+		if (owner == null) {
 			domainEntity.discard();
 			return;
 		}
-		// after 2 second delay (40 ticks), start domain effects
-		if (lifetimeTicks < 40) {
-			return;
-		}
-		// spawn wild slashes everywhere (80 random slashes per tick)
-		spawnWildSlashes(world, owner, x, y, z);
+		// spawn slashes using packets (60-80 per tick)
+		int slashCount = BASE_SLASH_COUNT + world.random.nextInt(SLASH_VARIANCE);
+		spawnSlashesViaPackets((ServerLevel) world, owner, x, y, z, slashCount, domainEntity.getStringUUID());
 		// damage entities every 4 ticks
-		if (lifetimeTicks % 4 == 0) {
-			damageEntitiesInDomain(world, owner, x, y, z);
+		if (lifetimeTicks % DAMAGE_INTERVAL == 0) {
+			damageEntitiesOptimized(world, owner, x, y, z);
 		}
 	}
 
-	// spawn 80 massive random slashes throughout the domain hemisphere
-	private static void spawnWildSlashes(Level world, Entity owner, double centerX, double centerY, double centerZ) {
-		if (world == null || owner == null)
+	// validate owner
+	private static boolean validateOwner(Level world, CompoundTag data, double x, double y, double z) {
+		String ownerUUIDStr = data.getString("ownerUUID");
+		if (ownerUUIDStr.isEmpty())
+			return false;
+		try {
+			UUID ownerUUID = UUID.fromString(ownerUUIDStr);
+			if (world instanceof ServerLevel serverLevel) {
+				Entity owner = serverLevel.getEntity(ownerUUID);
+				if (owner == null || !owner.isAlive())
+					return false;
+				return owner.distanceToSqr(x, y, z) <= RADIUS_SQ;
+			}
+		} catch (Exception e) {
+			return false;
+		}
+		return false;
+	}
+
+	// get owner
+	private static Entity getOwner(Level world, CompoundTag data) {
+		String ownerUUIDStr = data.getString("ownerUUID");
+		if (ownerUUIDStr.isEmpty())
+			return null;
+		try {
+			UUID ownerUUID = UUID.fromString(ownerUUIDStr);
+			if (world instanceof ServerLevel serverLevel) {
+				return serverLevel.getEntity(ownerUUID);
+			}
+		} catch (Exception e) {
+		}
+		return null;
+	}
+
+	// spawn slashes via network packets
+	private static void spawnSlashesViaPackets(ServerLevel world, Entity owner, double centerX, double centerY, double centerZ, int count, String domainUUID) {
+		double radiusSq = RADIUS * RADIUS;
+		double twoPI = Math.PI * 2;
+		// get nearby players to send packets to
+		List<ServerPlayer> nearbyPlayers = world.getEntitiesOfClass(ServerPlayer.class, new AABB(centerX - 150, centerY - 150, centerZ - 150, centerX + 150, centerY + 150, centerZ + 150));
+		if (nearbyPlayers.isEmpty())
 			return;
-		for (int i = 0; i < 110; i++) {
-			// random position within 100 block radius hemisphere
-			double angle = world.random.nextDouble() * Math.PI * 2;
-			double radius = Math.sqrt(world.random.nextDouble()) * 100;
+		for (int i = 0; i < count; i++) {
+			// generate slash data
+			double angle = world.random.nextDouble() * twoPI;
+			double radius = Math.sqrt(world.random.nextDouble()) * RADIUS;
 			double offsetX = Math.cos(angle) * radius;
 			double offsetZ = Math.sin(angle) * radius;
-			// random height within hemisphere
 			double horizontalDistSq = offsetX * offsetX + offsetZ * offsetZ;
-			double maxHeight = Math.sqrt(Math.max(0, 100 * 100 - horizontalDistSq));
+			double maxHeight = Math.sqrt(Math.max(0, radiusSq - horizontalDistSq));
 			double offsetY = world.random.nextDouble() * maxHeight;
 			double slashX = centerX + offsetX;
 			double slashY = centerY + offsetY;
 			double slashZ = centerZ + offsetZ;
-			// random direction for slash
+			// random direction
 			Vec3 randomDir = new Vec3(world.random.nextDouble() - 0.5, world.random.nextDouble() - 0.5, world.random.nextDouble() - 0.5).normalize();
-			// spawn massive domain slash using custom procedure
-			SpawnMalevolentShrineSlashProcedure.execute(world, owner, slashX, slashY, slashZ, randomDir);
+			// style and colors
+			int styleRoll = world.random.nextInt(100);
+			int style = styleRoll < 30 ? 0 : 1;
+			float length = 25.0f + world.random.nextFloat() * 10.0f;
+			float width = 1.5f + world.random.nextFloat() * 1.5f;
+			float roll = world.random.nextFloat() * 6.2831853f;
+			float seed = world.random.nextFloat() * 1000.0f;
+			float r, g, b;
+			if (style == 0) {
+				r = g = b = 1.0f;
+			} else {
+				r = 1.0f;
+				g = 0.1f + world.random.nextFloat() * 0.15f;
+				b = 0.1f + world.random.nextFloat() * 0.15f;
+			}
+			// create and send packet
+			SpawnDomainSlashPacket packet = new SpawnDomainSlashPacket(slashX, slashY, slashZ, randomDir.x, randomDir.y, randomDir.z, length, width, style, roll, seed, r, g, b, 12, domainUUID);
+			// send to all nearby players
+			for (ServerPlayer player : nearbyPlayers) {
+				DomainSlashNetworkHandler.sendToPlayer(player, packet);
+			}
 		}
 	}
 
-	// damage all entities in domain every 4 ticks (full sphere, no knockback)
-	private static void damageEntitiesInDomain(Level world, Entity owner, double centerX, double centerY, double centerZ) {
+	// optimized damage
+	private static void damageEntitiesOptimized(Level world, Entity owner, double centerX, double centerY, double centerZ) {
 		if (world == null || owner == null)
 			return;
-		// get all entities within 100 block radius
-		AABB boundingBox = new AABB(centerX - 100, centerY - 100, centerZ - 100, centerX + 100, centerY + 100, centerZ + 100);
-		List<Entity> entities = world.getEntitiesOfClass(Entity.class, boundingBox, e -> true).stream().sorted(new Object() {
-			Comparator<Entity> compareDistOf(double x, double y, double z) {
-				return Comparator.comparingDouble(ent -> ent.distanceToSqr(x, y, z));
-			}
-		}.compareDistOf(centerX, centerY, centerZ)).toList();
-		// damage each entity
+		AABB boundingBox = new AABB(centerX - RADIUS, centerY - RADIUS, centerZ - RADIUS, centerX + RADIUS, centerY + RADIUS, centerZ + RADIUS);
+		List<Entity> entities = world.getEntitiesOfClass(Entity.class, boundingBox, e -> e instanceof LivingEntity && e != owner && !e.isPassengerOfSameVehicle(owner));
+		double radiusSq = RADIUS * RADIUS;
 		for (Entity target : entities) {
-			if (target == owner || target == owner.getVehicle() || target.isPassengerOfSameVehicle(owner))
-				continue;
-			if (!(target instanceof LivingEntity))
-				continue;
-			// check if within full 100 block sphere (3D distance)
 			double dx = target.getX() - centerX;
 			double dy = target.getY() - centerY;
 			double dz = target.getZ() - centerZ;
-			double dist3D = Math.sqrt(dx * dx + dy * dy + dz * dz);
-			if (dist3D > 100)
+			double distSq = dx * dx + dy * dy + dz * dz;
+			if (distSq > radiusSq)
 				continue;
-			// spawn 3-5 slash effects on the entity getting hit
-			int slashCount = 3 + world.random.nextInt(3);
-			for (int i = 0; i < slashCount; i++) {
-				// random position around entity
-				double offsetX = (world.random.nextDouble() - 0.5) * target.getBbWidth() * 2;
-				double offsetY = world.random.nextDouble() * target.getBbHeight();
-				double offsetZ = (world.random.nextDouble() - 0.5) * target.getBbWidth() * 2;
-				double slashX = target.getX() + offsetX;
-				double slashY = target.getY() + offsetY;
-				double slashZ = target.getZ() + offsetZ;
-				// random slash direction
-				Vec3 randomDir = new Vec3(world.random.nextDouble() - 0.5, world.random.nextDouble() - 0.5, world.random.nextDouble() - 0.5).normalize();
-				// spawn slash effect
-				//TestDismantleRightclickedProcedure.execute(world, target);
-				if (world instanceof ServerLevel _level)
-					_level.sendParticles(ParticleTypes.SWEEP_ATTACK, slashX, slashY, slashZ, 2, 0.1, 0.4, 0.1, 1);
+			// spawn 2-3 slash effects
+			int slashCount = 2 + world.random.nextInt(2);
+			if (world instanceof ServerLevel serverLevel) {
+				for (int i = 0; i < slashCount; i++) {
+					double offsetX = (world.random.nextDouble() - 0.5) * target.getBbWidth();
+					double offsetY = world.random.nextDouble() * target.getBbHeight();
+					double offsetZ = (world.random.nextDouble() - 0.5) * target.getBbWidth();
+					serverLevel.sendParticles(ParticleTypes.SWEEP_ATTACK, target.getX() + offsetX, target.getY() + offsetY, target.getZ() + offsetZ, 2, 0.1, 0.4, 0.1, 1);
+				}
 			}
-			// disable invulnerability frames and knockback
+			Vec3 originalVelocity = target.getDeltaMovement();
 			target.invulnerableTime = 0;
-			Vec3 originalDeltaMovement = target.getDeltaMovement();
-			// deal jujutsu damage from owner
 			target.hurt(new DamageSource(world.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE).getHolderOrThrow(ResourceKey.create(Registries.DAMAGE_TYPE, new ResourceLocation("jjk_strongest:jujutsu"))), owner), 2.0f);
-			// restore original velocity (no knockback)
-			target.setDeltaMovement(originalDeltaMovement);
+			target.setDeltaMovement(originalVelocity);
 		}
 	}
 }
