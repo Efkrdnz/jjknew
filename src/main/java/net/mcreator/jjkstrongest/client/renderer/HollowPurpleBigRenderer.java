@@ -8,6 +8,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.MultiBufferSource;
 
 import net.mcreator.jjkstrongest.procedures.ReturnPurpleSizeProcedure;
@@ -36,6 +37,12 @@ public class HollowPurpleBigRenderer extends MobRenderer<HollowPurpleBigEntity, 
 		super.render(entity, entityYaw, partialTick, poseStack, bufferSource, packedLight);
 		float scale = (float) ReturnPurpleSizeProcedure.execute(entity);
 		renderHollowPurple(entity, partialTick, poseStack, bufferSource, scale);
+	}
+
+	@Override
+	public boolean shouldRender(HollowPurpleBigEntity entity, Frustum frustum, double x, double y, double z) {
+		// always render regardless of distance/frustum
+		return true;
 	}
 
 	// renders hollow purple with shader

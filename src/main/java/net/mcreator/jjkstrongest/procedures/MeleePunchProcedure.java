@@ -31,12 +31,11 @@ public class MeleePunchProcedure {
 		List<Entity> targets = world.getEntitiesOfClass(Entity.class, searchBox, e -> e != entity && e instanceof LivingEntity && e.isAlive());
 		boolean hitSomething = false;
 		// hand swing
-		if (entity instanceof LivingEntity _entity)
-			_entity.swing(InteractionHand.MAIN_HAND, true);
 		for (Entity target : targets) {
 			// damage target
 			if (world instanceof ServerLevel serverLevel) {
 				target.hurt(new DamageSource(serverLevel.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE).getHolderOrThrow(DamageTypes.PLAYER_ATTACK), entity), 6f);
+				target.invulnerableTime = 3;
 			}
 			// apply knockback
 			Vec3 knockback = lookVec.multiply(1.2, 0.3, 1.2);
@@ -49,16 +48,6 @@ public class MeleePunchProcedure {
 				serverLevel.sendParticles((SimpleParticleType) (JjkStrongestModParticleTypes.PUNCH_IMPACT.get()), targetPos.x, targetPos.y, targetPos.z, 1, 0, 0, 0, 0);
 			}
 			hitSomething = true;
-		}
-		// swing trail particles even if missed
-		if (world instanceof ServerLevel serverLevel) {
-			Vec3 perpendicular = new Vec3(-lookVec.z, 0, lookVec.x).normalize();
-			for (int i = 0; i < 5; i++) {
-				double progress = i / 4.0;
-				Vec3 trailPos = startPos.add(lookVec.scale(1.5 * progress));
-				Vec3 offset = perpendicular.scale(0.3 * Math.sin(progress * Math.PI));
-				serverLevel.sendParticles(ParticleTypes.CLOUD, trailPos.x + offset.x, trailPos.y + offset.y, trailPos.z + offset.z, 1, 0, 0, 0, 0);
-			}
 		}
 	}
 }

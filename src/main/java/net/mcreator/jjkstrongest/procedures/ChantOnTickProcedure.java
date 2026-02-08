@@ -135,6 +135,17 @@ public class ChantOnTickProcedure {
 				}
 				entity.getPersistentData().putDouble("TechniquePower", 2);
 			}
+		} else if ((entity.getPersistentData().getString("chanting")).equals("imaginary_purple")) {
+			entity.getPersistentData().putDouble("ChantCounter", (entity.getPersistentData().getDouble("ChantCounter") + 1));
+			if (entity.getPersistentData().getDouble("ChantCounter") == 20) {
+				if (world instanceof Level _level) {
+					if (!_level.isClientSide()) {
+						_level.playSound(null, BlockPos.containing(x, y, z), ForgeRegistries.SOUND_EVENTS.getValue(new ResourceLocation("entity.experience_orb.pickup")), SoundSource.NEUTRAL, 1, 1);
+					} else {
+						_level.playLocalSound(x, y, z, ForgeRegistries.SOUND_EVENTS.getValue(new ResourceLocation("entity.experience_orb.pickup")), SoundSource.NEUTRAL, 1, 1, false);
+					}
+				}
+			}
 		} else if ((entity.getPersistentData().getString("chanting")).equals("dismantle")) {
 			entity.getPersistentData().putDouble("ChantCounter", (entity.getPersistentData().getDouble("ChantCounter") + 1));
 			if (entity.getPersistentData().getDouble("ChantCounter") == 10) {

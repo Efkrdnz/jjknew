@@ -38,6 +38,20 @@ public class JjkShaderManager {
 	public static RenderType BLUE_ORB_RENDER_TYPE;
 	public static ShaderInstance FLAME_ARROW_SHADER;
 	public static RenderType FLAME_ARROW_RENDER_TYPE;
+	public static ShaderInstance FLAME_ARROW_EXPLOSION_SHADER;
+	public static RenderType FLAME_ARROW_EXPLOSION_RENDER_TYPE;
+	public static ShaderInstance IMAGINARY_PURPLE_SHADER;
+	public static RenderType IMAGINARY_PURPLE_RENDER_TYPE;
+	public static ShaderInstance VOID_BLACKHOLE_SHADER;
+	public static RenderType VOID_BLACKHOLE_RENDER_TYPE;
+	public static ShaderInstance VOID_BRUSH_SHADER;
+	public static RenderType VOID_BRUSH_RENDER_TYPE;
+	public static ShaderInstance IMAGINARY_PURPLE_PROJECTILE_SHADER;
+	public static RenderType IMAGINARY_PURPLE_PROJECTILE_RENDER_TYPE;
+	public static ShaderInstance VOID_RIFT_SHADER;
+	public static RenderType VOID_RIFT_RENDER_TYPE;
+	public static ShaderInstance INFORMATION_OVERLOAD_OVERLAY_SHADER;
+	public static RenderType INFORMATION_OVERLOAD_OVERLAY_RENDER_TYPE;
 
 	@net.minecraftforge.eventbus.api.SubscribeEvent
 	public static void registerShaders(net.minecraftforge.client.event.RegisterShadersEvent event) {
@@ -125,6 +139,93 @@ public class JjkShaderManager {
 			FLAME_ARROW_RENDER_TYPE = null;
 			System.err.println("[JJK Strongest] ✗ Failed to load Flame Arrow shader");
 			e.printStackTrace();
+		}
+		try {
+			System.out.println("[JJK Strongest] Attempting to load Flame Arrow Explosion shader...");
+			event.registerShader(new ShaderInstance(event.getResourceProvider(), new ResourceLocation("jjk_strongest", "flame_arrow_explosion"), DefaultVertexFormat.POSITION_TEX), shader -> {
+				FLAME_ARROW_EXPLOSION_SHADER = shader;
+				FLAME_ARROW_EXPLOSION_RENDER_TYPE = makeRenderType("flame_arrow_explosion", () -> FLAME_ARROW_EXPLOSION_SHADER);
+				System.out.println("[JJK Strongest] ✓ Flame Arrow Explosion shader loaded successfully!");
+			});
+		} catch (Exception e) {
+			FLAME_ARROW_EXPLOSION_SHADER = null;
+			FLAME_ARROW_EXPLOSION_RENDER_TYPE = null;
+			System.err.println("[JJK Strongest] ✗ Failed to load Flame Arrow Explosion shader");
+			e.printStackTrace();
+		}
+		try {
+			System.out.println("[JJK Strongest] Attempting to load Imaginary Purple shader...");
+			event.registerShader(new ShaderInstance(event.getResourceProvider(), new ResourceLocation("jjk_strongest", "imaginary_purple"), DefaultVertexFormat.POSITION_TEX), shader -> {
+				IMAGINARY_PURPLE_SHADER = shader;
+				IMAGINARY_PURPLE_RENDER_TYPE = makeRenderType("imaginary_purple", () -> IMAGINARY_PURPLE_SHADER);
+				System.out.println("[JJK Strongest] ✓ Imaginary Purple shader loaded successfully!");
+			});
+		} catch (Exception e) {
+			IMAGINARY_PURPLE_SHADER = null;
+			IMAGINARY_PURPLE_RENDER_TYPE = null;
+			System.err.println("[JJK Strongest] ✗ Failed to load Imaginary Purple shader");
+			e.printStackTrace();
+		}
+		try {
+			System.out.println("[JJK Strongest] Attempting to load Void Blackhole shader...");
+			event.registerShader(new ShaderInstance(event.getResourceProvider(), new ResourceLocation("jjk_strongest", "void_blackhole"), DefaultVertexFormat.POSITION_TEX), shader -> {
+				VOID_BLACKHOLE_SHADER = shader;
+				VOID_BLACKHOLE_RENDER_TYPE = makeRenderType("void_blackhole", () -> VOID_BLACKHOLE_SHADER);
+				System.out.println("[JJK Strongest] ✓ Void Blackhole shader loaded successfully!");
+			});
+		} catch (Exception e) {
+			VOID_BLACKHOLE_SHADER = null;
+			VOID_BLACKHOLE_RENDER_TYPE = null;
+			System.err.println("[JJK Strongest] ✗ Failed to load Void Blackhole shader");
+			e.printStackTrace();
+		}
+		try {
+			System.out.println("[JJK Strongest] Attempting to load Void Brush shader...");
+			event.registerShader(new ShaderInstance(event.getResourceProvider(), new ResourceLocation("jjk_strongest", "void_brush"), DefaultVertexFormat.POSITION_TEX), shader -> {
+				VOID_BRUSH_SHADER = shader;
+				VOID_BRUSH_RENDER_TYPE = makeRenderType("void_brush", () -> VOID_BRUSH_SHADER);
+				System.out.println("[JJK Strongest] ✓ Void Brush shader loaded successfully!");
+			});
+		} catch (Exception e) {
+			VOID_BRUSH_SHADER = null;
+			VOID_BRUSH_RENDER_TYPE = null;
+			System.err.println("[JJK Strongest] ✗ Failed to load Void Brush shader");
+			e.printStackTrace();
+		}
+		try {
+			System.out.println("[JJK Strongest] Attempting to load Imaginary Purple Projectile shader...");
+			event.registerShader(new ShaderInstance(event.getResourceProvider(), new ResourceLocation("jjk_strongest", "imaginary_purple_projectile"), DefaultVertexFormat.POSITION_TEX), shader -> {
+				IMAGINARY_PURPLE_PROJECTILE_SHADER = shader;
+				IMAGINARY_PURPLE_PROJECTILE_RENDER_TYPE = makeRenderType("imaginary_purple_projectile", () -> IMAGINARY_PURPLE_PROJECTILE_SHADER);
+				System.out.println("[JJK Strongest] ✓ Imaginary Purple Projectile shader loaded successfully!");
+			});
+		} catch (Exception e) {
+			IMAGINARY_PURPLE_PROJECTILE_SHADER = null;
+			IMAGINARY_PURPLE_PROJECTILE_RENDER_TYPE = null;
+			System.err.println("[JJK Strongest] ✗ Failed to load Imaginary Purple Projectile shader");
+			e.printStackTrace();
+		}
+		try {
+			System.out.println("[JJK Strongest] Attempting to load Void Rift shader...");
+			event.registerShader(new ShaderInstance(event.getResourceProvider(), new ResourceLocation("jjk_strongest", "void_rift"), DefaultVertexFormat.POSITION_TEX), shader -> {
+				VOID_RIFT_SHADER = shader;
+				VOID_RIFT_RENDER_TYPE = makeRenderType("void_rift", () -> VOID_RIFT_SHADER);
+				System.out.println("[JJK Strongest] ✓ Void Rift shader loaded successfully!");
+			});
+		} catch (Exception e) {
+			VOID_RIFT_SHADER = null;
+			VOID_RIFT_RENDER_TYPE = null;
+			System.err.println("[JJK Strongest] ✗ Failed to load Void Rift shader");
+			e.printStackTrace();
+		}
+		try {
+			event.registerShader(new ShaderInstance(event.getResourceProvider(), new ResourceLocation("jjk_strongest", "information_overload_overlay"), DefaultVertexFormat.POSITION_TEX), shader -> {
+				INFORMATION_OVERLOAD_OVERLAY_SHADER = shader;
+				INFORMATION_OVERLOAD_OVERLAY_RENDER_TYPE = makeRenderType("information_overload_overlay", () -> INFORMATION_OVERLOAD_OVERLAY_SHADER);
+			});
+		} catch (Exception e) {
+			INFORMATION_OVERLOAD_OVERLAY_SHADER = null;
+			INFORMATION_OVERLOAD_OVERLAY_RENDER_TYPE = null;
 		}
 	}
 
@@ -247,8 +348,163 @@ public class JjkShaderManager {
 		return true;
 	}
 
+	public static boolean beginImaginaryPurpleEffect(float timeSeconds, float chargeProgress) {
+		if (IMAGINARY_PURPLE_SHADER == null)
+			return false;
+		setUniformIfExistsImaginaryPurple("Time", timeSeconds);
+		setUniformIfExistsImaginaryPurple("ChargeProgress", chargeProgress);
+		return true;
+	}
+
+	public static boolean beginVoidBlackholeEffect(float timeSeconds, float intensity) {
+		if (VOID_BLACKHOLE_SHADER == null)
+			return false;
+		setUniformIfExistsVoidBlackhole("Time", timeSeconds);
+		setUniformIfExistsVoidBlackhole("Intensity", intensity);
+		return true;
+	}
+
+	public static boolean beginVoidBrushEffect(float timeSeconds, float brushSeed, float intensity) {
+		if (VOID_BRUSH_SHADER == null)
+			return false;
+		setUniformIfExistsVoidBrush("Time", timeSeconds);
+		setUniformIfExistsVoidBrush("BrushSeed", brushSeed);
+		setUniformIfExistsVoidBrush("Intensity", intensity);
+		return true;
+	}
+
+	public static boolean beginImaginaryPurpleProjectileEffect(float timeSeconds, float intensity) {
+		if (IMAGINARY_PURPLE_PROJECTILE_SHADER == null)
+			return false;
+		setUniformIfExistsImaginaryPurpleProjectile("Time", timeSeconds);
+		setUniformIfExistsImaginaryPurpleProjectile("Intensity", intensity);
+		return true;
+	}
+
+	public static boolean beginVoidRiftEffect(float timeSeconds, float intensity) {
+		if (VOID_RIFT_SHADER == null)
+			return false;
+		setUniformIfExistsVoidRift("Time", timeSeconds);
+		setUniformIfExistsVoidRift("Intensity", intensity);
+		return true;
+	}
+
+	public static boolean beginInformationOverloadOverlayEffect(float timeSeconds, float strength) {
+		if (INFORMATION_OVERLOAD_OVERLAY_SHADER == null)
+			return false;
+		setUniformIfExistsInformationOverloadOverlay("Time", timeSeconds);
+		setUniformIfExistsInformationOverloadOverlay("Strength", strength);
+		return true;
+	}
+
+	private static void setUniformIfExistsInformationOverloadOverlay(String name, float... values) {
+		var uniform = INFORMATION_OVERLOAD_OVERLAY_SHADER.getUniform(name);
+		if (uniform != null) {
+			if (values.length == 1)
+				uniform.set(values[0]);
+			else if (values.length == 2)
+				uniform.set(values[0], values[1]);
+			else if (values.length == 3)
+				uniform.set(values[0], values[1], values[2]);
+			else if (values.length == 4)
+				uniform.set(values[0], values[1], values[2], values[3]);
+		}
+	}
+
+	private static void setUniformIfExistsVoidRift(String name, float... values) {
+		var uniform = VOID_RIFT_SHADER.getUniform(name);
+		if (uniform != null) {
+			if (values.length == 1)
+				uniform.set(values[0]);
+			else if (values.length == 2)
+				uniform.set(values[0], values[1]);
+			else if (values.length == 3)
+				uniform.set(values[0], values[1], values[2]);
+			else if (values.length == 4)
+				uniform.set(values[0], values[1], values[2], values[3]);
+		}
+	}
+
+	private static void setUniformIfExistsImaginaryPurpleProjectile(String name, float... values) {
+		var uniform = IMAGINARY_PURPLE_PROJECTILE_SHADER.getUniform(name);
+		if (uniform != null) {
+			if (values.length == 1)
+				uniform.set(values[0]);
+			else if (values.length == 2)
+				uniform.set(values[0], values[1]);
+			else if (values.length == 3)
+				uniform.set(values[0], values[1], values[2]);
+			else if (values.length == 4)
+				uniform.set(values[0], values[1], values[2], values[3]);
+		}
+	}
+
+	private static void setUniformIfExistsVoidBlackhole(String name, float... values) {
+		var uniform = VOID_BLACKHOLE_SHADER.getUniform(name);
+		if (uniform != null) {
+			if (values.length == 1)
+				uniform.set(values[0]);
+			else if (values.length == 2)
+				uniform.set(values[0], values[1]);
+			else if (values.length == 3)
+				uniform.set(values[0], values[1], values[2]);
+			else if (values.length == 4)
+				uniform.set(values[0], values[1], values[2], values[3]);
+		}
+	}
+
+	private static void setUniformIfExistsVoidBrush(String name, float... values) {
+		var uniform = VOID_BRUSH_SHADER.getUniform(name);
+		if (uniform != null) {
+			if (values.length == 1)
+				uniform.set(values[0]);
+			else if (values.length == 2)
+				uniform.set(values[0], values[1]);
+			else if (values.length == 3)
+				uniform.set(values[0], values[1], values[2]);
+			else if (values.length == 4)
+				uniform.set(values[0], values[1], values[2], values[3]);
+		}
+	}
+
+	private static void setUniformIfExistsImaginaryPurple(String name, float... values) {
+		var uniform = IMAGINARY_PURPLE_SHADER.getUniform(name);
+		if (uniform != null) {
+			if (values.length == 1)
+				uniform.set(values[0]);
+			else if (values.length == 2)
+				uniform.set(values[0], values[1]);
+			else if (values.length == 3)
+				uniform.set(values[0], values[1], values[2]);
+			else if (values.length == 4)
+				uniform.set(values[0], values[1], values[2], values[3]);
+		}
+	}
+
 	private static void setUniformIfExistsFlameArrow(String name, float... values) {
 		var uniform = FLAME_ARROW_SHADER.getUniform(name);
+		if (uniform != null) {
+			if (values.length == 1)
+				uniform.set(values[0]);
+			else if (values.length == 2)
+				uniform.set(values[0], values[1]);
+			else if (values.length == 3)
+				uniform.set(values[0], values[1], values[2]);
+			else if (values.length == 4)
+				uniform.set(values[0], values[1], values[2], values[3]);
+		}
+	}
+
+	public static boolean beginFlameArrowExplosionEffect(float timeSeconds, float intensity) {
+		if (FLAME_ARROW_EXPLOSION_SHADER == null)
+			return false;
+		setUniformIfExistsFlameArrowExplosion("Time", timeSeconds);
+		setUniformIfExistsFlameArrowExplosion("ChargeProgress", intensity);
+		return true;
+	}
+
+	private static void setUniformIfExistsFlameArrowExplosion(String name, float... values) {
+		var uniform = FLAME_ARROW_EXPLOSION_SHADER.getUniform(name);
 		if (uniform != null) {
 			if (values.length == 1)
 				uniform.set(values[0]);

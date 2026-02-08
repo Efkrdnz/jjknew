@@ -5,6 +5,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
 
 import net.mcreator.jjkstrongest.entity.ReversalRedEntity;
+import net.mcreator.jjkstrongest.entity.MahoragaEntity;
 import net.mcreator.jjkstrongest.entity.LapseBlueEntity;
 import net.mcreator.jjkstrongest.entity.InfiniteHollowEntity;
 import net.mcreator.jjkstrongest.entity.HollowPurpleProjectileEntity;
@@ -44,6 +45,13 @@ public class EntityAnimationFactory {
 				}
 			}
 			if (event.getEntity() instanceof InfiniteHollowEntity syncable) {
+				String animation = syncable.getSyncedAnimation();
+				if (!animation.equals("undefined")) {
+					syncable.setAnimation("undefined");
+					syncable.animationprocedure = animation;
+				}
+			}
+			if (event.getEntity() instanceof MahoragaEntity syncable) {
 				String animation = syncable.getSyncedAnimation();
 				if (!animation.equals("undefined")) {
 					syncable.setAnimation("undefined");

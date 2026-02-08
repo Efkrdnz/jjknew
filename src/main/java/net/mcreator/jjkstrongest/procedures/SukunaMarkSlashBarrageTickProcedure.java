@@ -58,7 +58,7 @@ public class SukunaMarkSlashBarrageTickProcedure {
 		double output_multiplier = data.getDouble("mark_barrage_output");
 		float damagePerSlash = (float) (2.0 * output_multiplier);
 		// apply damage with correct damage source - FIXED
-		DamageSource damageSource = new DamageSource(world.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE).getHolderOrThrow(ResourceKey.create(Registries.DAMAGE_TYPE, new ResourceLocation("jjk_strongest:jujutsu"))), attacker);
+		DamageSource damageSource = new DamageSource(world.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE).getHolderOrThrow(ResourceKey.create(Registries.DAMAGE_TYPE, new ResourceLocation("jjk_strongest:technique_cleave"))), attacker);
 		entity.hurt(damageSource, damagePerSlash);
 		// CONTINUOUS KNOCKBACK
 		Vec3 playerPos = attacker.position();

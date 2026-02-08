@@ -20,4 +20,6 @@ public class JjkStrongestModSounds {
 	public static final RegistryObject<SoundEvent> BLACKFLASH = REGISTRY.register("blackflash", () -> SoundEvent.createVariableRangeEvent(new ResourceLocation("jjk_strongest", "blackflash")));
 	public static final RegistryObject<SoundEvent> SUKUNA_DOMAIN_OST = REGISTRY.register("sukuna_domain_ost", () -> SoundEvent.createVariableRangeEvent(new ResourceLocation("jjk_strongest", "sukuna_domain_ost")));
 	public static final RegistryObject<SoundEvent> SUKUNA_DOMAIN_ACT = REGISTRY.register("sukuna_domain_act", () -> SoundEvent.createVariableRangeEvent(new ResourceLocation("jjk_strongest", "sukuna_domain_act")));
+	public static final RegistryObject<SoundEvent> IMAGINARY_PURPLE_SHOOT = REGISTRY.register("imaginary_purple_shoot", () -> SoundEvent.createVariableRangeEvent(new ResourceLocation("jjk_strongest", "imaginary_purple_shoot")));
+	public static final RegistryObject<SoundEvent> WHEELSPIN = REGISTRY.register("wheelspin", () -> SoundEvent.createVariableRangeEvent(new ResourceLocation("jjk_strongest", "wheelspin")));
 }

@@ -43,5 +43,23 @@
         "stream": false
       }
     ]
+  },
+  "imaginary_purple_shoot": {
+    "subtitle": "subtitles.imaginary_purple_shoot",
+    "sounds": [
+      {
+        "name": "jjk_strongest:murasaki_np",
+        "stream": false
+      }
+    ]
+  },
+  "wheelspin": {
+    "subtitle": "subtitles.wheelspin",
+    "sounds": [
+      {
+        "name": "jjk_strongest:wheel_spin",
+        "stream": false
+      }
+    ]
   }
 }

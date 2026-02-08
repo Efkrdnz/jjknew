@@ -29,6 +29,7 @@ public class JjkStrongestModTabs {
 
 			tabData.accept(JjkStrongestModItems.LAPSE_BLUE_SPAWN_EGG.get());
 			tabData.accept(JjkStrongestModItems.REVERSAL_RED_SPAWN_EGG.get());
+			tabData.accept(JjkStrongestModItems.MAHORAGA_SPAWN_EGG.get());
 
 		} else if (tabData.getTabKey() == CreativeModeTabs.TOOLS_AND_UTILITIES) {
 

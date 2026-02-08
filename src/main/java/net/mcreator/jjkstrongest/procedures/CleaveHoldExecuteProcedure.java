@@ -23,7 +23,7 @@ public class CleaveHoldExecuteProcedure {
 		CompoundTag data = entity.getPersistentData();
 		if (target instanceof LivingEntity living) {
 			if (world instanceof Level _level) {
-				DamageSource damageSource = new DamageSource(world.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE).getHolderOrThrow(ResourceKey.create(Registries.DAMAGE_TYPE, new ResourceLocation("jjk_strongest:jujutsu"))), entity);
+				DamageSource damageSource = new DamageSource(world.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE).getHolderOrThrow(ResourceKey.create(Registries.DAMAGE_TYPE, new ResourceLocation("jjk_strongest:technique_cleave"))), entity);
 				living.hurt(damageSource, 12.0f);
 			}
 		}

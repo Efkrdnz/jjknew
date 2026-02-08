@@ -24,7 +24,6 @@ import net.mcreator.jjkstrongest.JjkStrongestMod;
 
 @Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.MOD, value = {Dist.CLIENT})
 public class JjkStrongestModKeyMappings {
-	public static final KeyMapping PASSIVE = new KeyMapping("key.jjk_strongest.passive", GLFW.GLFW_KEY_R, "key.categories.jjk");
 	public static final KeyMapping TECHNIQUE_1 = new KeyMapping("key.jjk_strongest.technique_1", GLFW.GLFW_KEY_Z, "key.categories.jjk") {
 		private boolean isDownOld = false;
 
@@ -97,9 +96,8 @@ public class JjkStrongestModKeyMappings {
 			isDownOld = isDown;
 		}
 	};
-	public static final KeyMapping TECHNIQUE_5 = new KeyMapping("key.jjk_strongest.technique_5", GLFW.GLFW_KEY_V, "key.categories.jjk");
 	public static final KeyMapping ABILITYMENU = new KeyMapping("key.jjk_strongest.abilitymenu", GLFW.GLFW_KEY_R, "key.categories.jjk");
-	public static final KeyMapping MARK_EXECUTE = new KeyMapping("key.jjk_strongest.mark_execute", GLFW.GLFW_KEY_UNKNOWN, "key.categories.misc") {
+	public static final KeyMapping MARK_EXECUTE = new KeyMapping("key.jjk_strongest.mark_execute", GLFW.GLFW_KEY_UNKNOWN, "key.categories.jjk") {
 		private boolean isDownOld = false;
 
 		@Override
@@ -119,12 +117,10 @@ public class JjkStrongestModKeyMappings {
 
 	@SubscribeEvent
 	public static void registerKeyMappings(RegisterKeyMappingsEvent event) {
-		event.register(PASSIVE);
 		event.register(TECHNIQUE_1);
 		event.register(TECHNIQUE_2);
 		event.register(TECHNIQUE_3);
 		event.register(TECHNIQUE_4);
-		event.register(TECHNIQUE_5);
 		event.register(ABILITYMENU);
 		event.register(MARK_EXECUTE);
 	}

@@ -174,7 +174,7 @@ public class MalevolentShrineTickProcedure {
 			}
 			Vec3 originalVelocity = target.getDeltaMovement();
 			target.invulnerableTime = 0;
-			target.hurt(new DamageSource(world.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE).getHolderOrThrow(ResourceKey.create(Registries.DAMAGE_TYPE, new ResourceLocation("jjk_strongest:jujutsu"))), owner), 2.0f);
+			target.hurt(new DamageSource(world.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE).getHolderOrThrow(ResourceKey.create(Registries.DAMAGE_TYPE, new ResourceLocation("jjk_strongest:technique_cleave"))), owner), 2.0f);
 			target.setDeltaMovement(originalVelocity);
 		}
 	}

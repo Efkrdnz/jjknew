@@ -10,9 +10,21 @@ public class Technique2OnKeyPressProcedure {
 			return;
 		entity.getPersistentData().putDouble("TechniquePower", 0);
 		entity.getPersistentData().putDouble("ChantCounter", 0);
-		if (((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).current_moveset).equals("sukuna_melee")
-				|| ((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).current_moveset).equals("gojo_melee")) {
-			MeleeUppercutProcedure.execute(entity.level(), entity);
+		if (((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).current_moveset).equals("reverse_cursed_technique")) {
+			{
+				boolean _setval = true;
+				entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+					capability.rct_self = _setval;
+					capability.syncPlayerVariables(entity);
+				});
+			}
+		}
+		if (((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).current_moveset).contains("melee")) {
+			if ((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).left) {
+				PlayArmAnimationProcedure.execute(entity, "uppercut_left", true);
+			} else {
+				PlayArmAnimationProcedure.execute(entity, "uppercut_right", true);
+			}
 		}
 		if (((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).current_moveset).equals("gojo_limitless")) {
 			{
@@ -33,6 +45,8 @@ public class Technique2OnKeyPressProcedure {
 			PlayArmAnimationProcedure.execute(entity, "dismantle", true);
 		} else if (((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).current_moveset).equals("sukuna_wcs")) {
 			entity.getPersistentData().putString("chanting", "wcs2");
+		} else if (((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).current_moveset).equals("yuji_divergentfist")) {
+			BlackFlashQTEMasterProcedure.onKeyPress(entity);
 		}
 	}
 }

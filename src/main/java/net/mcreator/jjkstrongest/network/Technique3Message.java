@@ -53,7 +53,7 @@ public class Technique3Message {
 			return;
 		if (type == 0) {
 
-			Technique3OnKeypressProcedure.execute(world, y, entity);
+			Technique3OnKeypressProcedure.execute(entity);
 		}
 		if (type == 1) {
 

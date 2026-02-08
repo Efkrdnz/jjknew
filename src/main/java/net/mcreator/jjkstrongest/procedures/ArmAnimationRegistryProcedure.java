@@ -96,6 +96,19 @@ public class ArmAnimationRegistryProcedure {
     		.setDuration(40f)
     		.setEasing("ease_in_out"));
 
+    	//imaginary_purple pose
+    	ANIMATIONS.put("imaginary_purple", new ArmAnimationDataProcedure("imaginary_purple")
+    		.setArms(true, true)
+    		.setForceVisible(true)
+    		// right arm
+    		.setRightStartPose(0.58f, 0.39f, -0.58f, -10.94f, 36.88f, 0f)
+    		.setRightEndPose(0.58f, 0.39f, -0.58f, -10.94f, 36.88f, 0f)
+    		// left arm
+    		.setLeftStartPose(-0.70f, 0.35f, -0.85f, -25.00f, -90.00f, 0f)
+    		.setLeftEndPose(-0.70f, 0.35f, -0.85f, -25.00f, -90.00f, 0f)
+    		.setDuration(20f)
+    		.setEasing("ease_in_out"));
+
 		//open furnace pose
     	ANIMATIONS.put("fuga_hold", new ArmAnimationDataProcedure("fuga_hold")
     		.setArms(true, true)
@@ -108,6 +121,71 @@ public class ArmAnimationRegistryProcedure {
     		.setLeftEndPose(-0.39f, 0.31f, -1.00f, -20.00f, -62.50f, 0f)
     		.setDuration(20f)
     		.setEasing("ease_in_out"));
+
+    	//MELEE - BLOCK
+    	ANIMATIONS.put("blocking", new ArmAnimationDataProcedure("blocking")
+    		.setArms(true, true)
+    		.setForceVisible(true)
+    		// right arm
+    		.setRightStartPose(0.78f, -0.60f, -0.19f, 34.06f, 44.69f, 0f)
+    		.setRightEndPose(0.78f, -0.38f, 0.05f, 33.13f, 50.63f, 0f)
+    		// left arm
+    		.setLeftStartPose(-0.78f, -0.60f, -0.19f, 34.06f, -44.69f, 0f)
+    		.setLeftEndPose(-0.78f, -0.38f, 0.05f, 33.13f, -50.63f, 0f)
+    		.setDuration(5f)
+    		.setEasing("ease_out"));
+
+    	//MELEE - right jab
+    	ANIMATIONS.put("jab_right", new ArmAnimationDataProcedure("jab_right")
+    		.setArms(true, true)
+    		.setForceVisible(true)
+    		// right arm
+    		.setRightStartPose(-0.03f, 0.61f, -0.65f, -41.88f, -1.88f, 0f)
+    		.setRightEndPose(0.61f, 0.48f, -0.98f, -16.25f, 52.19f, 0f)
+    		// left arm
+    		.setLeftStartPose(-0.61f, 0.48f, -0.98f, -16.25f, -52.19f, 0f)
+    		.setLeftEndPose(0.03f, 0.61f, -0.65f, -41.88f, 1.88f, 0f)
+    		.setDuration(5f)
+    		.setEasing("ease_out"));
+
+    	//MELEE - left jab
+    	ANIMATIONS.put("jab_left", new ArmAnimationDataProcedure("jab_left")
+    		.setArms(true, true)
+    		.setForceVisible(true)
+    		// right arm
+    		.setRightStartPose(0.61f, 0.48f, -0.98f, -16.25f, 52.19f, 0f)
+    		.setRightEndPose(-0.03f, 0.61f, -0.65f, -41.88f, -1.88f, 0f)
+    		// left arm
+    		.setLeftStartPose(0.03f, 0.61f, -0.65f, -41.88f, 1.88f, 0f)
+    		.setLeftEndPose(-0.61f, 0.48f, -0.98f, -16.25f, -52.19f, 0f)
+    		.setDuration(5f)
+    		.setEasing("ease_out"));
+
+    	//MELEE - right uppercut
+    	ANIMATIONS.put("uppercut_right", new ArmAnimationDataProcedure("uppercut_right")
+    		.setArms(true, true)
+    		.setForceVisible(true)
+    		// right arm
+    		.setRightStartPose(0.40f, 0.25f, -0.27f, -18.75f, -26.25f, 0f)
+    		.setRightEndPose(0.38f, -0.29f, -0.20f, 43.44f, 41.88f, 0f)
+    		// left arm
+    		.setLeftStartPose(-0.61f, 0.48f, -0.98f, -16.25f, -52.19f, 0f)
+    		.setLeftEndPose(0.03f, 0.61f, -0.65f, -41.88f, 1.88f, 0f)
+    		.setDuration(5f)
+    		.setEasing("ease_out"));
+
+    	//MELEE - left uppercut
+    	ANIMATIONS.put("uppercut_left", new ArmAnimationDataProcedure("uppercut_left")
+    		.setArms(true, true)
+    		.setForceVisible(true)
+    		// right arm
+    		.setRightStartPose(0.61f, 0.48f, -0.98f, -16.25f, 52.19f, 0f)
+    		.setRightEndPose(-0.03f, 0.61f, -0.65f, -41.88f, -1.88f, 0f)
+    		// left arm
+    		.setLeftStartPose(-0.40f, 0.25f, -0.27f, -18.75f, 26.25f, 0f)
+    		.setLeftEndPose(-0.38f, -0.29f, -0.20f, 43.44f, -41.88f, 0f)
+    		.setDuration(5f)
+    		.setEasing("ease_out"));
     }
 
     public static ArmAnimationDataProcedure getAnimation(String name) {

@@ -35,5 +35,16 @@ public class Technique1OnKeyPressedProcedure {
 				}
 			}
 		}
+		if (((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).current_moveset).contains("melee")) {
+			MeleePunchProcedure.execute(entity.level(), entity);
+			ReleaseArmAnimationProcedure.execute(entity);
+			{
+				boolean _setval = !(entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).left;
+				entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+					capability.left = _setval;
+					capability.syncPlayerVariables(entity);
+				});
+			}
+		}
 	}
 }

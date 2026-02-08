@@ -7,8 +7,8 @@ import net.minecraftforge.event.entity.living.LivingAttackEvent;
 
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.tags.TagKey;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.core.registries.Registries;
 
 import javax.annotation.Nullable;
@@ -34,7 +34,7 @@ public class WhenEntityIsAttackedProcedure {
 		target = entity;
 		target = sourceentity;
 		target = immediatesourceentity;
-		if (!damagesource.is(ResourceKey.create(Registries.DAMAGE_TYPE, new ResourceLocation("jjk_strongest:jujutsu")))) {
+		if (!damagesource.is(TagKey.create(Registries.DAMAGE_TYPE, new ResourceLocation("forge:jujutsu")))) {
 			MarkEntityOnHitProcedure.execute(entity.level(), sourceentity, entity, immediatesourceentity);
 		}
 	}

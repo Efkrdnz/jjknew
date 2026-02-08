@@ -141,6 +141,10 @@ public class JjkStrongestModVariables {
 				clone.domain_image_1 = original.domain_image_1;
 				clone.domain_image_2 = original.domain_image_2;
 				clone.wcs_chant_progress = original.wcs_chant_progress;
+				clone.left = original.left;
+				clone.block = original.block;
+				clone.rct_self = original.rct_self;
+				clone.rct_output = original.rct_output;
 			}
 		}
 	}
@@ -248,6 +252,10 @@ public class JjkStrongestModVariables {
 		public double domain_image_1 = 0;
 		public double domain_image_2 = 0;
 		public double wcs_chant_progress = 0;
+		public boolean left = false;
+		public boolean block = false;
+		public boolean rct_self = false;
+		public boolean rct_output = false;
 
 		public void syncPlayerVariables(Entity entity) {
 			if (entity instanceof ServerPlayer serverPlayer)
@@ -328,6 +336,10 @@ public class JjkStrongestModVariables {
 			nbt.putDouble("domain_image_1", domain_image_1);
 			nbt.putDouble("domain_image_2", domain_image_2);
 			nbt.putDouble("wcs_chant_progress", wcs_chant_progress);
+			nbt.putBoolean("left", left);
+			nbt.putBoolean("block", block);
+			nbt.putBoolean("rct_self", rct_self);
+			nbt.putBoolean("rct_output", rct_output);
 			return nbt;
 		}
 
@@ -405,6 +417,10 @@ public class JjkStrongestModVariables {
 			domain_image_1 = nbt.getDouble("domain_image_1");
 			domain_image_2 = nbt.getDouble("domain_image_2");
 			wcs_chant_progress = nbt.getDouble("wcs_chant_progress");
+			left = nbt.getBoolean("left");
+			block = nbt.getBoolean("block");
+			rct_self = nbt.getBoolean("rct_self");
+			rct_output = nbt.getBoolean("rct_output");
 		}
 	}
 
@@ -501,6 +517,10 @@ public class JjkStrongestModVariables {
 					variables.domain_image_1 = message.data.domain_image_1;
 					variables.domain_image_2 = message.data.domain_image_2;
 					variables.wcs_chant_progress = message.data.wcs_chant_progress;
+					variables.left = message.data.left;
+					variables.block = message.data.block;
+					variables.rct_self = message.data.rct_self;
+					variables.rct_output = message.data.rct_output;
 				}
 			});
 			context.setPacketHandled(true);

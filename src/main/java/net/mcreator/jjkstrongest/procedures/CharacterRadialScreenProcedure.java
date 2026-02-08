@@ -62,6 +62,10 @@ public class CharacterRadialScreenProcedure {
 				loadGojoAbilities(player);
 			} else if (character.equals("sukuna")) {
 				loadSukunaAbilities(player);
+			} else if (character.equals("yuji")) {
+				loadYujiAbilities(player);
+			} else if (character.equals("inumaki")) {
+				loadInumakiAbilities(player);
 			}
 		}
 
@@ -81,6 +85,7 @@ public class CharacterRadialScreenProcedure {
 			items.add(new AbilityItem("Melee", 0xFFAA00, 4, "gojo_melee"));
 			items.add(new AbilityItem("Limitless", 0xFFFFFF, 1, "gojo_limitless"));
 			if (this.rtcUnlocked) {
+				items.add(new AbilityItem("RCT", 0x32A848, 21, "reverse_cursed_technique"));
 				items.add(new AbilityItem("Red", 0xFF4444, 2, "gojo_red"));
 			}
 		}
@@ -91,15 +96,56 @@ public class CharacterRadialScreenProcedure {
 				BW_WCSTemp.set(capability.vow_wcsact);
 			});
 			this.BW_WCS = BW_WCSTemp.get();
+			AtomicBoolean rtcUnlockedTemp = new AtomicBoolean(false);
+			player.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+				rtcUnlockedTemp.set(capability.RTC_unlocked);
+			});
+			this.rtcUnlocked = rtcUnlockedTemp.get();
 			items.add(new AbilityItem("Dismantle", 0xCC0000, 6, "sukuna_dismantle"));
 			items.add(new AbilityItem("Cleave", 0xFF0000, 5, "sukuna_cleave"));
 			items.add(new AbilityItem("Generic", 0xFFFFFF, 11, "all_generic"));
 			items.add(new AbilityItem("Shrine", 0xFFFFFF, 9, "sukuna_shrine"));
+			if (this.rtcUnlocked) {
+				items.add(new AbilityItem("RCT", 0x32A848, 21, "reverse_cursed_technique"));
+			}
 			items.add(new AbilityItem("Melee", 0xFFAA00, 10, "sukuna_melee"));
 			items.add(new AbilityItem("Fuga", 0xFF6600, 7, "sukuna_fuga"));
 			if (this.BW_WCS) {
 				items.add(new AbilityItem("World Slash", 0xDD0000, 8, "sukuna_wcs"));
 			}
+		}
+
+		private void loadYujiAbilities(Player player) {
+			AtomicBoolean rtcUnlockedTemp = new AtomicBoolean(false);
+			player.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+				rtcUnlockedTemp.set(capability.RTC_unlocked);
+			});
+			this.rtcUnlocked = rtcUnlockedTemp.get();
+			items.add(new AbilityItem("Blood Manipulation", 0x6E160F, 12, "yuji_bloodmanipulation"));
+			items.add(new AbilityItem("Shrine", 0xF25207, 13, "yuji_shrine"));
+			items.add(new AbilityItem("Generic", 0xFFFFFF, 11, "all_generic"));
+			if (this.rtcUnlocked) {
+				items.add(new AbilityItem("RCT", 0x32A848, 21, "reverse_cursed_technique"));
+			}
+			items.add(new AbilityItem("Melee", 0xFFAA00, 15, "yuji_melee"));
+			items.add(new AbilityItem("Divergent\nFist", 0x0B93BD, 14, "yuji_divergentfist"));
+		}
+
+		private void loadInumakiAbilities(Player player) {
+			AtomicBoolean rtcUnlockedTemp = new AtomicBoolean(false);
+			player.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+				rtcUnlockedTemp.set(capability.RTC_unlocked);
+			});
+			this.rtcUnlocked = rtcUnlockedTemp.get();
+			items.add(new AbilityItem("Assault", 0xCC00CC, 16, "inumaki_assault"));
+			items.add(new AbilityItem("Control", 0x9933FF, 17, "inumaki_control"));
+			items.add(new AbilityItem("General", 0xFFFFFF, 11, "all_generic"));
+			if (this.rtcUnlocked) {
+				items.add(new AbilityItem("RCT", 0x32A848, 21, "reverse_cursed_technique"));
+			}
+			items.add(new AbilityItem("Melee", 0xFFAA00, 20, "inumaki_melee"));
+			items.add(new AbilityItem("Binding", 0x6600CC, 18, "inumaki_binding"));
+			items.add(new AbilityItem("Utility", 0xCC66FF, 19, "inumaki_utility"));
 		}
 
 		public void selectAndClose() {
@@ -232,9 +278,28 @@ public class CharacterRadialScreenProcedure {
 				int posX = (int) (centerX + radius * Math.cos(middle));
 				int posY = (int) (centerY + radius * Math.sin(middle));
 				AbilityItem item = items.get(i);
-				int textWidth = this.font.width(item.name);
 				int textColor = this.hovered == i ? 0xFFFFFF : item.color;
-				guiGraphics.drawString(this.font, item.name, posX - textWidth / 2, posY - this.font.lineHeight / 2, textColor, true);
+				// special positioning for divergent fist
+				float adjustedRadius = radius;
+				if (item.name.contains("Divergent")) {
+					adjustedRadius = radius - 8; // move 8 pixels closer to center
+					posX = (int) (centerX + adjustedRadius * Math.cos(middle));
+					posY = (int) (centerY + adjustedRadius * Math.sin(middle));
+				}
+				// handle multi-line text
+				if (item.name.contains("\n")) {
+					String[] lines = item.name.split("\n");
+					int totalHeight = lines.length * this.font.lineHeight;
+					int startY = posY - totalHeight / 2;
+					for (int lineIdx = 0; lineIdx < lines.length; lineIdx++) {
+						int textWidth = this.font.width(lines[lineIdx]);
+						int lineY = startY + lineIdx * this.font.lineHeight;
+						guiGraphics.drawString(this.font, lines[lineIdx], posX - textWidth / 2, lineY, textColor, true);
+					}
+				} else {
+					int textWidth = this.font.width(item.name);
+					guiGraphics.drawString(this.font, item.name, posX - textWidth / 2, posY - this.font.lineHeight / 2, textColor, true);
+				}
 			}
 		}
 

@@ -33,7 +33,7 @@ public class ReversalRedEntityIsHurtProcedure {
 				List<Entity> _entfound = world.getEntitiesOfClass(Entity.class, new AABB(_center, _center).inflate(25 / 2d), e -> true).stream().sorted(Comparator.comparingDouble(_entcnd -> _entcnd.distanceToSqr(_center))).toList();
 				for (Entity entityiterator : _entfound) {
 					if (!(entity == entityiterator || (entity.getPersistentData().getString("caster")).equals(entityiterator.getDisplayName().getString()))) {
-						entity.hurt(new DamageSource(world.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE).getHolderOrThrow(ResourceKey.create(Registries.DAMAGE_TYPE, new ResourceLocation("jjk_strongest:jujutsu"))), entity),
+						entity.hurt(new DamageSource(world.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE).getHolderOrThrow(ResourceKey.create(Registries.DAMAGE_TYPE, new ResourceLocation("jjk_strongest:technique_red"))), entity),
 								(float) (10 * entity.getPersistentData().getDouble("TechniquePower")));
 						entityiterator.setDeltaMovement(new Vec3(
 								((entityiterator.getX() - entity.getX()) * ((3 * entity.getPersistentData().getDouble("TechniquePower"))

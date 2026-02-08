@@ -15,7 +15,9 @@ import net.minecraft.core.Direction;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.commands.Commands;
 
+import net.mcreator.jjkstrongest.procedures.SorcererYujiProcedure;
 import net.mcreator.jjkstrongest.procedures.SorcererSukunaProcedure;
+import net.mcreator.jjkstrongest.procedures.SorcererInumakiProcedure;
 import net.mcreator.jjkstrongest.procedures.SorcererGojoProcedure;
 import net.mcreator.jjkstrongest.procedures.RTCToggleProcedure;
 
@@ -25,7 +27,7 @@ import com.mojang.brigadier.arguments.BoolArgumentType;
 public class JjkCommand {
 	@SubscribeEvent
 	public static void registerCommand(RegisterCommandsEvent event) {
-		event.getDispatcher().register(Commands.literal("jjk").requires(s -> s.hasPermission(3)).then(Commands.argument("target", EntityArgument.entities()).then(Commands.literal("Character").then(Commands.literal("Sukuna").executes(arguments -> {
+		event.getDispatcher().register(Commands.literal("jjk").requires(s -> s.hasPermission(3)).then(Commands.argument("target", EntityArgument.entities()).then(Commands.literal("Character").then(Commands.literal("Shrine").executes(arguments -> {
 			Level world = arguments.getSource().getUnsidedLevel();
 			double x = arguments.getSource().getPosition().x();
 			double y = arguments.getSource().getPosition().y();
@@ -39,7 +41,7 @@ public class JjkCommand {
 
 			SorcererSukunaProcedure.execute(arguments);
 			return 0;
-		})).then(Commands.literal("Gojo").executes(arguments -> {
+		})).then(Commands.literal("Limitless").executes(arguments -> {
 			Level world = arguments.getSource().getUnsidedLevel();
 			double x = arguments.getSource().getPosition().x();
 			double y = arguments.getSource().getPosition().y();
@@ -52,6 +54,34 @@ public class JjkCommand {
 				direction = entity.getDirection();
 
 			SorcererGojoProcedure.execute(arguments);
+			return 0;
+		})).then(Commands.literal("Yuji").executes(arguments -> {
+			Level world = arguments.getSource().getUnsidedLevel();
+			double x = arguments.getSource().getPosition().x();
+			double y = arguments.getSource().getPosition().y();
+			double z = arguments.getSource().getPosition().z();
+			Entity entity = arguments.getSource().getEntity();
+			if (entity == null && world instanceof ServerLevel _servLevel)
+				entity = FakePlayerFactory.getMinecraft(_servLevel);
+			Direction direction = Direction.DOWN;
+			if (entity != null)
+				direction = entity.getDirection();
+
+			SorcererYujiProcedure.execute(arguments);
+			return 0;
+		})).then(Commands.literal("CursedSpeech").executes(arguments -> {
+			Level world = arguments.getSource().getUnsidedLevel();
+			double x = arguments.getSource().getPosition().x();
+			double y = arguments.getSource().getPosition().y();
+			double z = arguments.getSource().getPosition().z();
+			Entity entity = arguments.getSource().getEntity();
+			if (entity == null && world instanceof ServerLevel _servLevel)
+				entity = FakePlayerFactory.getMinecraft(_servLevel);
+			Direction direction = Direction.DOWN;
+			if (entity != null)
+				direction = entity.getDirection();
+
+			SorcererInumakiProcedure.execute(arguments);
 			return 0;
 		}))).then(Commands.literal("RCT").then(Commands.argument("logic", BoolArgumentType.bool()).executes(arguments -> {
 			Level world = arguments.getSource().getUnsidedLevel();

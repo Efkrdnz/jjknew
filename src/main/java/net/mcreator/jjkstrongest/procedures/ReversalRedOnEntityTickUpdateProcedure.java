@@ -16,6 +16,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.tags.TagKey;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.ServerLevel;
@@ -119,7 +120,7 @@ public class ReversalRedOnEntityTickUpdateProcedure {
 				final Vec3 center = new Vec3(x, y, z);
 				List<Entity> targets = world.getEntitiesOfClass(Entity.class, new AABB(center, center).inflate(radius / 2d), e -> true).stream().sorted(Comparator.comparingDouble(e -> e.distanceToSqr(center))).toList();
 				for (Entity target : targets) {
-					if (!entity.getPersistentData().getString("caster").equals(target.getDisplayName().getString()) && target != entity) {
+					if (!entity.getPersistentData().getString("caster").equals(target.getDisplayName().getString()) && target != entity && !target.getType().is(TagKey.create(Registries.ENTITY_TYPE, new ResourceLocation("technique")))) {
 						target.getPersistentData().putBoolean("RedDrag", true);
 					}
 				}
@@ -198,7 +199,7 @@ public class ReversalRedOnEntityTickUpdateProcedure {
 				// create damage source with caster attribution
 				DamageSource damageSource;
 				if (finalCaster != null) {
-					damageSource = new DamageSource(world.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE).getHolderOrThrow(ResourceKey.create(Registries.DAMAGE_TYPE, new ResourceLocation("jjk_strongest:jujutsu"))), finalCaster);
+					damageSource = new DamageSource(world.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE).getHolderOrThrow(ResourceKey.create(Registries.DAMAGE_TYPE, new ResourceLocation("jjk_strongest:technique_red"))), finalCaster);
 				} else {
 					damageSource = new DamageSource(world.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE).getHolderOrThrow(DamageTypes.MAGIC));
 				}

@@ -18,8 +18,10 @@ import net.minecraft.world.entity.Entity;
 
 import net.mcreator.jjkstrongest.entity.ReversalRedEntity;
 import net.mcreator.jjkstrongest.entity.MalevolentShrineEntity;
+import net.mcreator.jjkstrongest.entity.MahoragaEntity;
 import net.mcreator.jjkstrongest.entity.LapseBlueEntity;
 import net.mcreator.jjkstrongest.entity.InfiniteHollowEntity;
+import net.mcreator.jjkstrongest.entity.ImaginaryPurpleEntity;
 import net.mcreator.jjkstrongest.entity.HollowPurpleProjectileEntity;
 import net.mcreator.jjkstrongest.entity.HollowPurpleChargeEntity;
 import net.mcreator.jjkstrongest.entity.HollowPurpleBigEntity;
@@ -58,6 +60,12 @@ public class JjkStrongestModEntities {
 			.setShouldReceiveVelocityUpdates(true).setTrackingRange(64).setUpdateInterval(3).setCustomClientFactory(FlameArrowExplosionEntity::new).fireImmune().sized(0.1f, 0.1f));
 	public static final RegistryObject<EntityType<HollowPurpleBigEntity>> HOLLOW_PURPLE_BIG = register("hollow_purple_big", EntityType.Builder.<HollowPurpleBigEntity>of(HollowPurpleBigEntity::new, MobCategory.MONSTER)
 			.setShouldReceiveVelocityUpdates(true).setTrackingRange(64).setUpdateInterval(3).setCustomClientFactory(HollowPurpleBigEntity::new).fireImmune().sized(0.6f, 0.6f));
+	public static final RegistryObject<EntityType<ImaginaryPurpleEntity>> IMAGINARY_PURPLE = register("imaginary_purple", EntityType.Builder.<ImaginaryPurpleEntity>of(ImaginaryPurpleEntity::new, MobCategory.MONSTER)
+			.setShouldReceiveVelocityUpdates(true).setTrackingRange(64).setUpdateInterval(3).setCustomClientFactory(ImaginaryPurpleEntity::new).fireImmune().sized(0.1f, 0.1f));
+	public static final RegistryObject<EntityType<MahoragaEntity>> MAHORAGA = register("mahoraga",
+			EntityType.Builder.<MahoragaEntity>of(MahoragaEntity::new, MobCategory.MONSTER).setShouldReceiveVelocityUpdates(true).setTrackingRange(128).setUpdateInterval(3).setCustomClientFactory(MahoragaEntity::new)
+
+					.sized(1.2f, 3.6f));
 
 	private static <T extends Entity> RegistryObject<EntityType<T>> register(String registryname, EntityType.Builder<T> entityTypeBuilder) {
 		return REGISTRY.register(registryname, () -> (EntityType<T>) entityTypeBuilder.build(registryname));
@@ -76,6 +84,8 @@ public class JjkStrongestModEntities {
 			DomainUVEntity.init();
 			FlameArrowExplosionEntity.init();
 			HollowPurpleBigEntity.init();
+			ImaginaryPurpleEntity.init();
+			MahoragaEntity.init();
 		});
 	}
 
@@ -91,5 +101,7 @@ public class JjkStrongestModEntities {
 		event.put(DOMAIN_UV.get(), DomainUVEntity.createAttributes().build());
 		event.put(FLAME_ARROW_EXPLOSION.get(), FlameArrowExplosionEntity.createAttributes().build());
 		event.put(HOLLOW_PURPLE_BIG.get(), HollowPurpleBigEntity.createAttributes().build());
+		event.put(IMAGINARY_PURPLE.get(), ImaginaryPurpleEntity.createAttributes().build());
+		event.put(MAHORAGA.get(), MahoragaEntity.createAttributes().build());
 	}
 }

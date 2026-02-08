@@ -25,6 +25,7 @@ public class JjkStrongestModItems {
 	public static final RegistryObject<Item> BF_TEST_ITEM = REGISTRY.register("bf_test_item", () -> new BFTestItemItem());
 	public static final RegistryObject<Item> TEST_DISMANTLE = REGISTRY.register("test_dismantle", () -> new TestDismantleItem());
 	public static final RegistryObject<Item> DOMAIN_BARRIER = block(JjkStrongestModBlocks.DOMAIN_BARRIER);
+	public static final RegistryObject<Item> MAHORAGA_SPAWN_EGG = REGISTRY.register("mahoraga_spawn_egg", () -> new ForgeSpawnEggItem(JjkStrongestModEntities.MAHORAGA, -1, -26317, new Item.Properties()));
 
 	// Start of user code block custom items
 	// End of user code block custom items

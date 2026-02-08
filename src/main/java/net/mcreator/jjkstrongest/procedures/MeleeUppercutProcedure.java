@@ -28,6 +28,7 @@ public class MeleeUppercutProcedure {
 			// damage target
 			if (world instanceof ServerLevel serverLevel) {
 				target.hurt(new DamageSource(serverLevel.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE).getHolderOrThrow(DamageTypes.PLAYER_ATTACK), entity), 8f);
+				target.invulnerableTime = 3;
 			}
 			// launch target upward with forward momentum
 			Vec3 launchVec = new Vec3(lookVec.x * 0.6, 1.2, lookVec.z * 0.6);

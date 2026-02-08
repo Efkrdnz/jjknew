@@ -41,7 +41,7 @@ public class HandleRadialMenuProcedure {
 					character.set(capability.sorcerer);
 				});
 				String charName = character.get();
-				if (charName.equals("gojo") || charName.equals("sukuna")) {
+				if (charName.equals("gojo") || charName.equals("sukuna") || charName.equals("yuji") || charName.equals("inumaki")) {
 					mc.setScreen(new CharacterRadialScreenProcedure.CharacterRadialScreen(charName));
 				}
 			}

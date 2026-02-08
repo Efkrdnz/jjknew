@@ -12,6 +12,7 @@ import net.minecraft.world.effect.MobEffect;
 
 import net.mcreator.jjkstrongest.potion.ZoneMobEffect;
 import net.mcreator.jjkstrongest.potion.PurpleChargingMobEffect;
+import net.mcreator.jjkstrongest.potion.InformationOverloadMobEffect;
 import net.mcreator.jjkstrongest.potion.InfinityMobEffect;
 import net.mcreator.jjkstrongest.JjkStrongestMod;
 
@@ -20,4 +21,5 @@ public class JjkStrongestModMobEffects {
 	public static final RegistryObject<MobEffect> INFINITY = REGISTRY.register("infinity", () -> new InfinityMobEffect());
 	public static final RegistryObject<MobEffect> PURPLE_CHARGING = REGISTRY.register("purple_charging", () -> new PurpleChargingMobEffect());
 	public static final RegistryObject<MobEffect> ZONE = REGISTRY.register("zone", () -> new ZoneMobEffect());
+	public static final RegistryObject<MobEffect> INFORMATION_OVERLOAD = REGISTRY.register("information_overload", () -> new InformationOverloadMobEffect());
 }

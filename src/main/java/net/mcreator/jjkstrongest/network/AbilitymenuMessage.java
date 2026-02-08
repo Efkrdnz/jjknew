@@ -89,6 +89,48 @@ public class AbilitymenuMessage {
 						moveset = "all_generic";
 						displayName = "Generic";
 						break;
+					// yuji
+					case 12 :
+						moveset = "yuji_bloodmanipulation";
+						displayName = "Blood Manipulation";
+						break;
+					case 13 :
+						moveset = "yuji_shrine";
+						displayName = "Shrine";
+						break;
+					case 14 :
+						moveset = "yuji_divergentfist";
+						displayName = "Divergent Fist";
+						break;
+					case 15 :
+						moveset = "yuji_melee";
+						displayName = "Melee";
+						break;
+					// inumaki
+					case 16 :
+						moveset = "inumaki_assault";
+						displayName = "Assault";
+						break;
+					case 17 :
+						moveset = "inumaki_control";
+						displayName = "Control";
+						break;
+					case 18 :
+						moveset = "inumaki_binding";
+						displayName = "Binding";
+						break;
+					case 19 :
+						moveset = "inumaki_utility";
+						displayName = "Utility";
+						break;
+					case 20 :
+						moveset = "inumaki_melee";
+						displayName = "Melee";
+						break;
+					case 21 :
+						moveset = "reverse_cursed_technique";
+						displayName = "RCT";
+						break;
 					default :
 						return;
 				}

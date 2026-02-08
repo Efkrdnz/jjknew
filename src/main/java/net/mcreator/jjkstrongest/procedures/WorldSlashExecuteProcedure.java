@@ -122,7 +122,7 @@ public class WorldSlashExecuteProcedure {
 			Vec3 targetPos = target.position().add(0, target.getBbHeight() / 2, 0);
 			if (isPointInTriangle(targetPos, point1, point2, point3, normal, planeThickness * 2)) {
 				// devastating damage
-				target.hurt(new DamageSource(world.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE).getHolderOrThrow(ResourceKey.create(Registries.DAMAGE_TYPE, new ResourceLocation("jjk_strongest:jujutsu"))), entity), 50.0F);
+				target.hurt(new DamageSource(world.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE).getHolderOrThrow(ResourceKey.create(Registries.DAMAGE_TYPE, new ResourceLocation("jjk_strongest:technique_dismantle"))), entity), 50.0F);
 				// severe debuffs
 				target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, 3));
 				target.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 100, 2));

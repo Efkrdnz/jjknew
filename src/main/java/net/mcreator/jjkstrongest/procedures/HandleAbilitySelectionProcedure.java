@@ -48,6 +48,24 @@ public class HandleAbilitySelectionProcedure {
 			case 8 :
 				moveset = "sukuna_wcs";
 				displayName = "World Slash";
+				break;
+			// yuji
+			case 9 :
+				moveset = "yuji_bloodmanipulation";
+				displayName = "Blood Manipulation";
+				break;
+			case 10 :
+				moveset = "yuji_shrine";
+				displayName = "Shrine";
+				break;
+			case 11 :
+				moveset = "yuji_divergentfist";
+				displayName = "Divergent Fist";
+				break;
+			case 12 :
+				moveset = "yuji_melee";
+				displayName = "Melee";
+				break;
 			default :
 				return;
 		}

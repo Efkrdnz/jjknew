@@ -9,6 +9,7 @@ import net.minecraft.client.Minecraft;
 
 import net.mcreator.jjkstrongest.procedures.RenderRedFirstPersonProcedure;
 import net.mcreator.jjkstrongest.procedures.RenderPurpleChargeFirstPersonProcedure;
+import net.mcreator.jjkstrongest.procedures.RenderImaginaryPurpleFirstPersonProcedure;
 import net.mcreator.jjkstrongest.procedures.RenderFlameArrowFirstPersonProcedure;
 import net.mcreator.jjkstrongest.procedures.RenderBlueFirstPersonProcedure;
 import net.mcreator.jjkstrongest.client.renderer.RedFirstPersonRenderHook;
@@ -26,5 +27,6 @@ public class RedFirstPersonRenderHook {
 		RenderBlueFirstPersonProcedure.execute(mc, mc.player, event.getPoseStack(), event.getHand(), event.getPartialTick());
 		RenderFlameArrowFirstPersonProcedure.execute(mc, mc.player, event.getPoseStack(), event.getHand(), event.getPartialTick());
 		RenderPurpleChargeFirstPersonProcedure.execute(mc, mc.player, event.getPoseStack(), event.getHand(), event.getPartialTick());
+		RenderImaginaryPurpleFirstPersonProcedure.execute(mc, mc.player, event.getPoseStack(), event.getHand(), event.getPartialTick());
 	}
 }

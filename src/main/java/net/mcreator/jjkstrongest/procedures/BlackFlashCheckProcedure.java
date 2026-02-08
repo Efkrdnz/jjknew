@@ -14,12 +14,12 @@ import net.minecraft.world.item.AxeItem;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.util.RandomSource;
 import net.minecraft.util.Mth;
 import net.minecraft.tags.TagKey;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.core.registries.Registries;
 
 import net.mcreator.jjkstrongest.network.JjkStrongestModVariables;
@@ -50,8 +50,18 @@ public class BlackFlashCheckProcedure {
 	private static void execute(@Nullable Event event, Level world, double x, double y, double z, Entity entity, Entity sourceentity, DamageSource damageSource, Entity immediatesourceentity) {
 		if (entity == null || sourceentity == null || damageSource == null)
 			return;
+		// CHECK FOR GUARANTEED BLACK FLASH FROM QTE SUCCESS - HIGHEST PRIORITY
+		if (sourceentity.getPersistentData().getBoolean("guaranteed_blackflash")) {
+			sourceentity.getPersistentData().putBoolean("guaranteed_blackflash", false);
+			System.out.println("[BlackFlash Check] Guaranteed Black Flash triggered!");
+			BlackFlashExecuteProcedure.execute(world, x, y, z, entity, sourceentity);
+			return; // Skip all other checks including normal RNG
+		}
 		// check if damage is from jujutsu technique - skip black flash if true
-		if ((damageSource).is(ResourceKey.create(Registries.DAMAGE_TYPE, new ResourceLocation("jjk_strongest:jujutsu")))) {
+		if ((damageSource).is(TagKey.create(Registries.DAMAGE_TYPE, new ResourceLocation("forge:jujutsu")))) {
+			return;
+		}
+		if ((damageSource).is(DamageTypes.GENERIC_KILL)) {
 			return;
 		}
 		if (sourceentity.getType().is(TagKey.create(Registries.ENTITY_TYPE, new ResourceLocation("technique")))) {

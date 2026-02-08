@@ -11,8 +11,10 @@ import net.minecraftforge.api.distmarker.Dist;
 
 import net.mcreator.jjkstrongest.client.renderer.ReversalRedRenderer;
 import net.mcreator.jjkstrongest.client.renderer.MalevolentShrineRenderer;
+import net.mcreator.jjkstrongest.client.renderer.MahoragaRenderer;
 import net.mcreator.jjkstrongest.client.renderer.LapseBlueRenderer;
 import net.mcreator.jjkstrongest.client.renderer.InfiniteHollowRenderer;
+import net.mcreator.jjkstrongest.client.renderer.ImaginaryPurpleRenderer;
 import net.mcreator.jjkstrongest.client.renderer.HollowPurpleProjectileRenderer;
 import net.mcreator.jjkstrongest.client.renderer.HollowPurpleChargeRenderer;
 import net.mcreator.jjkstrongest.client.renderer.HollowPurpleBigRenderer;
@@ -38,5 +40,7 @@ public class JjkStrongestModEntityRenderers {
 		event.registerEntityRenderer(JjkStrongestModEntities.FLAME_ARROW.get(), FlameArrowRenderer::new);
 		event.registerEntityRenderer(JjkStrongestModEntities.FLAME_ARROW_EXPLOSION.get(), FlameArrowExplosionRenderer::new);
 		event.registerEntityRenderer(JjkStrongestModEntities.HOLLOW_PURPLE_BIG.get(), HollowPurpleBigRenderer::new);
+		event.registerEntityRenderer(JjkStrongestModEntities.IMAGINARY_PURPLE.get(), ImaginaryPurpleRenderer::new);
+		event.registerEntityRenderer(JjkStrongestModEntities.MAHORAGA.get(), MahoragaRenderer::new);
 	}
 }

@@ -6,7 +6,8 @@
   "mixins": [
     "FallingBlockEntityMixin",
     "FirstPersonRendererMixin",
-    "DisableSwingMixin"
+    "DisableSwingMixin",
+    "DisableHotbarKeymappingMixin"
   ],
   "client": [],
   "minVersion": "0.8"

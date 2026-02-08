@@ -98,10 +98,14 @@ public class LapseBlueOnEntityTickUpdateProcedure {
 					attraction = Math.sqrt(Math.pow(entity.getX() - entityiterator.getX(), 2) + Math.pow(entity.getY() - entityiterator.getY(), 2) + Math.pow(entity.getZ() - entityiterator.getZ(), 2));
 					if (attraction > 0) {
 						entityiterator.setDeltaMovement(new Vec3(((entity.getX() - entityiterator.getX()) / attraction), ((entity.getY() - entityiterator.getY()) / attraction), ((entity.getZ() - entityiterator.getZ()) / attraction)));
+						entityiterator.fallDistance = 0;
 					}
-					if (!(entityiterator instanceof ItemEntity) && !(entityiterator instanceof FallingBlockEntity)) {
-						entityiterator.hurt(new DamageSource(world.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE).getHolderOrThrow(ResourceKey.create(Registries.DAMAGE_TYPE, new ResourceLocation("jjk_strongest:jujutsu"))), entity),
-								(float) (entity.getPersistentData().getDouble("TechniquePower") * 2));
+					if (world.getLevelData().getGameTime() % 5 == 0) {
+						if (!(entityiterator instanceof ItemEntity) && !(entityiterator instanceof FallingBlockEntity)) {
+							entityiterator.hurt(
+									new DamageSource(world.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE).getHolderOrThrow(ResourceKey.create(Registries.DAMAGE_TYPE, new ResourceLocation("jjk_strongest:technique_blue"))), entity),
+									(float) (entity.getPersistentData().getDouble("TechniquePower") * 2));
+						}
 					}
 				}
 			}

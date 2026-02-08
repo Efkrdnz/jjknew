@@ -112,7 +112,7 @@ public class BarrageSlashSpamProcedure {
 			}
 		}
 		// no knockback application
-		DamageSource damageSource = new DamageSource(world.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE).getHolderOrThrow(ResourceKey.create(Registries.DAMAGE_TYPE, new ResourceLocation("jjk_strongest:jujutsu"))), shooter);
+		DamageSource damageSource = new DamageSource(world.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE).getHolderOrThrow(ResourceKey.create(Registries.DAMAGE_TYPE, new ResourceLocation("jjk_strongest:technique_dismantle"))), shooter);
 		double originalKnockbackResist = 0;
 		if (target instanceof LivingEntity livingTarget) {
 			originalKnockbackResist = livingTarget.getAttributeValue(net.minecraft.world.entity.ai.attributes.Attributes.KNOCKBACK_RESISTANCE);

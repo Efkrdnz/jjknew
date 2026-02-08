@@ -171,7 +171,7 @@ public class RaycastDismantleAdvancedProcedure {
 		target.getPersistentData().putDouble("dismantle_slash_z", slashDir.z);
 		target.getPersistentData().putLong("dismantle_slash_time", world.getGameTime());
 		// apply damage
-		DamageSource damageSource = new DamageSource(world.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE).getHolderOrThrow(ResourceKey.create(Registries.DAMAGE_TYPE, new ResourceLocation("jjk_strongest:jujutsu"))), shooter);
+		DamageSource damageSource = new DamageSource(world.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE).getHolderOrThrow(ResourceKey.create(Registries.DAMAGE_TYPE, new ResourceLocation("jjk_strongest:technique_dismantle"))), shooter);
 		target.hurt(damageSource, (float) damage);
 		// spawn NEW shader-based slash effect
 		SpawnDismantleSlashProcedure.execute(world, shooter, target, slashDir, techniquePower);

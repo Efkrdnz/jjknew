@@ -86,9 +86,12 @@ public class Technique1OnKeyPressProcedure {
 					}
 				}
 			}
-		} else if (((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).current_moveset).equals("sukuna_melee")
-				|| ((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).current_moveset).equals("gojo_melee")) {
-			MeleePunchProcedure.execute(entity.level(), entity);
+		} else if (((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).current_moveset).contains("melee")) {
+			if ((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).left) {
+				PlayArmAnimationProcedure.execute(entity, "jab_left", true);
+			} else {
+				PlayArmAnimationProcedure.execute(entity, "jab_right", true);
+			}
 		} else if (((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).current_moveset).equals("sukuna_dismantle")) {
 			entity.getPersistentData().putString("chanting", "dismantle");
 			PlayArmAnimationProcedure.execute(entity, "dismantle", true);
@@ -98,6 +101,9 @@ public class Technique1OnKeyPressProcedure {
 			CleaveHoldStartProcedure.execute(entity.level(), entity);
 		} else if (((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).current_moveset).equals("sukuna_wcs")) {
 			entity.getPersistentData().putString("chanting", "wcs1");
+		}
+		if (((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).current_moveset).equals("inumaki_control")) {
+			SpeechExecuteStopProcedure.execute(entity);
 		}
 	}
 }

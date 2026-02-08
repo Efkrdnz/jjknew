@@ -20,7 +20,7 @@ public class SukunaMarkSlashSingleProcedure {
 		float baseDamage = 10.0f;
 		float finalDamage = (float) (baseDamage * 1 + output_multiplier);
 		// apply damage with correct damage source
-		DamageSource damageSource = new DamageSource(_world.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE).getHolderOrThrow(ResourceKey.create(Registries.DAMAGE_TYPE, new ResourceLocation("jjk_strongest:jujutsu"))), player);
+		DamageSource damageSource = new DamageSource(_world.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE).getHolderOrThrow(ResourceKey.create(Registries.DAMAGE_TYPE, new ResourceLocation("jjk_strongest:technique_cleave"))), player);
 		target.hurt(damageSource, finalDamage);
 		// pull target toward player
 		Vec3 playerPos = player.position();
