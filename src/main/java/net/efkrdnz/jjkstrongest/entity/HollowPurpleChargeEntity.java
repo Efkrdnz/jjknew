@@ -208,7 +208,7 @@ public class HollowPurpleChargeEntity extends TamableAnimal implements GeoEntity
 
 	@Override
 	protected EntityDimensions getDefaultDimensions(Pose p_33597_) {
-		return super.getDimensions(p_33597_).scale((float) 1);
+		return super.getDefaultDimensions(p_33597_).scale((float) 1);
 	}
 
 	@Override
