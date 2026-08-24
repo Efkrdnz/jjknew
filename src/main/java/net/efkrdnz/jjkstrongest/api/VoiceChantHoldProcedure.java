@@ -5,6 +5,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 
 import net.efkrdnz.jjkstrongest.procedures.DismantleBarrageProjectileOnTickProcedure;
+import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
@@ -23,7 +24,9 @@ import net.neoforged.neoforge.event.tick.PlayerTickEvent;
  */
 @EventBusSubscriber
 public class VoiceChantHoldProcedure {
-	@SubscribeEvent
+	// After ChantOnTick, so the counter is pinned back down in the same tick it
+	// climbed rather than a frame later.
+	@SubscribeEvent(priority = EventPriority.LOWEST)
 	public static void onPlayerTick(PlayerTickEvent.Post event) {
 		Player player = event.getEntity();
 		if (player == null || player.level().isClientSide())
@@ -42,6 +45,12 @@ public class VoiceChantHoldProcedure {
 			data.putString(JjkVoiceApi.HOLD_STATE, "");
 			return;
 		}
+
+		// A chant buys a tier, not a hold. ChantOnTick has just climbed the counter
+		// as though the key were still down, so put it back where it was paid for.
+		double ceiling = data.getDouble(JjkVoiceApi.CEILING);
+		if (ceiling > 0.0D && data.getDouble("ChantCounter") > ceiling)
+			data.putDouble("ChantCounter", ceiling);
 
 		remaining--;
 		data.putInt(JjkVoiceApi.HOLD_TICKS, remaining);

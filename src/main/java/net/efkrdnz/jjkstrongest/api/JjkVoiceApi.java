@@ -225,6 +225,15 @@ public final class JjkVoiceApi {
 	public static final String HOLD_TICKS = "jjkvoice_hold";
 	public static final String HOLD_STATE = "jjkvoice_hold_state";
 
+	/**
+	 * The counter value a chant paid for, past which it must not drift.
+	 *
+	 * <p>Leaving {@code chanting} set is holding the key, and ChantOnTick climbs the
+	 * counter every tick it is set -- so a charge left standing so it can be spent
+	 * would wind itself all the way to full. This is the line it is pinned to.
+	 */
+	public static final String CEILING = "jjkvoice_ceiling";
+
 	/** How far through an incantation the player has recited, and for what. */
 	private static final String INCANT_ABILITY = "jjkvoice_incant";
 	private static final String INCANT_LINE = "jjkvoice_incant_line";
@@ -428,6 +437,7 @@ public final class JjkVoiceApi {
 		player.getPersistentData().putString("chanting", "");
 		player.getPersistentData().putInt(HOLD_TICKS, 0);
 		player.getPersistentData().putString(HOLD_STATE, "");
+		player.getPersistentData().putDouble(CEILING, 0.0D);
 		forgetRecital(player);
 		return true;
 	}
@@ -547,7 +557,7 @@ public final class JjkVoiceApi {
 	private static void advance(ServerPlayer player, Chantable ability, boolean exact, boolean full) {
 		int[] tiers = ability.tiers();
 		if (full && exact) {
-			player.getPersistentData().putDouble("ChantCounter", tiers[tiers.length - 1] - 1);
+			park(player, tiers[tiers.length - 1] - 1);
 			return;
 		}
 
@@ -568,13 +578,26 @@ public final class JjkVoiceApi {
 
 		double target = next - 1;
 		if (exact) {
-			player.getPersistentData().putDouble("ChantCounter", target);
+			park(player, target);
 			return;
 		}
 		// Half the gap between this tier and the last, so two near chants are worth
 		// one clean one instead of creeping ever closer without arriving.
 		double half = (next - previous) / 2.0D;
-		player.getPersistentData().putDouble("ChantCounter", Math.min(target, counter + half));
+		park(player, Math.min(target, counter + half));
+	}
+
+	/**
+	 * Sets the counter one short of where this chant bought, and pins it there.
+	 *
+	 * <p>One short because ChantOnTick increments before testing with {@code ==}:
+	 * the following tick lands exactly on the value, which is what plays the tier
+	 * sound and sets the multiplier. The ceiling is that landing point, so the tick
+	 * after finds nothing left to climb.
+	 */
+	private static void park(ServerPlayer player, double counter) {
+		player.getPersistentData().putDouble("ChantCounter", counter);
+		player.getPersistentData().putDouble(CEILING, counter + 1.0D);
 	}
 
 	/** Drops a chant this started, without firing it. */
@@ -588,6 +611,7 @@ public final class JjkVoiceApi {
 			player.getPersistentData().putString("chanting", "");
 		player.getPersistentData().putInt(HOLD_TICKS, 0);
 		player.getPersistentData().putString(HOLD_STATE, "");
+		player.getPersistentData().putDouble(CEILING, 0.0D);
 		forgetRecital(player);
 	}
 
@@ -617,6 +641,7 @@ public final class JjkVoiceApi {
 			ability.key().release(player);
 			player.getPersistentData().putInt(HOLD_TICKS, 0);
 			player.getPersistentData().putString(HOLD_STATE, "");
+			player.getPersistentData().putDouble(CEILING, 0.0D);
 			forgetRecital(player);
 			return true;
 		}
