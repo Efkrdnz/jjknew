@@ -8,6 +8,6 @@ public class ReturnMovesetTESTProcedure {
 	public static String execute(Entity entity) {
 		if (entity == null)
 			return "";
-		return (entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).current_moveset;
+		return (entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).current_moveset;
 	}
 }

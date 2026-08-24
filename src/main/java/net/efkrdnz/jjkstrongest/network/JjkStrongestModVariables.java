@@ -1,73 +1,81 @@
 package net.efkrdnz.jjkstrongest.network;
 
 import net.neoforged.neoforge.network.PacketDistributor;
-import net.minecraftforge.network.NetworkEvent;
-import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
+import net.neoforged.neoforge.registries.NeoForgeRegistries;
+import net.neoforged.neoforge.registries.DeferredRegister;
+import net.neoforged.neoforge.attachment.AttachmentType;
+import net.neoforged.neoforge.attachment.IAttachmentHolder;
+import net.neoforged.neoforge.attachment.IAttachmentSerializer;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.event.AttachCapabilitiesEvent;
-import net.minecraftforge.common.util.LazyOptional;
-import net.neoforged.neoforge.common.util.FakePlayer;
-import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import net.minecraftforge.common.capabilities.ICapabilitySerializable;
-import net.minecraftforge.common.capabilities.CapabilityToken;
-import net.minecraftforge.common.capabilities.CapabilityManager;
-import net.minecraftforge.common.capabilities.Capability;
 
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.nbt.Tag;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.core.Direction;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.client.Minecraft;
 
 import net.efkrdnz.jjkstrongest.JjkStrongestMod;
 
 import java.util.function.Supplier;
 
-import com.ibm.icu.util.Output;
-
-@EventBusSubscriber(bus = EventBusSubscriber.Bus.MOD)
 public class JjkStrongestModVariables {
-	@SubscribeEvent
-	public static void init(FMLCommonSetupEvent event) {
-		JjkStrongestMod.addNetworkMessage(PlayerVariablesSyncMessage.class, PlayerVariablesSyncMessage::buffer, PlayerVariablesSyncMessage::new, PlayerVariablesSyncMessage::handler);
-	}
+	public static final DeferredRegister<AttachmentType<?>> ATTACHMENT_TYPES = DeferredRegister.create(NeoForgeRegistries.Keys.ATTACHMENT_TYPES, JjkStrongestMod.MODID);
 
-	@SubscribeEvent
-	public static void init(RegisterCapabilitiesEvent event) {
-		event.register(PlayerVariables.class);
-	}
+	/**
+	 * Per-player state. On 1.20.1 this was a Forge capability attached to every
+	 * non-fake Player; NeoForge 1.21.1 has no such capability system, so it is a
+	 * data attachment instead. It deliberately does NOT declare copyOnDeath() --
+	 * {@link EventBusVariableHandlers#clonePlayer} copies a hand-picked subset,
+	 * and only some of that subset survives an actual death.
+	 */
+	public static final Supplier<AttachmentType<PlayerVariables>> PLAYER_VARIABLES = ATTACHMENT_TYPES.register("player_variables",
+			() -> AttachmentType.builder(PlayerVariables::new).serialize(new IAttachmentSerializer<CompoundTag, PlayerVariables>() {
+				@Override
+				public PlayerVariables read(IAttachmentHolder holder, CompoundTag tag, HolderLookup.Provider provider) {
+					PlayerVariables variables = new PlayerVariables();
+					variables.readNBT(tag);
+					return variables;
+				}
+
+				@Override
+				public CompoundTag write(PlayerVariables attachment, HolderLookup.Provider provider) {
+					return (CompoundTag) attachment.writeNBT();
+				}
+			}).build());
 
 	@EventBusSubscriber
 	public static class EventBusVariableHandlers {
 		@SubscribeEvent
 		public static void onPlayerLoggedInSyncPlayerVariables(PlayerEvent.PlayerLoggedInEvent event) {
 			if (!event.getEntity().level().isClientSide())
-				((PlayerVariables) event.getEntity().getCapability(PLAYER_VARIABLES_CAPABILITY, null).orElse(new PlayerVariables())).syncPlayerVariables(event.getEntity());
+				event.getEntity().getData(PLAYER_VARIABLES).syncPlayerVariables(event.getEntity());
 		}
 
 		@SubscribeEvent
 		public static void onPlayerRespawnedSyncPlayerVariables(PlayerEvent.PlayerRespawnEvent event) {
 			if (!event.getEntity().level().isClientSide())
-				((PlayerVariables) event.getEntity().getCapability(PLAYER_VARIABLES_CAPABILITY, null).orElse(new PlayerVariables())).syncPlayerVariables(event.getEntity());
+				event.getEntity().getData(PLAYER_VARIABLES).syncPlayerVariables(event.getEntity());
 		}
 
 		@SubscribeEvent
 		public static void onPlayerChangedDimensionSyncPlayerVariables(PlayerEvent.PlayerChangedDimensionEvent event) {
 			if (!event.getEntity().level().isClientSide())
-				((PlayerVariables) event.getEntity().getCapability(PLAYER_VARIABLES_CAPABILITY, null).orElse(new PlayerVariables())).syncPlayerVariables(event.getEntity());
+				event.getEntity().getData(PLAYER_VARIABLES).syncPlayerVariables(event.getEntity());
 		}
 
 		@SubscribeEvent
 		public static void clonePlayer(PlayerEvent.Clone event) {
 			event.getOriginal().revive();
-			PlayerVariables original = ((PlayerVariables) event.getOriginal().getCapability(PLAYER_VARIABLES_CAPABILITY, null).orElse(new PlayerVariables()));
-			PlayerVariables clone = ((PlayerVariables) event.getEntity().getCapability(PLAYER_VARIABLES_CAPABILITY, null).orElse(new PlayerVariables()));
+			PlayerVariables original = event.getOriginal().getData(PLAYER_VARIABLES);
+			PlayerVariables clone = event.getEntity().getData(PLAYER_VARIABLES);
 			clone.sorcerer = original.sorcerer;
 			clone.RTC_unlocked = original.RTC_unlocked;
 			clone.gojo_blue_unlocked = original.gojo_blue_unlocked;
@@ -149,36 +157,6 @@ public class JjkStrongestModVariables {
 				clone.fullbright = original.fullbright;
 				clone.precision = original.precision;
 			}
-		}
-	}
-
-	public static final Capability<PlayerVariables> PLAYER_VARIABLES_CAPABILITY = CapabilityManager.get(new CapabilityToken<PlayerVariables>() {
-	});
-
-	@EventBusSubscriber
-	private static class PlayerVariablesProvider implements ICapabilitySerializable<Tag> {
-		@SubscribeEvent
-		public static void onAttachCapabilities(AttachCapabilitiesEvent<Entity> event) {
-			if (event.getObject() instanceof Player && !(event.getObject() instanceof FakePlayer))
-				event.addCapability(ResourceLocation.fromNamespaceAndPath("jjk_strongest", "player_variables"), new PlayerVariablesProvider());
-		}
-
-		private final PlayerVariables playerVariables = new PlayerVariables();
-		private final LazyOptional<PlayerVariables> instance = LazyOptional.of(() -> playerVariables);
-
-		@Override
-		public <T> LazyOptional<T> getCapability(Capability<T> cap, Direction side) {
-			return cap == PLAYER_VARIABLES_CAPABILITY ? instance.cast() : LazyOptional.empty();
-		}
-
-		@Override
-		public Tag serializeNBT() {
-			return playerVariables.writeNBT();
-		}
-
-		@Override
-		public void deserializeNBT(Tag nbt) {
-			playerVariables.readNBT(nbt);
 		}
 	}
 
@@ -265,7 +243,7 @@ public class JjkStrongestModVariables {
 
 		public void syncPlayerVariables(Entity entity) {
 			if (entity instanceof ServerPlayer serverPlayer)
-				JjkStrongestMod.PACKET_HANDLER.send(PacketDistributor.PLAYER.with(() -> serverPlayer), new PlayerVariablesSyncMessage(this));
+				PacketDistributor.sendToPlayer(serverPlayer, new PlayerVariablesSyncMessage(this));
 		}
 
 		public Tag writeNBT() {
@@ -436,109 +414,104 @@ public class JjkStrongestModVariables {
 		}
 	}
 
-	public static class PlayerVariablesSyncMessage {
-		private final PlayerVariables data;
+	public record PlayerVariablesSyncMessage(PlayerVariables data) implements CustomPacketPayload {
+		public static final CustomPacketPayload.Type<PlayerVariablesSyncMessage> TYPE = new CustomPacketPayload.Type<>(
+				ResourceLocation.fromNamespaceAndPath(JjkStrongestMod.MODID, "player_variables_sync"));
 
-		public PlayerVariablesSyncMessage(FriendlyByteBuf buffer) {
-			this.data = new PlayerVariables();
-			this.data.readNBT(buffer.readNbt());
-		}
-
-		public PlayerVariablesSyncMessage(PlayerVariables data) {
-			this.data = data;
-		}
-
-		public static void buffer(PlayerVariablesSyncMessage message, FriendlyByteBuf buffer) {
+		public static final StreamCodec<RegistryFriendlyByteBuf, PlayerVariablesSyncMessage> STREAM_CODEC = StreamCodec.of((buffer, message) -> {
 			buffer.writeNbt((CompoundTag) message.data.writeNBT());
+		}, buffer -> {
+			PlayerVariables data = new PlayerVariables();
+			data.readNBT(buffer.readNbt());
+			return new PlayerVariablesSyncMessage(data);
+		});
+
+		@Override
+		public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {
+			return TYPE;
 		}
 
-		public static void handler(PlayerVariablesSyncMessage message, Supplier<NetworkEvent.Context> contextSupplier) {
-			NetworkEvent.Context context = contextSupplier.get();
-			context.enqueueWork(() -> {
-				if (!context.getDirection().getReceptionSide().isServer()) {
-					PlayerVariables variables = ((PlayerVariables) Minecraft.getInstance().player.getCapability(PLAYER_VARIABLES_CAPABILITY, null).orElse(new PlayerVariables()));
-					variables.sorcerer = message.data.sorcerer;
-					variables.wcs_x1 = message.data.wcs_x1;
-					variables.wcs_y1 = message.data.wcs_y1;
-					variables.wcs_z1 = message.data.wcs_z1;
-					variables.wcs_x2 = message.data.wcs_x2;
-					variables.wcs_y2 = message.data.wcs_y2;
-					variables.wcs_z2 = message.data.wcs_z2;
-					variables.charge_red = message.data.charge_red;
-					variables.charge_blue = message.data.charge_blue;
-					variables.charge_purple = message.data.charge_purple;
-					variables.current_moveset = message.data.current_moveset;
-					variables.RTC_unlocked = message.data.RTC_unlocked;
-					variables.gojo_blue_unlocked = message.data.gojo_blue_unlocked;
-					variables.wcs_power = message.data.wcs_power;
-					variables.dismantle_barrage = message.data.dismantle_barrage;
-					variables.red_flight = message.data.red_flight;
-					variables.Output = message.data.Output;
-					variables.Output_Dismantle = message.data.Output_Dismantle;
-					variables.Output_Cleave = message.data.Output_Cleave;
-					variables.Output_Flame = message.data.Output_Flame;
-					variables.Output_Blue = message.data.Output_Blue;
-					variables.Output_Red = message.data.Output_Red;
-					variables.Output_Purple = message.data.Output_Purple;
-					variables.Output_Domain = message.data.Output_Domain;
-					variables.Output_HollowPurple = message.data.Output_HollowPurple;
-					variables.Output_WorldSlash = message.data.Output_WorldSlash;
-					variables.vow_overtime = message.data.vow_overtime;
-					variables.vow_recoil = message.data.vow_recoil;
-					variables.vow_wcsact = message.data.vow_wcsact;
-					variables.vow_dismantleimbue = message.data.vow_dismantleimbue;
-					variables.vow_RTChealbrain = message.data.vow_RTChealbrain;
-					variables.vow_trueform = message.data.vow_trueform;
-					variables.vow_executioner = message.data.vow_executioner;
-					variables.vow_adaptivecleave = message.data.vow_adaptivecleave;
-					variables.vow_shreddingbarrage = message.data.vow_shreddingbarrage;
-					variables.vow_bladeresonance = message.data.vow_bladeresonance;
-					variables.vow_smolderingbuildup = message.data.vow_smolderingbuildup;
-					variables.vow_concentratedinferno = message.data.vow_concentratedinferno;
-					variables.vow_desperateflames = message.data.vow_desperateflames;
-					variables.vow_pyroclasm = message.data.vow_pyroclasm;
-					variables.vow_meditativeopening = message.data.vow_meditativeopening;
-					variables.vow_emptyhandshrine = message.data.vow_emptyhandshrine;
-					variables.vow_overwhelmingmalevolence = message.data.vow_overwhelmingmalevolence;
-					variables.vow_shrinesupremacy = message.data.vow_shrinesupremacy;
-					variables.vow_overextendedmalice = message.data.vow_overextendedmalice;
-					variables.vow_distanceamplification = message.data.vow_distanceamplification;
-					variables.vow_stationaryperfection = message.data.vow_stationaryperfection;
-					variables.vow_calculatedwarp = message.data.vow_calculatedwarp;
-					variables.vow_overworlddominance = message.data.vow_overworlddominance;
-					variables.vow_unencumberedfocus = message.data.vow_unencumberedfocus;
-					variables.vow_pressuredexcellence = message.data.vow_pressuredexcellence;
-					variables.vow_fairweatherfighter = message.data.vow_fairweatherfighter;
-					variables.infinity_crush = message.data.infinity_crush;
-					variables.arm_translate_x = message.data.arm_translate_x;
-					variables.arm_translate_y = message.data.arm_translate_y;
-					variables.arm_translate_z = message.data.arm_translate_z;
-					variables.arm_rotate_x = message.data.arm_rotate_x;
-					variables.arm_rotate_y = message.data.arm_rotate_y;
-					variables.arm_rotate_z = message.data.arm_rotate_z;
-					variables.current_arm_animation = message.data.current_arm_animation;
-					variables.arm_anim_holding = message.data.arm_anim_holding;
-					variables.arm_anim_playing = message.data.arm_anim_playing;
-					variables.arm_anim_progress = message.data.arm_anim_progress;
-					variables.arm_anim_start_tick = message.data.arm_anim_start_tick;
-					variables.using_red = message.data.using_red;
-					variables.marked_entities = message.data.marked_entities;
-					variables.marked_timestamps = message.data.marked_timestamps;
-					variables.blue_fist_toggle = message.data.blue_fist_toggle;
-					variables.cleave_melee_toggle = message.data.cleave_melee_toggle;
-					variables.domain_image_1 = message.data.domain_image_1;
-					variables.domain_image_2 = message.data.domain_image_2;
-					variables.wcs_chant_progress = message.data.wcs_chant_progress;
-					variables.left = message.data.left;
-					variables.block = message.data.block;
-					variables.rct_self = message.data.rct_self;
-					variables.rct_output = message.data.rct_output;
-					variables.CE_FLOW = message.data.CE_FLOW;
-					variables.fullbright = message.data.fullbright;
-					variables.precision = message.data.precision;
-				}
-			});
-			context.setPacketHandled(true);
+		public static void handler(PlayerVariablesSyncMessage message, IPayloadContext context) {
+			PlayerVariables variables = Minecraft.getInstance().player.getData(PLAYER_VARIABLES);
+			variables.sorcerer = message.data.sorcerer;
+			variables.wcs_x1 = message.data.wcs_x1;
+			variables.wcs_y1 = message.data.wcs_y1;
+			variables.wcs_z1 = message.data.wcs_z1;
+			variables.wcs_x2 = message.data.wcs_x2;
+			variables.wcs_y2 = message.data.wcs_y2;
+			variables.wcs_z2 = message.data.wcs_z2;
+			variables.charge_red = message.data.charge_red;
+			variables.charge_blue = message.data.charge_blue;
+			variables.charge_purple = message.data.charge_purple;
+			variables.current_moveset = message.data.current_moveset;
+			variables.RTC_unlocked = message.data.RTC_unlocked;
+			variables.gojo_blue_unlocked = message.data.gojo_blue_unlocked;
+			variables.wcs_power = message.data.wcs_power;
+			variables.dismantle_barrage = message.data.dismantle_barrage;
+			variables.red_flight = message.data.red_flight;
+			variables.Output = message.data.Output;
+			variables.Output_Dismantle = message.data.Output_Dismantle;
+			variables.Output_Cleave = message.data.Output_Cleave;
+			variables.Output_Flame = message.data.Output_Flame;
+			variables.Output_Blue = message.data.Output_Blue;
+			variables.Output_Red = message.data.Output_Red;
+			variables.Output_Purple = message.data.Output_Purple;
+			variables.Output_Domain = message.data.Output_Domain;
+			variables.Output_HollowPurple = message.data.Output_HollowPurple;
+			variables.Output_WorldSlash = message.data.Output_WorldSlash;
+			variables.vow_overtime = message.data.vow_overtime;
+			variables.vow_recoil = message.data.vow_recoil;
+			variables.vow_wcsact = message.data.vow_wcsact;
+			variables.vow_dismantleimbue = message.data.vow_dismantleimbue;
+			variables.vow_RTChealbrain = message.data.vow_RTChealbrain;
+			variables.vow_trueform = message.data.vow_trueform;
+			variables.vow_executioner = message.data.vow_executioner;
+			variables.vow_adaptivecleave = message.data.vow_adaptivecleave;
+			variables.vow_shreddingbarrage = message.data.vow_shreddingbarrage;
+			variables.vow_bladeresonance = message.data.vow_bladeresonance;
+			variables.vow_smolderingbuildup = message.data.vow_smolderingbuildup;
+			variables.vow_concentratedinferno = message.data.vow_concentratedinferno;
+			variables.vow_desperateflames = message.data.vow_desperateflames;
+			variables.vow_pyroclasm = message.data.vow_pyroclasm;
+			variables.vow_meditativeopening = message.data.vow_meditativeopening;
+			variables.vow_emptyhandshrine = message.data.vow_emptyhandshrine;
+			variables.vow_overwhelmingmalevolence = message.data.vow_overwhelmingmalevolence;
+			variables.vow_shrinesupremacy = message.data.vow_shrinesupremacy;
+			variables.vow_overextendedmalice = message.data.vow_overextendedmalice;
+			variables.vow_distanceamplification = message.data.vow_distanceamplification;
+			variables.vow_stationaryperfection = message.data.vow_stationaryperfection;
+			variables.vow_calculatedwarp = message.data.vow_calculatedwarp;
+			variables.vow_overworlddominance = message.data.vow_overworlddominance;
+			variables.vow_unencumberedfocus = message.data.vow_unencumberedfocus;
+			variables.vow_pressuredexcellence = message.data.vow_pressuredexcellence;
+			variables.vow_fairweatherfighter = message.data.vow_fairweatherfighter;
+			variables.infinity_crush = message.data.infinity_crush;
+			variables.arm_translate_x = message.data.arm_translate_x;
+			variables.arm_translate_y = message.data.arm_translate_y;
+			variables.arm_translate_z = message.data.arm_translate_z;
+			variables.arm_rotate_x = message.data.arm_rotate_x;
+			variables.arm_rotate_y = message.data.arm_rotate_y;
+			variables.arm_rotate_z = message.data.arm_rotate_z;
+			variables.current_arm_animation = message.data.current_arm_animation;
+			variables.arm_anim_holding = message.data.arm_anim_holding;
+			variables.arm_anim_playing = message.data.arm_anim_playing;
+			variables.arm_anim_progress = message.data.arm_anim_progress;
+			variables.arm_anim_start_tick = message.data.arm_anim_start_tick;
+			variables.using_red = message.data.using_red;
+			variables.marked_entities = message.data.marked_entities;
+			variables.marked_timestamps = message.data.marked_timestamps;
+			variables.blue_fist_toggle = message.data.blue_fist_toggle;
+			variables.cleave_melee_toggle = message.data.cleave_melee_toggle;
+			variables.domain_image_1 = message.data.domain_image_1;
+			variables.domain_image_2 = message.data.domain_image_2;
+			variables.wcs_chant_progress = message.data.wcs_chant_progress;
+			variables.left = message.data.left;
+			variables.block = message.data.block;
+			variables.rct_self = message.data.rct_self;
+			variables.rct_output = message.data.rct_output;
+			variables.CE_FLOW = message.data.CE_FLOW;
+			variables.fullbright = message.data.fullbright;
+			variables.precision = message.data.precision;
 		}
 	}
 }

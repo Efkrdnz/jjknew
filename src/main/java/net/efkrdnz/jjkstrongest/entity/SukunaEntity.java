@@ -1,8 +1,6 @@
 package net.efkrdnz.jjkstrongest.entity;
 
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraftforge.network.PlayMessages;
-import net.minecraftforge.network.NetworkHooks;
 
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.Level;
@@ -26,8 +24,6 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.ServerBossEvent;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.network.protocol.game.ClientGamePacketListener;
-import net.minecraft.network.protocol.Packet;
 
 import net.efkrdnz.jjkstrongest.procedures.SukunaNPCTickProcedure;
 import net.efkrdnz.jjkstrongest.init.JjkStrongestModEntities;
@@ -35,9 +31,6 @@ import net.efkrdnz.jjkstrongest.init.JjkStrongestModEntities;
 public class SukunaEntity extends Monster {
 	private final ServerBossEvent bossInfo = new ServerBossEvent(this.getDisplayName(), ServerBossEvent.BossBarColor.RED, ServerBossEvent.BossBarOverlay.PROGRESS);
 
-	public SukunaEntity(PlayMessages.SpawnEntity packet, Level world) {
-		this(JjkStrongestModEntities.SUKUNA.get(), world);
-	}
 
 	public SukunaEntity(EntityType<SukunaEntity> type, Level world) {
 		super(type, world);
@@ -46,10 +39,6 @@ public class SukunaEntity extends Monster {
 		setNoAi(false);
 	}
 
-	@Override
-	public Packet<ClientGamePacketListener> getAddEntityPacket() {
-		return NetworkHooks.getEntitySpawningPacket(this);
-	}
 
 	@Override
 	protected void registerGoals() {

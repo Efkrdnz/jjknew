@@ -15,7 +15,7 @@ public class OnRightClickBlockProcedure {
 			return;
 		Player player = (Player) entity;
 		// check if player has any marks
-		String markedJson = (player.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).marked_entities;
+		String markedJson = (player.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).marked_entities;
 		if (markedJson == null || markedJson.isEmpty())
 			return;
 		try {

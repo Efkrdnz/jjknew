@@ -21,34 +21,37 @@ public class VCTexeProcedure {
 		if (!(entity instanceof Player)) {
 			return;
 		}
-		if (((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).sorcerer).equals("gojo")) {
+		if (((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).sorcerer).equals("gojo")) {
 			if (message.contains("domain_expansion")) {
 				{
 					double _setval = 1;
-					entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+					{
+						JjkStrongestModVariables.PlayerVariables capability = entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 						capability.domain_image_1 = _setval;
 						capability.syncPlayerVariables(entity);
-					});
+					}
 				}
 				{
 					double _setval = 1;
-					entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+					{
+						JjkStrongestModVariables.PlayerVariables capability = entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 						capability.domain_image_2 = _setval;
 						capability.syncPlayerVariables(entity);
-					});
+					}
 				}
 				if (!world.isClientSide()) {
 					DomainExpansionStartProcedure.execute(entity.level(), Math.round(x + 0), Math.round(y + 0), Math.round(z + 0), entity, 0);
 				}
 			}
-		} else if (((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).sorcerer).equals("sukuna")) {
+		} else if (((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).sorcerer).equals("sukuna")) {
 			if (message.contains("domain_expansion")) {
 				{
 					double _setval = 1;
-					entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+					{
+						JjkStrongestModVariables.PlayerVariables capability = entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 						capability.domain_image_2 = _setval;
 						capability.syncPlayerVariables(entity);
-					});
+					}
 				}
 				if (world instanceof Level _level) {
 					if (!_level.isClientSide()) {
@@ -65,7 +68,7 @@ public class VCTexeProcedure {
 			} else if (message.contains("fuga")) {
 				FlameArrowShootExecuteProcedure.execute(entity);
 			}
-		} else if (((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).sorcerer).equals("inumaki")) {
+		} else if (((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).sorcerer).equals("inumaki")) {
 			if (message.contains("dont_move")) {
 				SpeechExecuteStopProcedure.execute(entity);
 			} else if (message.contains("die")) {

@@ -42,7 +42,7 @@ public class DomainCastOverlayGojoOverlay {
 		RenderSystem.enableBlend();
 		RenderSystem.setShader(GameRenderer::getPositionTexShader);
 		RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
-		RenderSystem.setShaderColor(1, 1, 1, (float) (entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).domain_image_2);
+		RenderSystem.setShaderColor(1, 1, 1, (float) (entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).domain_image_2);
 		if (ReturnBoolGojoProcedure.execute(entity)) {
 			event.getGuiGraphics().blit(ResourceLocation.parse("jjk_strongest:textures/screens/unlimited_void_hand_2.png"), w / 2 + -50, h / 2 + -98, 0, 0, 100, 100, 100, 100);
 		}

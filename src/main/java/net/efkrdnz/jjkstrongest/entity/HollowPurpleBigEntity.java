@@ -1,8 +1,6 @@
 
 package net.efkrdnz.jjkstrongest.entity;
 
-import net.minecraftforge.network.PlayMessages;
-import net.minecraftforge.network.NetworkHooks;
 
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.Level;
@@ -25,8 +23,6 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.EntityDataAccessor;
-import net.minecraft.network.protocol.game.ClientGamePacketListener;
-import net.minecraft.network.protocol.Packet;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.core.BlockPos;
 
@@ -36,9 +32,6 @@ import net.efkrdnz.jjkstrongest.init.JjkStrongestModEntities;
 public class HollowPurpleBigEntity extends PathfinderMob {
 	public static final EntityDataAccessor<Integer> DATA_size10 = SynchedEntityData.defineId(HollowPurpleBigEntity.class, EntityDataSerializers.INT);
 
-	public HollowPurpleBigEntity(PlayMessages.SpawnEntity packet, Level world) {
-		this(JjkStrongestModEntities.HOLLOW_PURPLE_BIG.get(), world);
-	}
 
 	public HollowPurpleBigEntity(EntityType<HollowPurpleBigEntity> type, Level world) {
 		super(type, world);
@@ -49,10 +42,6 @@ public class HollowPurpleBigEntity extends PathfinderMob {
 		this.moveControl = new FlyingMoveControl(this, 10, true);
 	}
 
-	@Override
-	public Packet<ClientGamePacketListener> getAddEntityPacket() {
-		return NetworkHooks.getEntitySpawningPacket(this);
-	}
 
 	@Override
 	protected void defineSynchedData() {

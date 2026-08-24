@@ -36,9 +36,10 @@ public class HandleRadialMenuProcedure {
 		if (isPressed && !wasPressed) {
 			Player player = mc.player;
 			AtomicReference<String> character = new AtomicReference<>("");
-			player.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+			{
+				JjkStrongestModVariables.PlayerVariables capability = player.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 				character.set(capability.sorcerer);
-			});
+			}
 			String charName = character.get();
 			if (charName.equals("gojo") || charName.equals("sukuna") || charName.equals("yuji") || charName.equals("inumaki")) {
 				mc.setScreen(new CharacterRadialScreenProcedure.CharacterRadialScreen(charName));

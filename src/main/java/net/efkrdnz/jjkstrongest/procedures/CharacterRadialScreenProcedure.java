@@ -1,5 +1,7 @@
 package net.efkrdnz.jjkstrongest.procedures;
 
+import net.neoforged.neoforge.network.PacketDistributor;
+
 import org.joml.Matrix4f;
 
 
@@ -70,9 +72,10 @@ public class CharacterRadialScreenProcedure {
 
 		private void loadGojoAbilities(Player player) {
 			AtomicBoolean rtcUnlockedTemp = new AtomicBoolean(false);
-			player.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+			{
+				JjkStrongestModVariables.PlayerVariables capability = player.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 				rtcUnlockedTemp.set(capability.RTC_unlocked);
-			});
+			}
 			this.rtcUnlocked = rtcUnlockedTemp.get();
 			// debug: print to console
 			if (this.rtcUnlocked) {
@@ -90,14 +93,16 @@ public class CharacterRadialScreenProcedure {
 
 		private void loadSukunaAbilities(Player player) {
 			AtomicBoolean BW_WCSTemp = new AtomicBoolean(false);
-			player.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+			{
+				JjkStrongestModVariables.PlayerVariables capability = player.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 				BW_WCSTemp.set(capability.vow_wcsact);
-			});
+			}
 			this.BW_WCS = BW_WCSTemp.get();
 			AtomicBoolean rtcUnlockedTemp = new AtomicBoolean(false);
-			player.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+			{
+				JjkStrongestModVariables.PlayerVariables capability = player.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 				rtcUnlockedTemp.set(capability.RTC_unlocked);
-			});
+			}
 			this.rtcUnlocked = rtcUnlockedTemp.get();
 			items.add(new AbilityItem("Dismantle", 0xCC0000, 6, "sukuna_dismantle"));
 			items.add(new AbilityItem("Cleave", 0xFF0000, 5, "sukuna_cleave"));
@@ -115,9 +120,10 @@ public class CharacterRadialScreenProcedure {
 
 		private void loadYujiAbilities(Player player) {
 			AtomicBoolean rtcUnlockedTemp = new AtomicBoolean(false);
-			player.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+			{
+				JjkStrongestModVariables.PlayerVariables capability = player.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 				rtcUnlockedTemp.set(capability.RTC_unlocked);
-			});
+			}
 			this.rtcUnlocked = rtcUnlockedTemp.get();
 			items.add(new AbilityItem("Blood Manipulation", 0x6E160F, 12, "yuji_bloodmanipulation"));
 			items.add(new AbilityItem("Shrine", 0xF25207, 13, "yuji_shrine"));
@@ -131,9 +137,10 @@ public class CharacterRadialScreenProcedure {
 
 		private void loadInumakiAbilities(Player player) {
 			AtomicBoolean rtcUnlockedTemp = new AtomicBoolean(false);
-			player.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+			{
+				JjkStrongestModVariables.PlayerVariables capability = player.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 				rtcUnlockedTemp.set(capability.RTC_unlocked);
-			});
+			}
 			this.rtcUnlocked = rtcUnlockedTemp.get();
 			items.add(new AbilityItem("Assault", 0xCC00CC, 16, "inumaki_assault"));
 			items.add(new AbilityItem("Control", 0x9933FF, 17, "inumaki_control"));
@@ -149,7 +156,7 @@ public class CharacterRadialScreenProcedure {
 		public void selectAndClose() {
 			if (this.hovered >= 0 && this.hovered < this.items.size()) {
 				AbilityItem item = this.items.get(this.hovered);
-				JjkStrongestMod.PACKET_HANDLER.sendToServer(new AbilitymenuMessage(item.id, 0));
+				PacketDistributor.sendToServer(new AbilitymenuMessage(item.id, 0));
 			}
 		}
 
@@ -374,9 +381,10 @@ public class CharacterRadialScreenProcedure {
 			if (this.minecraft == null || this.minecraft.player == null)
 				return false;
 			AtomicBoolean active = new AtomicBoolean(false);
-			this.minecraft.player.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+			{
+				JjkStrongestModVariables.PlayerVariables capability = this.minecraft.player.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 				active.set(capability.current_moveset.equals(key));
-			});
+			}
 			return active.get();
 		}
 

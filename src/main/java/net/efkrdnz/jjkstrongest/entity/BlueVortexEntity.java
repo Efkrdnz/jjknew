@@ -1,11 +1,7 @@
 package net.efkrdnz.jjkstrongest.entity;
 
-import net.minecraftforge.network.NetworkHooks;
-import net.minecraftforge.network.PlayMessages;
 
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.protocol.Packet;
-import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -15,9 +11,6 @@ import net.efkrdnz.jjkstrongest.init.JjkStrongestModEntities;
 import net.efkrdnz.jjkstrongest.procedures.BlueVortexProcedure;
 
 public class BlueVortexEntity extends Entity {
-	public BlueVortexEntity(PlayMessages.SpawnEntity packet, Level world) {
-		this(JjkStrongestModEntities.BLUE_VORTEX.get(), world);
-	}
 
 	public BlueVortexEntity(EntityType<? extends BlueVortexEntity> type, Level world) {
 		super(type, world);
@@ -25,10 +18,6 @@ public class BlueVortexEntity extends Entity {
 		this.setNoGravity(true);
 	}
 
-	@Override
-	public Packet<ClientGamePacketListener> getAddEntityPacket() {
-		return NetworkHooks.getEntitySpawningPacket(this);
-	}
 
 	@Override
 	protected void defineSynchedData() {

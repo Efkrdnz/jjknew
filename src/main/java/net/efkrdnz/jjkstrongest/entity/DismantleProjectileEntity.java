@@ -1,8 +1,6 @@
 package net.efkrdnz.jjkstrongest.entity;
 
 
-import net.minecraftforge.network.PlayMessages;
-import net.minecraftforge.network.NetworkHooks;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.api.distmarker.Dist;
 
@@ -17,8 +15,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.EntityDataAccessor;
-import net.minecraft.network.protocol.game.ClientGamePacketListener;
-import net.minecraft.network.protocol.Packet;
 import net.minecraft.nbt.CompoundTag;
 
 import net.efkrdnz.jjkstrongest.init.JjkStrongestModEntities;
@@ -39,10 +35,6 @@ public class DismantleProjectileEntity extends AbstractArrow implements ItemSupp
 	private static final EntityDataAccessor<Float> COLOR_G = SynchedEntityData.defineId(DismantleProjectileEntity.class, EntityDataSerializers.FLOAT);
 	private static final EntityDataAccessor<Float> COLOR_B = SynchedEntityData.defineId(DismantleProjectileEntity.class, EntityDataSerializers.FLOAT);
 
-	public DismantleProjectileEntity(PlayMessages.SpawnEntity packet, Level world) {
-		super(JjkStrongestModEntities.DISMANTLE_PROJECTILE.get(), world);
-		setupDefaults();
-	}
 
 	public DismantleProjectileEntity(EntityType<? extends DismantleProjectileEntity> type, Level world) {
 		super(type, world);
@@ -68,10 +60,6 @@ public class DismantleProjectileEntity extends AbstractArrow implements ItemSupp
 		this.pickup = AbstractArrow.Pickup.DISALLOWED;
 	}
 
-	@Override
-	public Packet<ClientGamePacketListener> getAddEntityPacket() {
-		return NetworkHooks.getEntitySpawningPacket(this);
-	}
 
 	@Override
 	protected void defineSynchedData() {

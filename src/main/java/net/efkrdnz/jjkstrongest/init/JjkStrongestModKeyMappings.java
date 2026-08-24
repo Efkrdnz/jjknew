@@ -6,6 +6,7 @@ package net.efkrdnz.jjkstrongest.init;
 
 import org.lwjgl.glfw.GLFW;
 
+import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -31,12 +32,12 @@ public class JjkStrongestModKeyMappings {
 		public void setDown(boolean isDown) {
 			super.setDown(isDown);
 			if (isDownOld != isDown && isDown) {
-				JjkStrongestMod.PACKET_HANDLER.sendToServer(new Technique1Message(0, 0));
+				PacketDistributor.sendToServer(new Technique1Message(0, 0));
 				Technique1Message.pressAction(Minecraft.getInstance().player, 0, 0);
 				TECHNIQUE_1_LASTPRESS = System.currentTimeMillis();
 			} else if (isDownOld != isDown && !isDown) {
 				int dt = (int) (System.currentTimeMillis() - TECHNIQUE_1_LASTPRESS);
-				JjkStrongestMod.PACKET_HANDLER.sendToServer(new Technique1Message(1, dt));
+				PacketDistributor.sendToServer(new Technique1Message(1, dt));
 				Technique1Message.pressAction(Minecraft.getInstance().player, 1, dt);
 			}
 			isDownOld = isDown;
@@ -49,12 +50,12 @@ public class JjkStrongestModKeyMappings {
 		public void setDown(boolean isDown) {
 			super.setDown(isDown);
 			if (isDownOld != isDown && isDown) {
-				JjkStrongestMod.PACKET_HANDLER.sendToServer(new Technique2Message(0, 0));
+				PacketDistributor.sendToServer(new Technique2Message(0, 0));
 				Technique2Message.pressAction(Minecraft.getInstance().player, 0, 0);
 				TECHNIQUE_2_LASTPRESS = System.currentTimeMillis();
 			} else if (isDownOld != isDown && !isDown) {
 				int dt = (int) (System.currentTimeMillis() - TECHNIQUE_2_LASTPRESS);
-				JjkStrongestMod.PACKET_HANDLER.sendToServer(new Technique2Message(1, dt));
+				PacketDistributor.sendToServer(new Technique2Message(1, dt));
 				Technique2Message.pressAction(Minecraft.getInstance().player, 1, dt);
 			}
 			isDownOld = isDown;
@@ -67,12 +68,12 @@ public class JjkStrongestModKeyMappings {
 		public void setDown(boolean isDown) {
 			super.setDown(isDown);
 			if (isDownOld != isDown && isDown) {
-				JjkStrongestMod.PACKET_HANDLER.sendToServer(new Technique3Message(0, 0));
+				PacketDistributor.sendToServer(new Technique3Message(0, 0));
 				Technique3Message.pressAction(Minecraft.getInstance().player, 0, 0);
 				TECHNIQUE_3_LASTPRESS = System.currentTimeMillis();
 			} else if (isDownOld != isDown && !isDown) {
 				int dt = (int) (System.currentTimeMillis() - TECHNIQUE_3_LASTPRESS);
-				JjkStrongestMod.PACKET_HANDLER.sendToServer(new Technique3Message(1, dt));
+				PacketDistributor.sendToServer(new Technique3Message(1, dt));
 				Technique3Message.pressAction(Minecraft.getInstance().player, 1, dt);
 			}
 			isDownOld = isDown;
@@ -85,12 +86,12 @@ public class JjkStrongestModKeyMappings {
 		public void setDown(boolean isDown) {
 			super.setDown(isDown);
 			if (isDownOld != isDown && isDown) {
-				JjkStrongestMod.PACKET_HANDLER.sendToServer(new Technique4Message(0, 0));
+				PacketDistributor.sendToServer(new Technique4Message(0, 0));
 				Technique4Message.pressAction(Minecraft.getInstance().player, 0, 0);
 				TECHNIQUE_4_LASTPRESS = System.currentTimeMillis();
 			} else if (isDownOld != isDown && !isDown) {
 				int dt = (int) (System.currentTimeMillis() - TECHNIQUE_4_LASTPRESS);
-				JjkStrongestMod.PACKET_HANDLER.sendToServer(new Technique4Message(1, dt));
+				PacketDistributor.sendToServer(new Technique4Message(1, dt));
 				Technique4Message.pressAction(Minecraft.getInstance().player, 1, dt);
 			}
 			isDownOld = isDown;
@@ -104,7 +105,7 @@ public class JjkStrongestModKeyMappings {
 		public void setDown(boolean isDown) {
 			super.setDown(isDown);
 			if (isDownOld != isDown && isDown) {
-				JjkStrongestMod.PACKET_HANDLER.sendToServer(new MarkExecuteMessage(0, 0));
+				PacketDistributor.sendToServer(new MarkExecuteMessage(0, 0));
 				MarkExecuteMessage.pressAction(Minecraft.getInstance().player, 0, 0);
 			}
 			isDownOld = isDown;

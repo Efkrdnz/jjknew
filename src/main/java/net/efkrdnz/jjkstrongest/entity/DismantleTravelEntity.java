@@ -1,8 +1,6 @@
 package net.efkrdnz.jjkstrongest.entity;
 
 
-import net.minecraftforge.network.PlayMessages;
-import net.minecraftforge.network.NetworkHooks;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.api.distmarker.Dist;
 
@@ -25,8 +23,6 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.EntityDataAccessor;
-import net.minecraft.network.protocol.game.ClientGamePacketListener;
-import net.minecraft.network.protocol.Packet;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.core.BlockPos;
@@ -50,10 +46,6 @@ public class DismantleTravelEntity extends AbstractArrow implements ItemSupplier
 	private static final EntityDataAccessor<Float> COLOR_G = SynchedEntityData.defineId(DismantleTravelEntity.class, EntityDataSerializers.FLOAT);
 	private static final EntityDataAccessor<Float> COLOR_B = SynchedEntityData.defineId(DismantleTravelEntity.class, EntityDataSerializers.FLOAT);
 
-	public DismantleTravelEntity(PlayMessages.SpawnEntity packet, Level world) {
-		super(JjkStrongestModEntities.DISMANTLE_TRAVEL.get(), world);
-		setupDefaults();
-	}
 
 	public DismantleTravelEntity(EntityType<? extends DismantleTravelEntity> type, Level world) {
 		super(type, world);
@@ -80,10 +72,6 @@ public class DismantleTravelEntity extends AbstractArrow implements ItemSupplier
 		this.noPhysics = true;
 	}
 
-	@Override
-	public Packet<ClientGamePacketListener> getAddEntityPacket() {
-		return NetworkHooks.getEntitySpawningPacket(this);
-	}
 
 	@Override
 	protected void defineSynchedData() {

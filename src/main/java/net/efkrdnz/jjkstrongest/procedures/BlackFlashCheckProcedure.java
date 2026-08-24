@@ -89,9 +89,9 @@ public class BlackFlashCheckProcedure {
 			// normal Black Flash calculation
 			else {
 				// get base chance based on character
-				if (((sourceentity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).sorcerer).equals("gojo")) {
+				if (((sourceentity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).sorcerer).equals("gojo")) {
 					base_chance = 3;
-				} else if (((sourceentity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).sorcerer).equals("yuji")) {
+				} else if (((sourceentity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).sorcerer).equals("yuji")) {
 					base_chance = 12;
 				} else {
 					base_chance = 6;

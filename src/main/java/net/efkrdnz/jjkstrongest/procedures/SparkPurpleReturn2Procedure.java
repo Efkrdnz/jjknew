@@ -8,8 +8,8 @@ public class SparkPurpleReturn2Procedure {
 	public static boolean execute(Entity entity) {
 		if (entity == null)
 			return false;
-		if (((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).sorcerer).equals("gojo")) {
-			if ((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).charge_purple >= 2) {
+		if (((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).sorcerer).equals("gojo")) {
+			if ((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).charge_purple >= 2) {
 				return true;
 			}
 		}

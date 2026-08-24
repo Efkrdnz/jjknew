@@ -19,8 +19,8 @@ public class ExecuteMarkAbilityProcedure {
 			return;
 		Player player = (Player) entity;
 		ServerLevel serverLevel = (ServerLevel) world;
-		String currentTechnique = (player.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).sorcerer;
-		String markedJson = (player.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).marked_entities;
+		String currentTechnique = (player.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).sorcerer;
+		String markedJson = (player.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).marked_entities;
 		if (markedJson == null || markedJson.isEmpty())
 			return;
 		JsonArray markedArray = JsonParser.parseString(markedJson).getAsJsonArray();
@@ -73,7 +73,7 @@ public class ExecuteMarkAbilityProcedure {
 		// remove the used mark
 		String targetUUID = bestTarget.getStringUUID();
 		JsonArray newMarkedArray = new JsonArray();
-		String timestampJson = (player.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).marked_timestamps;
+		String timestampJson = (player.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).marked_timestamps;
 		JsonArray timestampArray = JsonParser.parseString(timestampJson).getAsJsonArray();
 		JsonArray newTimestampArray = new JsonArray();
 		for (int i = 0; i < markedArray.size(); i++) {
@@ -82,10 +82,11 @@ public class ExecuteMarkAbilityProcedure {
 				newTimestampArray.add(timestampArray.get(i));
 			}
 		}
-		player.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+		{
+			JjkStrongestModVariables.PlayerVariables capability = player.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 			capability.marked_entities = newMarkedArray.toString();
 			capability.marked_timestamps = newTimestampArray.toString();
 			capability.syncPlayerVariables(player);
-		});
+		}
 	}
 }

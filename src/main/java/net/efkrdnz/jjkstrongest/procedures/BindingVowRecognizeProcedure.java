@@ -26,7 +26,7 @@ public class BindingVowRecognizeProcedure {
 				}
 			}
 		}).getMessage()).toUpperCase();
-		sorcerer = (entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).sorcerer;
+		sorcerer = (entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).sorcerer;
 		// check if message starts with proper declaration
 		if (!(message.contains("I NEED") || message.contains("I WANT") || message.contains("I SEEK") || message.contains("I VOW"))) {
 			if (entity instanceof Player _player && !_player.level().isClientSide())
@@ -35,16 +35,17 @@ public class BindingVowRecognizeProcedure {
 		}
 		// overtime vow
 		if (message.contains("OVERTIME") || (message.contains("WORK") && message.contains("NIGHT"))) {
-			if ((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).vow_overtime) {
+			if ((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).vow_overtime) {
 				if (entity instanceof Player _player && !_player.level().isClientSide())
 					_player.displayClientMessage(Component.literal("§eYou already have this vow."), false);
 			} else {
 				{
 					boolean _setval = true;
-					entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+					{
+						JjkStrongestModVariables.PlayerVariables capability = entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 						capability.vow_overtime = _setval;
 						capability.syncPlayerVariables(entity);
-					});
+					}
 				}
 				if (entity instanceof Player _player && !_player.level().isClientSide()) {
 					_player.displayClientMessage(Component.literal("§6§l⚖ OVERTIME §r§7- Weakened by day, stronger at night (+50%)"), false);
@@ -54,16 +55,17 @@ public class BindingVowRecognizeProcedure {
 		// recoil vow
 		else if ((message.contains("MORE") || message.contains("BETTER") || message.contains("STRONG") || message.contains("GREATER"))
 				&& (message.contains("OUTPUT") || message.contains("IMPACT") || message.contains("POWER") || message.contains("DAMAGE"))) {
-			if ((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).vow_recoil) {
+			if ((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).vow_recoil) {
 				if (entity instanceof Player _player && !_player.level().isClientSide())
 					_player.displayClientMessage(Component.literal("§eYou already have this vow."), false);
 			} else {
 				{
 					boolean _setval = true;
-					entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+					{
+						JjkStrongestModVariables.PlayerVariables capability = entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 						capability.vow_recoil = _setval;
 						capability.syncPlayerVariables(entity);
-					});
+					}
 				}
 				if (entity instanceof Player _player && !_player.level().isClientSide()) {
 					_player.displayClientMessage(Component.literal("§c§l⚖ RECOIL §r§7- Take recoil damage, +30% output"), false);
@@ -72,16 +74,17 @@ public class BindingVowRecognizeProcedure {
 		}
 		// heal brain/burnout vow
 		else if ((message.contains("HEAL") || message.contains("RESTORE") || message.contains("RECOVER") || message.contains("FIX")) && (message.contains("BRAIN") || message.contains("BURNOUT") || message.contains("MIND"))) {
-			if ((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).vow_RTChealbrain) {
+			if ((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).vow_RTChealbrain) {
 				if (entity instanceof Player _player && !_player.level().isClientSide())
 					_player.displayClientMessage(Component.literal("§eYou already have this vow."), false);
 			} else {
 				{
 					boolean _setval = true;
-					entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+					{
+						JjkStrongestModVariables.PlayerVariables capability = entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 						capability.vow_RTChealbrain = _setval;
 						capability.syncPlayerVariables(entity);
-					});
+					}
 				}
 				if (entity instanceof Player _player && !_player.level().isClientSide()) {
 					_player.displayClientMessage(Component.literal("§b§l⚖ HEAL BURNOUT §r§7- RCT -30%, can heal burnout"), false);
@@ -95,16 +98,17 @@ public class BindingVowRecognizeProcedure {
 					_player.displayClientMessage(Component.literal("§c[Sukuna only]"), false);
 				return;
 			}
-			if ((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).vow_executioner) {
+			if ((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).vow_executioner) {
 				if (entity instanceof Player _player && !_player.level().isClientSide())
 					_player.displayClientMessage(Component.literal("§eYou already have this vow."), false);
 			} else {
 				{
 					boolean _setval = true;
-					entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+					{
+						JjkStrongestModVariables.PlayerVariables capability = entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 						capability.vow_executioner = _setval;
 						capability.syncPlayerVariables(entity);
-					});
+					}
 				}
 				if (entity instanceof Player _player && !_player.level().isClientSide()) {
 					_player.displayClientMessage(Component.literal("§c§l⚖ EXECUTIONER §r§7- Weaker vs healthy, stronger vs wounded (<50% HP)"), false);
@@ -118,16 +122,17 @@ public class BindingVowRecognizeProcedure {
 					_player.displayClientMessage(Component.literal("§c[Sukuna only]"), false);
 				return;
 			}
-			if ((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).vow_trueform) {
+			if ((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).vow_trueform) {
 				if (entity instanceof Player _player && !_player.level().isClientSide())
 					_player.displayClientMessage(Component.literal("§eYou already have this vow."), false);
 			} else {
 				{
 					boolean _setval = true;
-					entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+					{
+						JjkStrongestModVariables.PlayerVariables capability = entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 						capability.vow_trueform = _setval;
 						capability.syncPlayerVariables(entity);
-					});
+					}
 				}
 				if (entity instanceof Player _player && !_player.level().isClientSide()) {
 					_player.displayClientMessage(Component.literal("§4§l⚖ TRUE FORM §r§7[PERMANENT] - Unlocks transformation (needs BF + RCT)"), false);
@@ -141,16 +146,17 @@ public class BindingVowRecognizeProcedure {
 					_player.displayClientMessage(Component.literal("§c[Sukuna only]"), false);
 				return;
 			}
-			if ((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).vow_adaptivecleave) {
+			if ((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).vow_adaptivecleave) {
 				if (entity instanceof Player _player && !_player.level().isClientSide())
 					_player.displayClientMessage(Component.literal("§eYou already have this vow."), false);
 			} else {
 				{
 					boolean _setval = true;
-					entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+					{
+						JjkStrongestModVariables.PlayerVariables capability = entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 						capability.vow_adaptivecleave = _setval;
 						capability.syncPlayerVariables(entity);
-					});
+					}
 				}
 				if (entity instanceof Player _player && !_player.level().isClientSide()) {
 					_player.displayClientMessage(Component.literal("§c§l⚖ ADAPTIVE CLEAVE §r§7- Weaker first hit, stronger on repeated targets"), false);
@@ -164,16 +170,17 @@ public class BindingVowRecognizeProcedure {
 					_player.displayClientMessage(Component.literal("§c[Sukuna only]"), false);
 				return;
 			}
-			if ((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).vow_shreddingbarrage) {
+			if ((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).vow_shreddingbarrage) {
 				if (entity instanceof Player _player && !_player.level().isClientSide())
 					_player.displayClientMessage(Component.literal("§eYou already have this vow."), false);
 			} else {
 				{
 					boolean _setval = true;
-					entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+					{
+						JjkStrongestModVariables.PlayerVariables capability = entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 						capability.vow_shreddingbarrage = _setval;
 						capability.syncPlayerVariables(entity);
-					});
+					}
 				}
 				if (entity instanceof Player _player && !_player.level().isClientSide()) {
 					_player.displayClientMessage(Component.literal("§c§l⚖ SHREDDING BARRAGE §r§7- Less damage/slash, more slashes + stun"), false);
@@ -187,16 +194,17 @@ public class BindingVowRecognizeProcedure {
 					_player.displayClientMessage(Component.literal("§c[Sukuna only]"), false);
 				return;
 			}
-			if ((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).vow_bladeresonance) {
+			if ((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).vow_bladeresonance) {
 				if (entity instanceof Player _player && !_player.level().isClientSide())
 					_player.displayClientMessage(Component.literal("§eYou already have this vow."), false);
 			} else {
 				{
 					boolean _setval = true;
-					entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+					{
+						JjkStrongestModVariables.PlayerVariables capability = entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 						capability.vow_dismantleimbue = _setval;
 						capability.syncPlayerVariables(entity);
-					});
+					}
 				}
 				if (entity instanceof Player _player && !_player.level().isClientSide()) {
 					_player.displayClientMessage(Component.literal("§c§l⚖ BLADE RESONANCE §r§7- Lower output w/o sword, higher with sword"), false);
@@ -210,16 +218,17 @@ public class BindingVowRecognizeProcedure {
 					_player.displayClientMessage(Component.literal("§c[Sukuna only]"), false);
 				return;
 			}
-			if ((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).vow_wcsact) {
+			if ((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).vow_wcsact) {
 				if (entity instanceof Player _player && !_player.level().isClientSide())
 					_player.displayClientMessage(Component.literal("§eYou already have this vow."), false);
 			} else {
 				{
 					boolean _setval = true;
-					entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+					{
+						JjkStrongestModVariables.PlayerVariables capability = entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 						capability.vow_wcsact = _setval;
 						capability.syncPlayerVariables(entity);
-					});
+					}
 				}
 				if (entity instanceof Player _player && !_player.level().isClientSide()) {
 					_player.displayClientMessage(Component.literal("§4§l⚖ WORLD SLASH §r§7[PERMANENT] - Unlocks WCS with chanting (longer cast)"), false);
@@ -233,16 +242,17 @@ public class BindingVowRecognizeProcedure {
 					_player.displayClientMessage(Component.literal("§c[Sukuna only]"), false);
 				return;
 			}
-			if ((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).vow_smolderingbuildup) {
+			if ((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).vow_smolderingbuildup) {
 				if (entity instanceof Player _player && !_player.level().isClientSide())
 					_player.displayClientMessage(Component.literal("§eYou already have this vow."), false);
 			} else {
 				{
 					boolean _setval = true;
-					entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+					{
+						JjkStrongestModVariables.PlayerVariables capability = entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 						capability.vow_smolderingbuildup = _setval;
 						capability.syncPlayerVariables(entity);
-					});
+					}
 				}
 				if (entity instanceof Player _player && !_player.level().isClientSide()) {
 					_player.displayClientMessage(Component.literal("§c§l⚖ SMOLDERING BUILDUP §r§7- No cooldown, charges over time (20-100%+)"), false);
@@ -256,16 +266,17 @@ public class BindingVowRecognizeProcedure {
 					_player.displayClientMessage(Component.literal("§c[Sukuna only]"), false);
 				return;
 			}
-			if ((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).vow_concentratedinferno) {
+			if ((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).vow_concentratedinferno) {
 				if (entity instanceof Player _player && !_player.level().isClientSide())
 					_player.displayClientMessage(Component.literal("§eYou already have this vow."), false);
 			} else {
 				{
 					boolean _setval = true;
-					entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+					{
+						JjkStrongestModVariables.PlayerVariables capability = entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 						capability.vow_concentratedinferno = _setval;
 						capability.syncPlayerVariables(entity);
-					});
+					}
 				}
 				if (entity instanceof Player _player && !_player.level().isClientSide()) {
 					_player.displayClientMessage(Component.literal("§c§l⚖ CONCENTRATED INFERNO §r§7- No explosion, higher direct damage"), false);
@@ -279,16 +290,17 @@ public class BindingVowRecognizeProcedure {
 					_player.displayClientMessage(Component.literal("§c[Sukuna only]"), false);
 				return;
 			}
-			if ((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).vow_desperateflames) {
+			if ((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).vow_desperateflames) {
 				if (entity instanceof Player _player && !_player.level().isClientSide())
 					_player.displayClientMessage(Component.literal("§eYou already have this vow."), false);
 			} else {
 				{
 					boolean _setval = true;
-					entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+					{
+						JjkStrongestModVariables.PlayerVariables capability = entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 						capability.vow_desperateflames = _setval;
 						capability.syncPlayerVariables(entity);
-					});
+					}
 				}
 				if (entity instanceof Player _player && !_player.level().isClientSide()) {
 					_player.displayClientMessage(Component.literal("§c§l⚖ DESPERATE FLAMES §r§7- Shorter chant when outnumbered, much less CE cost"), false);
@@ -302,16 +314,17 @@ public class BindingVowRecognizeProcedure {
 					_player.displayClientMessage(Component.literal("§c[Sukuna only]"), false);
 				return;
 			}
-			if ((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).vow_pyroclasm) {
+			if ((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).vow_pyroclasm) {
 				if (entity instanceof Player _player && !_player.level().isClientSide())
 					_player.displayClientMessage(Component.literal("§eYou already have this vow."), false);
 			} else {
 				{
 					boolean _setval = true;
-					entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+					{
+						JjkStrongestModVariables.PlayerVariables capability = entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 						capability.vow_pyroclasm = _setval;
 						capability.syncPlayerVariables(entity);
-					});
+					}
 				}
 				if (entity instanceof Player _player && !_player.level().isClientSide()) {
 					_player.displayClientMessage(Component.literal("§c§l⚖ PYROCLASM §r§7- -15% when not burning, +10% while burning"), false);
@@ -325,16 +338,17 @@ public class BindingVowRecognizeProcedure {
 					_player.displayClientMessage(Component.literal("§c[Sukuna only]"), false);
 				return;
 			}
-			if ((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).vow_meditativeopening) {
+			if ((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).vow_meditativeopening) {
 				if (entity instanceof Player _player && !_player.level().isClientSide())
 					_player.displayClientMessage(Component.literal("§eYou already have this vow."), false);
 			} else {
 				{
 					boolean _setval = true;
-					entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+					{
+						JjkStrongestModVariables.PlayerVariables capability = entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 						capability.vow_meditativeopening = _setval;
 						capability.syncPlayerVariables(entity);
-					});
+					}
 				}
 				if (entity instanceof Player _player && !_player.level().isClientSide()) {
 					_player.displayClientMessage(Component.literal("§5§l⚖ MEDITATIVE OPENING §r§7- Faster domain if idle 10s, slower if just used ability"), false);
@@ -348,16 +362,17 @@ public class BindingVowRecognizeProcedure {
 					_player.displayClientMessage(Component.literal("§c[Sukuna only]"), false);
 				return;
 			}
-			if ((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).vow_emptyhandshrine) {
+			if ((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).vow_emptyhandshrine) {
 				if (entity instanceof Player _player && !_player.level().isClientSide())
 					_player.displayClientMessage(Component.literal("§eYou already have this vow."), false);
 			} else {
 				{
 					boolean _setval = true;
-					entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+					{
+						JjkStrongestModVariables.PlayerVariables capability = entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 						capability.vow_emptyhandshrine = _setval;
 						capability.syncPlayerVariables(entity);
-					});
+					}
 				}
 				if (entity instanceof Player _player && !_player.level().isClientSide()) {
 					_player.displayClientMessage(Component.literal("§5§l⚖ EMPTY HAND SHRINE §r§7- Weaker domain with items, stronger with empty hands"), false);
@@ -371,16 +386,17 @@ public class BindingVowRecognizeProcedure {
 					_player.displayClientMessage(Component.literal("§c[Sukuna only]"), false);
 				return;
 			}
-			if ((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).vow_overwhelmingmalevolence) {
+			if ((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).vow_overwhelmingmalevolence) {
 				if (entity instanceof Player _player && !_player.level().isClientSide())
 					_player.displayClientMessage(Component.literal("§eYou already have this vow."), false);
 			} else {
 				{
 					boolean _setval = true;
-					entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+					{
+						JjkStrongestModVariables.PlayerVariables capability = entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 						capability.vow_overwhelmingmalevolence = _setval;
 						capability.syncPlayerVariables(entity);
-					});
+					}
 				}
 				if (entity instanceof Player _player && !_player.level().isClientSide()) {
 					_player.displayClientMessage(Component.literal("§5§l⚖ OVERWHELMING MALEVOLENCE §r§7- HUGE damage first 5s, decreases after"), false);
@@ -394,16 +410,17 @@ public class BindingVowRecognizeProcedure {
 					_player.displayClientMessage(Component.literal("§c[Sukuna only]"), false);
 				return;
 			}
-			if ((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).vow_shrinesupremacy) {
+			if ((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).vow_shrinesupremacy) {
 				if (entity instanceof Player _player && !_player.level().isClientSide())
 					_player.displayClientMessage(Component.literal("§eYou already have this vow."), false);
 			} else {
 				{
 					boolean _setval = true;
-					entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+					{
+						JjkStrongestModVariables.PlayerVariables capability = entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 						capability.vow_shrinesupremacy = _setval;
 						capability.syncPlayerVariables(entity);
-					});
+					}
 				}
 				if (entity instanceof Player _player && !_player.level().isClientSide()) {
 					_player.displayClientMessage(Component.literal("§5§l⚖ SHRINE SUPREMACY §r§7- Take more damage in domains, deal more in your domain"), false);
@@ -417,16 +434,17 @@ public class BindingVowRecognizeProcedure {
 					_player.displayClientMessage(Component.literal("§c[Sukuna only]"), false);
 				return;
 			}
-			if ((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).vow_overextendedmalice) {
+			if ((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).vow_overextendedmalice) {
 				if (entity instanceof Player _player && !_player.level().isClientSide())
 					_player.displayClientMessage(Component.literal("§eYou already have this vow."), false);
 			} else {
 				{
 					boolean _setval = true;
-					entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+					{
+						JjkStrongestModVariables.PlayerVariables capability = entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 						capability.vow_overextendedmalice = _setval;
 						capability.syncPlayerVariables(entity);
-					});
+					}
 				}
 				if (entity instanceof Player _player && !_player.level().isClientSide()) {
 					_player.displayClientMessage(Component.literal("§5§l⚖ OVEREXTENDED MALICE §r§7- Take DoT/burnout, domain lasts much longer"), false);
@@ -440,16 +458,17 @@ public class BindingVowRecognizeProcedure {
 					_player.displayClientMessage(Component.literal("§c[Gojo only]"), false);
 				return;
 			}
-			if ((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).vow_distanceamplification) {
+			if ((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).vow_distanceamplification) {
 				if (entity instanceof Player _player && !_player.level().isClientSide())
 					_player.displayClientMessage(Component.literal("§eYou already have this vow."), false);
 			} else {
 				{
 					boolean _setval = true;
-					entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+					{
+						JjkStrongestModVariables.PlayerVariables capability = entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 						capability.vow_distanceamplification = _setval;
 						capability.syncPlayerVariables(entity);
-					});
+					}
 				}
 				if (entity instanceof Player _player && !_player.level().isClientSide()) {
 					_player.displayClientMessage(Component.literal("§5§l⚖ DISTANCE AMPLIFICATION §r§7- Purple damage scales with distance"), false);
@@ -463,16 +482,17 @@ public class BindingVowRecognizeProcedure {
 					_player.displayClientMessage(Component.literal("§c[Gojo only]"), false);
 				return;
 			}
-			if ((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).vow_stationaryperfection) {
+			if ((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).vow_stationaryperfection) {
 				if (entity instanceof Player _player && !_player.level().isClientSide())
 					_player.displayClientMessage(Component.literal("§eYou already have this vow."), false);
 			} else {
 				{
 					boolean _setval = true;
-					entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+					{
+						JjkStrongestModVariables.PlayerVariables capability = entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 						capability.vow_stationaryperfection = _setval;
 						capability.syncPlayerVariables(entity);
-					});
+					}
 				}
 				if (entity instanceof Player _player && !_player.level().isClientSide()) {
 					_player.displayClientMessage(Component.literal("§b§l⚖ STATIONARY PERFECTION §r§7- Stronger Infinity when still, weaker when moving"), false);
@@ -486,16 +506,17 @@ public class BindingVowRecognizeProcedure {
 					_player.displayClientMessage(Component.literal("§c[Gojo only]"), false);
 				return;
 			}
-			if ((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).vow_calculatedwarp) {
+			if ((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).vow_calculatedwarp) {
 				if (entity instanceof Player _player && !_player.level().isClientSide())
 					_player.displayClientMessage(Component.literal("§eYou already have this vow."), false);
 			} else {
 				{
 					boolean _setval = true;
-					entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+					{
+						JjkStrongestModVariables.PlayerVariables capability = entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 						capability.vow_calculatedwarp = _setval;
 						capability.syncPlayerVariables(entity);
-					});
+					}
 				}
 				if (entity instanceof Player _player && !_player.level().isClientSide()) {
 					_player.displayClientMessage(Component.literal("§b§l⚖ CALCULATED WARP §r§7- 1.5s charge, teleport 2x distance"), false);
@@ -504,16 +525,17 @@ public class BindingVowRecognizeProcedure {
 		}
 		// universal - overworld dominance vow
 		else if ((message.contains("OVERWORLD") || message.contains("SURFACE") || message.contains("WORLD")) && (message.contains("DOMINANCE") || message.contains("POWER") || message.contains("STRONGER"))) {
-			if ((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).vow_overworlddominance) {
+			if ((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).vow_overworlddominance) {
 				if (entity instanceof Player _player && !_player.level().isClientSide())
 					_player.displayClientMessage(Component.literal("§eYou already have this vow."), false);
 			} else {
 				{
 					boolean _setval = true;
-					entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+					{
+						JjkStrongestModVariables.PlayerVariables capability = entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 						capability.vow_overworlddominance = _setval;
 						capability.syncPlayerVariables(entity);
-					});
+					}
 				}
 				if (entity instanceof Player _player && !_player.level().isClientSide()) {
 					_player.displayClientMessage(Component.literal("§a§l⚖ OVERWORLD DOMINANCE §r§7- Stronger in Overworld, weaker in Nether/End"), false);
@@ -522,16 +544,17 @@ public class BindingVowRecognizeProcedure {
 		}
 		// universal - unencumbered focus vow
 		else if ((message.contains("UNENCUMBERED") || message.contains("FREE") || message.contains("EMPTY")) && (message.contains("HAND") || message.contains("OFFHAND") || message.contains("FOCUS"))) {
-			if ((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).vow_unencumberedfocus) {
+			if ((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).vow_unencumberedfocus) {
 				if (entity instanceof Player _player && !_player.level().isClientSide())
 					_player.displayClientMessage(Component.literal("§eYou already have this vow."), false);
 			} else {
 				{
 					boolean _setval = true;
-					entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+					{
+						JjkStrongestModVariables.PlayerVariables capability = entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 						capability.vow_unencumberedfocus = _setval;
 						capability.syncPlayerVariables(entity);
-					});
+					}
 				}
 				if (entity instanceof Player _player && !_player.level().isClientSide()) {
 					_player.displayClientMessage(Component.literal("§a§l⚖ UNENCUMBERED FOCUS §r§7- Higher output with empty offhand"), false);
@@ -545,16 +568,17 @@ public class BindingVowRecognizeProcedure {
 					_player.displayClientMessage(Component.literal("§c[Gojo only]"), false);
 				return;
 			}
-			if ((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).vow_pressuredexcellence) {
+			if ((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).vow_pressuredexcellence) {
 				if (entity instanceof Player _player && !_player.level().isClientSide())
 					_player.displayClientMessage(Component.literal("§eYou already have this vow."), false);
 			} else {
 				{
 					boolean _setval = true;
-					entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+					{
+						JjkStrongestModVariables.PlayerVariables capability = entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 						capability.vow_pressuredexcellence = _setval;
 						capability.syncPlayerVariables(entity);
-					});
+					}
 				}
 				if (entity instanceof Player _player && !_player.level().isClientSide()) {
 					_player.displayClientMessage(Component.literal("§b§l⚖ PRESSURED EXCELLENCE §r§7- Stronger vs multiple enemies, weaker solo"), false);
@@ -563,16 +587,17 @@ public class BindingVowRecognizeProcedure {
 		}
 		// universal - fair weather fighter vow
 		else if ((message.contains("WEATHER") || message.contains("CLEAR") || message.contains("SUN")) && (message.contains("FIGHT") || message.contains("BATTLE") || message.contains("POWER"))) {
-			if ((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).vow_fairweatherfighter) {
+			if ((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).vow_fairweatherfighter) {
 				if (entity instanceof Player _player && !_player.level().isClientSide())
 					_player.displayClientMessage(Component.literal("§eYou already have this vow."), false);
 			} else {
 				{
 					boolean _setval = true;
-					entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+					{
+						JjkStrongestModVariables.PlayerVariables capability = entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 						capability.vow_fairweatherfighter = _setval;
 						capability.syncPlayerVariables(entity);
-					});
+					}
 				}
 				if (entity instanceof Player _player && !_player.level().isClientSide()) {
 					_player.displayClientMessage(Component.literal("§e§l⚖ FAIR WEATHER FIGHTER §r§7- Stronger in clear weather, weaker in rain"), false);

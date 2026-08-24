@@ -30,14 +30,14 @@ public class MaxHealthSetOnTickProcedure {
 		if (entity == null)
 			return;
 		if (world.getLevelData().getGameTime() % 20 == 0) {
-			if (!((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).sorcerer).equals("")) {
+			if (!((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).sorcerer).equals("")) {
 				if (!(entity instanceof LivingEntity _livEnt1 && _livEnt1.hasEffect(MobEffects.HEALTH_BOOST))) {
 					if (entity instanceof LivingEntity _entity && !_entity.level().isClientSide())
 						_entity.addEffect(new MobEffectInstance(MobEffects.HEALTH_BOOST, 99999999, 15, false, false));
 					if (entity instanceof LivingEntity _entity)
 						_entity.setHealth(entity instanceof LivingEntity _livEnt ? _livEnt.getMaxHealth() : -1);
 				}
-				if ((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).CE_FLOW) {
+				if ((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).CE_FLOW) {
 					if (!(entity instanceof LivingEntity _livEnt5 && _livEnt5.hasEffect(MobEffects.MOVEMENT_SPEED))) {
 						if (entity instanceof LivingEntity _entity && !_entity.level().isClientSide())
 							_entity.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 99999999, 5, false, false));

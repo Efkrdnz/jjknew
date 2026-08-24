@@ -31,7 +31,7 @@ public class InfinityProcessCrushProcedure {
 			return;
 		boolean is_holding = false;
 		if (sourceEntity instanceof Player) {
-			is_holding = (sourceEntity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).infinity_crush;
+			is_holding = (sourceEntity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).infinity_crush;
 		}
 		BlockPos wallPos = new BlockPos(nbt.getInt("infinityCrushX"), nbt.getInt("infinityCrushY"), nbt.getInt("infinityCrushZ"));
 		String directionName = nbt.getString("infinityCrushDirection");

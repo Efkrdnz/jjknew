@@ -71,10 +71,11 @@ public class HandleAbilitySelectionProcedure {
 		}
 		String finalMoveset = moveset;
 		String finalDisplayName = displayName;
-		player.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+		{
+			JjkStrongestModVariables.PlayerVariables capability = player.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 			capability.current_moveset = finalMoveset;
 			capability.syncPlayerVariables(player);
-		});
+		}
 		player.displayClientMessage(Component.literal("Selected: " + finalDisplayName), true);
 	}
 }

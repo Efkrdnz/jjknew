@@ -10,8 +10,6 @@ import software.bernie.geckolib.core.animation.AnimatableManager;
 import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animatable.GeoEntity;
 
-import net.minecraftforge.network.PlayMessages;
-import net.minecraftforge.network.NetworkHooks;
 
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.ServerLevelAccessor;
@@ -47,8 +45,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.EntityDataAccessor;
-import net.minecraft.network.protocol.game.ClientGamePacketListener;
-import net.minecraft.network.protocol.Packet;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.core.BlockPos;
 
@@ -72,9 +68,6 @@ public class ReversalRedEntity extends TamableAnimal implements GeoEntity {
 	private long lastSwing;
 	public String animationprocedure = "empty";
 
-	public ReversalRedEntity(PlayMessages.SpawnEntity packet, Level world) {
-		this(JjkStrongestModEntities.REVERSAL_RED.get(), world);
-	}
 
 	public ReversalRedEntity(EntityType<ReversalRedEntity> type, Level world) {
 		super(type, world);
@@ -101,10 +94,6 @@ public class ReversalRedEntity extends TamableAnimal implements GeoEntity {
 		return this.entityData.get(TEXTURE);
 	}
 
-	@Override
-	public Packet<ClientGamePacketListener> getAddEntityPacket() {
-		return NetworkHooks.getEntitySpawningPacket(this);
-	}
 
 	@Override
 	protected PathNavigation createNavigation(Level world) {

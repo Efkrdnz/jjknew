@@ -200,14 +200,14 @@ public class CustomSlashVisualiserProcedure {
 		double R = 0;
 		double B = 0;
 		double G = 0;
-		if ((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).wcs_x1 != 0) {
+		if ((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).wcs_x1 != 0) {
 			if (begin(VertexFormat.Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR, true)) {
-				add(((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).wcs_x1),
-						((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).wcs_y1),
-						((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).wcs_z1), 64 << 24 | 255 << 16 | 255 << 8 | 255);
-				add((entity.getX() + (25 + (entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).wcs_power) * entity.getLookAngle().x),
-						(entity.getY() + 1.6 + (25 + (entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).wcs_power) * entity.getLookAngle().y),
-						(entity.getZ() + (25 + (entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).wcs_power) * entity.getLookAngle().z),
+				add(((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).wcs_x1),
+						((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).wcs_y1),
+						((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).wcs_z1), 64 << 24 | 255 << 16 | 255 << 8 | 255);
+				add((entity.getX() + (25 + (entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).wcs_power) * entity.getLookAngle().x),
+						(entity.getY() + 1.6 + (25 + (entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).wcs_power) * entity.getLookAngle().y),
+						(entity.getZ() + (25 + (entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).wcs_power) * entity.getLookAngle().z),
 						255 << 24 | 255 << 16 | 255 << 8 | 255);
 				end();
 			}

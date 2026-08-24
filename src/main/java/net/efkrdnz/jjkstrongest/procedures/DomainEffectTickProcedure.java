@@ -25,22 +25,24 @@ public class DomainEffectTickProcedure {
 	private static void execute(@Nullable Event event, Entity entity) {
 		if (entity == null)
 			return;
-		if ((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).domain_image_1 > 0) {
+		if ((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).domain_image_1 > 0) {
 			{
-				double _setval = Math.min(1, Math.max((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).domain_image_1, 0)) - 0.025;
-				entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+				double _setval = Math.min(1, Math.max((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).domain_image_1, 0)) - 0.025;
+				{
+					JjkStrongestModVariables.PlayerVariables capability = entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 					capability.domain_image_1 = _setval;
 					capability.syncPlayerVariables(entity);
-				});
+				}
 			}
 		}
-		if ((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).domain_image_2 > 0) {
+		if ((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).domain_image_2 > 0) {
 			{
-				double _setval = Math.min(1, Math.max((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).domain_image_2, 0)) - 0.05;
-				entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+				double _setval = Math.min(1, Math.max((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).domain_image_2, 0)) - 0.05;
+				{
+					JjkStrongestModVariables.PlayerVariables capability = entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 					capability.domain_image_2 = _setval;
 					capability.syncPlayerVariables(entity);
-				});
+				}
 			}
 		}
 	}

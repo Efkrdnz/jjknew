@@ -45,9 +45,9 @@ public class WCSClientSideLineRendererProcedure {
 		if (!entity.getPersistentData().getBoolean("WorldSlashHolding"))
 			return;
 		// get coordinates
-		double x1 = (entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).wcs_x1;
-		double y1 = (entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).wcs_y1;
-		double z1 = (entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).wcs_z1;
+		double x1 = (entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).wcs_x1;
+		double y1 = (entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).wcs_y1;
+		double z1 = (entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).wcs_z1;
 		// calculate current aim point
 		Vec3 lookVec = entity.getLookAngle();
 		Vec3 eyePos = entity.getEyePosition(event.getPartialTick());

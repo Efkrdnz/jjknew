@@ -15,10 +15,11 @@ public class SorcererGojoProcedure {
 			for (Entity entityiterator : EntityArgument.getEntities(arguments, "target")) {
 				{
 					String _setval = "gojo";
-					entityiterator.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+					{
+						JjkStrongestModVariables.PlayerVariables capability = entityiterator.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 						capability.sorcerer = _setval;
 						capability.syncPlayerVariables(entityiterator);
-					});
+					}
 				}
 			}
 		} catch (CommandSyntaxException e) {

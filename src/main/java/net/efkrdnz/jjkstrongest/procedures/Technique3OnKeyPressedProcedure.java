@@ -30,16 +30,17 @@ public class Technique3OnKeyPressedProcedure {
 	public static void execute(LevelAccessor world, double x, double y, double z, Entity entity) {
 		if (entity == null)
 			return;
-		if (((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).sorcerer).equals("gojo")) {
-			if (((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).current_moveset).equals("gojo_blue")) {
-				if ((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).charge_blue >= 1) {
+		if (((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).sorcerer).equals("gojo")) {
+			if (((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).current_moveset).equals("gojo_blue")) {
+				if ((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).charge_blue >= 1) {
 					ReleaseArmAnimationProcedure.execute(entity);
 					{
-						double _setval = (entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).charge_blue - 1;
-						entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+						double _setval = (entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).charge_blue - 1;
+						{
+							JjkStrongestModVariables.PlayerVariables capability = entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 							capability.charge_blue = _setval;
 							capability.syncPlayerVariables(entity);
-						});
+						}
 					}
 					if (world instanceof ServerLevel _serverLevel) {
 						Entity entityinstance = JjkStrongestModEntities.LAPSE_BLUE.get().create(_serverLevel, null, null,
@@ -127,14 +128,15 @@ public class Technique3OnKeyPressedProcedure {
 						}
 					}
 				}
-			} else if (((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).current_moveset).equals("gojo_red")) {
-				if ((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).charge_red >= 1) {
+			} else if (((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).current_moveset).equals("gojo_red")) {
+				if ((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).charge_red >= 1) {
 					{
-						double _setval = (entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).charge_red - 1;
-						entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+						double _setval = (entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).charge_red - 1;
+						{
+							JjkStrongestModVariables.PlayerVariables capability = entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 							capability.charge_red = _setval;
 							capability.syncPlayerVariables(entity);
-						});
+						}
 					}
 					ReleaseArmAnimationProcedure.execute(entity);
 					if (world instanceof ServerLevel _serverLevel) {
@@ -167,14 +169,15 @@ public class Technique3OnKeyPressedProcedure {
 						}
 					}
 				}
-			} else if (((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).current_moveset).equals("gojo_purple")) {
-				if ((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).charge_purple >= 3) {
+			} else if (((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).current_moveset).equals("gojo_purple")) {
+				if ((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).charge_purple >= 3) {
 					{
-						double _setval = (entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).charge_purple - 3;
-						entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+						double _setval = (entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).charge_purple - 3;
+						{
+							JjkStrongestModVariables.PlayerVariables capability = entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 							capability.charge_purple = _setval;
 							capability.syncPlayerVariables(entity);
-						});
+						}
 					}
 					if (entity instanceof LivingEntity _livEnt100 && _livEnt100.hasEffect(JjkStrongestModMobEffects.PURPLE_CHARGING.get())) {
 						if (!world.getEntitiesOfClass(HollowPurpleChargeEntity.class, AABB.ofSize(new Vec3(x, y, z), 100, 100, 100), e -> true).isEmpty()) {
@@ -227,41 +230,45 @@ public class Technique3OnKeyPressedProcedure {
 						entity.getPersistentData().putString("chanting", "");
 					}
 				}
-			} else if (((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).current_moveset).equals("gojo_limitless")) {
+			} else if (((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).current_moveset).equals("gojo_limitless")) {
 				TeleportBlinkProcedure.execute(world, entity);
 				ReleaseArmAnimationProcedure.execute(entity);
 				entity.getPersistentData().putString("chanting", "");
 			}
-		} else if (((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).sorcerer).equals("sukuna")) {
-			if (((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).current_moveset).equals("sukuna_dismantle")) {
-				if ((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).precision) {
+		} else if (((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).sorcerer).equals("sukuna")) {
+			if (((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).current_moveset).equals("sukuna_dismantle")) {
+				if ((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).precision) {
 					{
 						double _setval = 0;
-						entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+						{
+							JjkStrongestModVariables.PlayerVariables capability = entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 							capability.wcs_power = _setval;
 							capability.syncPlayerVariables(entity);
-						});
+						}
 					}
 					{
 						double _setval = entity.getX() + 25 * entity.getLookAngle().x;
-						entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+						{
+							JjkStrongestModVariables.PlayerVariables capability = entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 							capability.wcs_x2 = _setval;
 							capability.syncPlayerVariables(entity);
-						});
+						}
 					}
 					{
 						double _setval = entity.getY() + entity.getBbHeight() + 25 * entity.getLookAngle().y;
-						entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+						{
+							JjkStrongestModVariables.PlayerVariables capability = entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 							capability.wcs_y2 = _setval;
 							capability.syncPlayerVariables(entity);
-						});
+						}
 					}
 					{
 						double _setval = entity.getZ() + 25 * entity.getLookAngle().z;
-						entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+						{
+							JjkStrongestModVariables.PlayerVariables capability = entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 							capability.wcs_z2 = _setval;
 							capability.syncPlayerVariables(entity);
-						});
+						}
 					}
 					WorldSlashExecuteProcedure.execute(world, entity);
 					ReleaseArmAnimationProcedure.execute(entity);
@@ -270,7 +277,7 @@ public class Technique3OnKeyPressedProcedure {
 					ReleaseArmAnimationProcedure.execute(entity);
 					entity.getPersistentData().putString("chanting", "");
 				}
-			} else if (((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).current_moveset).equals("sukuna_fuga")) {
+			} else if (((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).current_moveset).equals("sukuna_fuga")) {
 				ReleaseArmAnimationProcedure.execute(entity);
 				entity.getPersistentData().putString("chanting", "");
 				if (DomainCollapseManualProcedure.hasActiveDomain(entity.level(), entity)) {
@@ -278,60 +285,66 @@ public class Technique3OnKeyPressedProcedure {
 				} else {
 					FlameArrowShootExecuteProcedure.execute(entity);
 				}
-			} else if (((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).current_moveset).equals("sukuna_wcs")) {
+			} else if (((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).current_moveset).equals("sukuna_wcs")) {
 				entity.getPersistentData().putString("chanting", "");
 			}
 			{
 				double _setval = 0;
-				entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+				{
+					JjkStrongestModVariables.PlayerVariables capability = entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 					capability.wcs_x2 = _setval;
 					capability.syncPlayerVariables(entity);
-				});
+				}
 			}
 			{
 				double _setval = 0;
-				entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+				{
+					JjkStrongestModVariables.PlayerVariables capability = entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 					capability.wcs_y2 = _setval;
 					capability.syncPlayerVariables(entity);
-				});
+				}
 			}
 			{
 				double _setval = 0;
-				entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+				{
+					JjkStrongestModVariables.PlayerVariables capability = entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 					capability.wcs_z2 = _setval;
 					capability.syncPlayerVariables(entity);
-				});
+				}
 			}
 			{
 				double _setval = 0;
-				entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+				{
+					JjkStrongestModVariables.PlayerVariables capability = entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 					capability.wcs_x1 = _setval;
 					capability.syncPlayerVariables(entity);
-				});
+				}
 			}
 			{
 				double _setval = 0;
-				entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+				{
+					JjkStrongestModVariables.PlayerVariables capability = entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 					capability.wcs_y1 = _setval;
 					capability.syncPlayerVariables(entity);
-				});
+				}
 			}
 			{
 				double _setval = 0;
-				entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+				{
+					JjkStrongestModVariables.PlayerVariables capability = entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 					capability.wcs_z1 = _setval;
 					capability.syncPlayerVariables(entity);
-				});
+				}
 			}
 		}
-		if (((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).sorcerer).equals("inumaki")) {
-			if (((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).current_moveset).equals("inumaki_assault")) {
+		if (((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).sorcerer).equals("inumaki")) {
+			if (((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).current_moveset).equals("inumaki_assault")) {
 				SpeechExecuteBurnProcedure.execute(entity);
-			} else if (((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).current_moveset).equals("inumaki_control")) {
+			} else if (((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).current_moveset).equals("inumaki_control")) {
 				SpeechExecuteFleeProcedure.execute(entity);
-			} else if (((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).current_moveset).equals("inumaki_binding")) {
+			} else if (((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).current_moveset).equals("inumaki_binding")) {
 				SpeechExecuteShrinkProcedure.execute(entity);
-			} else if (((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).current_moveset).equals("inumaki_utility")) {
+			} else if (((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).current_moveset).equals("inumaki_utility")) {
 				SpeechExecutePullProcedure.execute(entity);
 			}
 		}

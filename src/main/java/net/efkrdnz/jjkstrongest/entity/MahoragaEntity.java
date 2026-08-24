@@ -11,8 +11,6 @@ import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache
 import software.bernie.geckolib.animatable.GeoEntity;
 
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraftforge.network.PlayMessages;
-import net.minecraftforge.network.NetworkHooks;
 
 import net.minecraft.world.level.Level;
 import net.minecraft.world.entity.player.Player;
@@ -42,8 +40,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.EntityDataAccessor;
-import net.minecraft.network.protocol.game.ClientGamePacketListener;
-import net.minecraft.network.protocol.Packet;
 import net.minecraft.nbt.CompoundTag;
 
 import net.efkrdnz.jjkstrongest.procedures.MahoragaOnEntityTickUpdateProcedure;
@@ -65,9 +61,6 @@ public class MahoragaEntity extends Monster implements GeoEntity {
 	public String animationprocedure = "empty";
 	private final ServerBossEvent bossInfo = new ServerBossEvent(this.getDisplayName(), ServerBossEvent.BossBarColor.YELLOW, ServerBossEvent.BossBarOverlay.PROGRESS);
 
-	public MahoragaEntity(PlayMessages.SpawnEntity packet, Level world) {
-		this(JjkStrongestModEntities.MAHORAGA.get(), world);
-	}
 
 	public MahoragaEntity(EntityType<MahoragaEntity> type, Level world) {
 		super(type, world);
@@ -98,10 +91,6 @@ public class MahoragaEntity extends Monster implements GeoEntity {
 		return this.entityData.get(TEXTURE);
 	}
 
-	@Override
-	public Packet<ClientGamePacketListener> getAddEntityPacket() {
-		return NetworkHooks.getEntitySpawningPacket(this);
-	}
 
 	@Override
 	protected void registerGoals() {

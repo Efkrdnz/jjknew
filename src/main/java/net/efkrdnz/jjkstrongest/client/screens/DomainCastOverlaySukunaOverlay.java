@@ -42,7 +42,7 @@ public class DomainCastOverlaySukunaOverlay {
 		RenderSystem.enableBlend();
 		RenderSystem.setShader(GameRenderer::getPositionTexShader);
 		RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
-		RenderSystem.setShaderColor(1, 1, 1, (float) (entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).domain_image_2);
+		RenderSystem.setShaderColor(1, 1, 1, (float) (entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).domain_image_2);
 		if (ReturnBookSukunaProcedure.execute(entity)) {
 			event.getGuiGraphics().blit(ResourceLocation.parse("jjk_strongest:textures/screens/benevolant_sanctuary.png"), w / 2 + -42, h / 2 + -92, 0, 0, 84, 84, 84, 84);
 		}

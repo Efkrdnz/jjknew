@@ -4,7 +4,7 @@
  */
 package net.efkrdnz.jjkstrongest.init;
 
-import net.minecraftforge.registries.RegistryObject;
+import net.neoforged.neoforge.registries.DeferredHolder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
@@ -40,52 +40,52 @@ import net.efkrdnz.jjkstrongest.JjkStrongestMod;
 @EventBusSubscriber(bus = EventBusSubscriber.Bus.MOD)
 public class JjkStrongestModEntities {
 	public static final DeferredRegister<EntityType<?>> REGISTRY = DeferredRegister.create(BuiltInRegistries.ENTITY_TYPE, JjkStrongestMod.MODID);
-	public static final RegistryObject<EntityType<LapseBlueEntity>> LAPSE_BLUE = register("lapse_blue", EntityType.Builder.<LapseBlueEntity>of(LapseBlueEntity::new, MobCategory.MONSTER).setShouldReceiveVelocityUpdates(true).setTrackingRange(64)
-			.setUpdateInterval(3).setCustomClientFactory(LapseBlueEntity::new).fireImmune().sized(0.5f, 0.5f));
-	public static final RegistryObject<EntityType<ReversalRedEntity>> REVERSAL_RED = register("reversal_red", EntityType.Builder.<ReversalRedEntity>of(ReversalRedEntity::new, MobCategory.MONSTER).setShouldReceiveVelocityUpdates(true)
-			.setTrackingRange(64).setUpdateInterval(3).setCustomClientFactory(ReversalRedEntity::new).fireImmune().sized(0.2f, 0.2f));
-	public static final RegistryObject<EntityType<HollowPurpleChargeEntity>> HOLLOW_PURPLE_CHARGE = register("hollow_purple_charge", EntityType.Builder.<HollowPurpleChargeEntity>of(HollowPurpleChargeEntity::new, MobCategory.MONSTER)
-			.setShouldReceiveVelocityUpdates(true).setTrackingRange(64).setUpdateInterval(3).setCustomClientFactory(HollowPurpleChargeEntity::new).fireImmune().sized(0.6f, 1.8f));
-	public static final RegistryObject<EntityType<HollowPurpleProjectileEntity>> HOLLOW_PURPLE_PROJECTILE = register("hollow_purple_projectile",
+	public static final DeferredHolder<EntityType<?>, EntityType<LapseBlueEntity>> LAPSE_BLUE = register("lapse_blue", EntityType.Builder.<LapseBlueEntity>of(LapseBlueEntity::new, MobCategory.MONSTER).setShouldReceiveVelocityUpdates(true).setTrackingRange(64)
+			.setUpdateInterval(3).fireImmune().sized(0.5f, 0.5f));
+	public static final DeferredHolder<EntityType<?>, EntityType<ReversalRedEntity>> REVERSAL_RED = register("reversal_red", EntityType.Builder.<ReversalRedEntity>of(ReversalRedEntity::new, MobCategory.MONSTER).setShouldReceiveVelocityUpdates(true)
+			.setTrackingRange(64).setUpdateInterval(3).fireImmune().sized(0.2f, 0.2f));
+	public static final DeferredHolder<EntityType<?>, EntityType<HollowPurpleChargeEntity>> HOLLOW_PURPLE_CHARGE = register("hollow_purple_charge", EntityType.Builder.<HollowPurpleChargeEntity>of(HollowPurpleChargeEntity::new, MobCategory.MONSTER)
+			.setShouldReceiveVelocityUpdates(true).setTrackingRange(64).setUpdateInterval(3).fireImmune().sized(0.6f, 1.8f));
+	public static final DeferredHolder<EntityType<?>, EntityType<HollowPurpleProjectileEntity>> HOLLOW_PURPLE_PROJECTILE = register("hollow_purple_projectile",
 			EntityType.Builder.<HollowPurpleProjectileEntity>of(HollowPurpleProjectileEntity::new, MobCategory.MONSTER).setShouldReceiveVelocityUpdates(true).setTrackingRange(64).setUpdateInterval(3)
-					.setCustomClientFactory(HollowPurpleProjectileEntity::new).fireImmune().sized(0.6f, 1.8f));
-	public static final RegistryObject<EntityType<DismantleProjectileEntity>> DISMANTLE_PROJECTILE = register("dismantle_projectile", EntityType.Builder.<DismantleProjectileEntity>of(DismantleProjectileEntity::new, MobCategory.MISC)
-			.setCustomClientFactory(DismantleProjectileEntity::new).setShouldReceiveVelocityUpdates(true).setTrackingRange(64).setUpdateInterval(1).sized(0.1f, 0.1f));
-	public static final RegistryObject<EntityType<BFEntityEntity>> BF_ENTITY = register("bf_entity",
-			EntityType.Builder.<BFEntityEntity>of(BFEntityEntity::new, MobCategory.MONSTER).setShouldReceiveVelocityUpdates(true).setTrackingRange(64).setUpdateInterval(3).setCustomClientFactory(BFEntityEntity::new).fireImmune().sized(0.1f, 0.1f));
-	public static final RegistryObject<EntityType<MalevolentShrineEntity>> MALEVOLENT_SHRINE = register("malevolent_shrine", EntityType.Builder.<MalevolentShrineEntity>of(MalevolentShrineEntity::new, MobCategory.MONSTER)
-			.setShouldReceiveVelocityUpdates(true).setTrackingRange(64).setUpdateInterval(3).setCustomClientFactory(MalevolentShrineEntity::new).fireImmune().sized(4f, 4f));
-	public static final RegistryObject<EntityType<DomainUVEntity>> DOMAIN_UV = register("domain_uv",
-			EntityType.Builder.<DomainUVEntity>of(DomainUVEntity::new, MobCategory.MONSTER).setShouldReceiveVelocityUpdates(true).setTrackingRange(64).setUpdateInterval(3).setCustomClientFactory(DomainUVEntity::new).fireImmune().sized(0.1f, 0.1f));
-	public static final RegistryObject<EntityType<FlameArrowEntity>> FLAME_ARROW = register("flame_arrow",
-			EntityType.Builder.<FlameArrowEntity>of(FlameArrowEntity::new, MobCategory.MISC).setCustomClientFactory(FlameArrowEntity::new).setShouldReceiveVelocityUpdates(true).setTrackingRange(64).setUpdateInterval(1).sized(0.5f, 0.5f));
-	public static final RegistryObject<EntityType<FlameArrowExplosionEntity>> FLAME_ARROW_EXPLOSION = register("flame_arrow_explosion", EntityType.Builder.<FlameArrowExplosionEntity>of(FlameArrowExplosionEntity::new, MobCategory.MONSTER)
-			.setShouldReceiveVelocityUpdates(true).setTrackingRange(64).setUpdateInterval(3).setCustomClientFactory(FlameArrowExplosionEntity::new).fireImmune().sized(0.1f, 0.1f));
-	public static final RegistryObject<EntityType<HollowPurpleBigEntity>> HOLLOW_PURPLE_BIG = register("hollow_purple_big", EntityType.Builder.<HollowPurpleBigEntity>of(HollowPurpleBigEntity::new, MobCategory.MONSTER)
-			.setShouldReceiveVelocityUpdates(true).setTrackingRange(64).setUpdateInterval(3).setCustomClientFactory(HollowPurpleBigEntity::new).fireImmune().sized(0.6f, 0.6f));
-	public static final RegistryObject<EntityType<ImaginaryPurpleEntity>> IMAGINARY_PURPLE = register("imaginary_purple", EntityType.Builder.<ImaginaryPurpleEntity>of(ImaginaryPurpleEntity::new, MobCategory.MONSTER)
-			.setShouldReceiveVelocityUpdates(true).setTrackingRange(64).setUpdateInterval(3).setCustomClientFactory(ImaginaryPurpleEntity::new).fireImmune().sized(0.1f, 0.1f));
-	public static final RegistryObject<EntityType<MahoragaEntity>> MAHORAGA = register("mahoraga",
-			EntityType.Builder.<MahoragaEntity>of(MahoragaEntity::new, MobCategory.MONSTER).setShouldReceiveVelocityUpdates(true).setTrackingRange(128).setUpdateInterval(3).setCustomClientFactory(MahoragaEntity::new)
+					.fireImmune().sized(0.6f, 1.8f));
+	public static final DeferredHolder<EntityType<?>, EntityType<DismantleProjectileEntity>> DISMANTLE_PROJECTILE = register("dismantle_projectile", EntityType.Builder.<DismantleProjectileEntity>of(DismantleProjectileEntity::new, MobCategory.MISC)
+			.setShouldReceiveVelocityUpdates(true).setTrackingRange(64).setUpdateInterval(1).sized(0.1f, 0.1f));
+	public static final DeferredHolder<EntityType<?>, EntityType<BFEntityEntity>> BF_ENTITY = register("bf_entity",
+			EntityType.Builder.<BFEntityEntity>of(BFEntityEntity::new, MobCategory.MONSTER).setShouldReceiveVelocityUpdates(true).setTrackingRange(64).setUpdateInterval(3).fireImmune().sized(0.1f, 0.1f));
+	public static final DeferredHolder<EntityType<?>, EntityType<MalevolentShrineEntity>> MALEVOLENT_SHRINE = register("malevolent_shrine", EntityType.Builder.<MalevolentShrineEntity>of(MalevolentShrineEntity::new, MobCategory.MONSTER)
+			.setShouldReceiveVelocityUpdates(true).setTrackingRange(64).setUpdateInterval(3).fireImmune().sized(4f, 4f));
+	public static final DeferredHolder<EntityType<?>, EntityType<DomainUVEntity>> DOMAIN_UV = register("domain_uv",
+			EntityType.Builder.<DomainUVEntity>of(DomainUVEntity::new, MobCategory.MONSTER).setShouldReceiveVelocityUpdates(true).setTrackingRange(64).setUpdateInterval(3).fireImmune().sized(0.1f, 0.1f));
+	public static final DeferredHolder<EntityType<?>, EntityType<FlameArrowEntity>> FLAME_ARROW = register("flame_arrow",
+			EntityType.Builder.<FlameArrowEntity>of(FlameArrowEntity::new, MobCategory.MISC).setShouldReceiveVelocityUpdates(true).setTrackingRange(64).setUpdateInterval(1).sized(0.5f, 0.5f));
+	public static final DeferredHolder<EntityType<?>, EntityType<FlameArrowExplosionEntity>> FLAME_ARROW_EXPLOSION = register("flame_arrow_explosion", EntityType.Builder.<FlameArrowExplosionEntity>of(FlameArrowExplosionEntity::new, MobCategory.MONSTER)
+			.setShouldReceiveVelocityUpdates(true).setTrackingRange(64).setUpdateInterval(3).fireImmune().sized(0.1f, 0.1f));
+	public static final DeferredHolder<EntityType<?>, EntityType<HollowPurpleBigEntity>> HOLLOW_PURPLE_BIG = register("hollow_purple_big", EntityType.Builder.<HollowPurpleBigEntity>of(HollowPurpleBigEntity::new, MobCategory.MONSTER)
+			.setShouldReceiveVelocityUpdates(true).setTrackingRange(64).setUpdateInterval(3).fireImmune().sized(0.6f, 0.6f));
+	public static final DeferredHolder<EntityType<?>, EntityType<ImaginaryPurpleEntity>> IMAGINARY_PURPLE = register("imaginary_purple", EntityType.Builder.<ImaginaryPurpleEntity>of(ImaginaryPurpleEntity::new, MobCategory.MONSTER)
+			.setShouldReceiveVelocityUpdates(true).setTrackingRange(64).setUpdateInterval(3).fireImmune().sized(0.1f, 0.1f));
+	public static final DeferredHolder<EntityType<?>, EntityType<MahoragaEntity>> MAHORAGA = register("mahoraga",
+			EntityType.Builder.<MahoragaEntity>of(MahoragaEntity::new, MobCategory.MONSTER).setShouldReceiveVelocityUpdates(true).setTrackingRange(128).setUpdateInterval(3)
 
 					.sized(1.2f, 3.6f));
-	public static final RegistryObject<EntityType<FugaDomainExplosionEntity>> FUGA_DOMAIN_EXPLOSION = register("fuga_domain_explosion", EntityType.Builder.<FugaDomainExplosionEntity>of(FugaDomainExplosionEntity::new, MobCategory.MONSTER)
-			.setShouldReceiveVelocityUpdates(true).setTrackingRange(64).setUpdateInterval(3).setCustomClientFactory(FugaDomainExplosionEntity::new).fireImmune().sized(0.6f, 1.8f));
-	public static final RegistryObject<EntityType<HollowNukeEntity>> HOLLOW_NUKE = register("hollow_nuke", EntityType.Builder.<HollowNukeEntity>of(HollowNukeEntity::new, MobCategory.MONSTER).setShouldReceiveVelocityUpdates(true).setTrackingRange(64)
-			.setUpdateInterval(3).setCustomClientFactory(HollowNukeEntity::new).fireImmune().sized(0.2f, 0.2f));
-	public static final RegistryObject<EntityType<DismantleTravelEntity>> DISMANTLE_TRAVEL = register("dismantle_travel", EntityType.Builder.<DismantleTravelEntity>of(DismantleTravelEntity::new, MobCategory.MISC)
-			.setCustomClientFactory(DismantleTravelEntity::new).setShouldReceiveVelocityUpdates(true).setTrackingRange(64).setUpdateInterval(1).sized(0.5f, 0.5f));
-	public static final RegistryObject<EntityType<SukunaEntity>> SUKUNA = register("sukuna",
-			EntityType.Builder.<SukunaEntity>of(SukunaEntity::new, MobCategory.MONSTER).setShouldReceiveVelocityUpdates(true).setTrackingRange(128).setUpdateInterval(3).setCustomClientFactory(SukunaEntity::new)
+	public static final DeferredHolder<EntityType<?>, EntityType<FugaDomainExplosionEntity>> FUGA_DOMAIN_EXPLOSION = register("fuga_domain_explosion", EntityType.Builder.<FugaDomainExplosionEntity>of(FugaDomainExplosionEntity::new, MobCategory.MONSTER)
+			.setShouldReceiveVelocityUpdates(true).setTrackingRange(64).setUpdateInterval(3).fireImmune().sized(0.6f, 1.8f));
+	public static final DeferredHolder<EntityType<?>, EntityType<HollowNukeEntity>> HOLLOW_NUKE = register("hollow_nuke", EntityType.Builder.<HollowNukeEntity>of(HollowNukeEntity::new, MobCategory.MONSTER).setShouldReceiveVelocityUpdates(true).setTrackingRange(64)
+			.setUpdateInterval(3).fireImmune().sized(0.2f, 0.2f));
+	public static final DeferredHolder<EntityType<?>, EntityType<DismantleTravelEntity>> DISMANTLE_TRAVEL = register("dismantle_travel", EntityType.Builder.<DismantleTravelEntity>of(DismantleTravelEntity::new, MobCategory.MISC)
+			.setShouldReceiveVelocityUpdates(true).setTrackingRange(64).setUpdateInterval(1).sized(0.5f, 0.5f));
+	public static final DeferredHolder<EntityType<?>, EntityType<SukunaEntity>> SUKUNA = register("sukuna",
+			EntityType.Builder.<SukunaEntity>of(SukunaEntity::new, MobCategory.MONSTER).setShouldReceiveVelocityUpdates(true).setTrackingRange(128).setUpdateInterval(3)
 
 					.sized(0.6f, 1.8f));
-	public static final RegistryObject<EntityType<GojoEntity>> GOJO = register("gojo",
-			EntityType.Builder.<GojoEntity>of(GojoEntity::new, MobCategory.MONSTER).setShouldReceiveVelocityUpdates(true).setTrackingRange(128).setUpdateInterval(3).setCustomClientFactory(GojoEntity::new)
+	public static final DeferredHolder<EntityType<?>, EntityType<GojoEntity>> GOJO = register("gojo",
+			EntityType.Builder.<GojoEntity>of(GojoEntity::new, MobCategory.MONSTER).setShouldReceiveVelocityUpdates(true).setTrackingRange(128).setUpdateInterval(3)
 					.sized(0.6f, 1.8f));
-	public static final RegistryObject<EntityType<BlueVortexEntity>> BLUE_VORTEX = register("blue_vortex", EntityType.Builder.<BlueVortexEntity>of(BlueVortexEntity::new, MobCategory.MISC).setShouldReceiveVelocityUpdates(true)
-			.setTrackingRange(64).setUpdateInterval(1).setCustomClientFactory(BlueVortexEntity::new).fireImmune().sized(0.2f, 0.2f));
+	public static final DeferredHolder<EntityType<?>, EntityType<BlueVortexEntity>> BLUE_VORTEX = register("blue_vortex", EntityType.Builder.<BlueVortexEntity>of(BlueVortexEntity::new, MobCategory.MISC).setShouldReceiveVelocityUpdates(true)
+			.setTrackingRange(64).setUpdateInterval(1).fireImmune().sized(0.2f, 0.2f));
 
-	private static <T extends Entity> RegistryObject<EntityType<T>> register(String registryname, EntityType.Builder<T> entityTypeBuilder) {
+	private static <T extends Entity> DeferredHolder<EntityType<?>, EntityType<T>> register(String registryname, EntityType.Builder<T> entityTypeBuilder) {
 		return REGISTRY.register(registryname, () -> (EntityType<T>) entityTypeBuilder.build(registryname));
 	}
 

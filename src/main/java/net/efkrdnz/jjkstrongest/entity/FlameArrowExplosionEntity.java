@@ -2,8 +2,6 @@
 package net.efkrdnz.jjkstrongest.entity;
 
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraftforge.network.PlayMessages;
-import net.minecraftforge.network.NetworkHooks;
 
 import net.minecraft.world.level.Level;
 import net.minecraft.world.item.crafting.Ingredient;
@@ -30,16 +28,11 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.network.protocol.game.ClientGamePacketListener;
-import net.minecraft.network.protocol.Packet;
 
 import net.efkrdnz.jjkstrongest.procedures.FlameArrowExplosionOnEntityTickUpdateProcedure;
 import net.efkrdnz.jjkstrongest.init.JjkStrongestModEntities;
 
 public class FlameArrowExplosionEntity extends TamableAnimal {
-	public FlameArrowExplosionEntity(PlayMessages.SpawnEntity packet, Level world) {
-		this(JjkStrongestModEntities.FLAME_ARROW_EXPLOSION.get(), world);
-	}
 
 	public FlameArrowExplosionEntity(EntityType<FlameArrowExplosionEntity> type, Level world) {
 		super(type, world);
@@ -49,10 +42,6 @@ public class FlameArrowExplosionEntity extends TamableAnimal {
 		setPersistenceRequired();
 	}
 
-	@Override
-	public Packet<ClientGamePacketListener> getAddEntityPacket() {
-		return NetworkHooks.getEntitySpawningPacket(this);
-	}
 
 	@Override
 	protected void registerGoals() {

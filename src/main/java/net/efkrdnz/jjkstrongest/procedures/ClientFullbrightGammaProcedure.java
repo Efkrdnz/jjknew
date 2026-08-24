@@ -28,7 +28,7 @@ public class ClientFullbrightGammaProcedure {
 			}
 			return;
 		}
-		boolean full_bright = player.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables()).fullbright;
+		boolean full_bright = player.getData(JjkStrongestModVariables.PLAYER_VARIABLES).fullbright;
 		boolean hasNV = player.hasEffect(MobEffects.NIGHT_VISION);
 		if (full_bright && !hasNV) {
 			if (!applied) {

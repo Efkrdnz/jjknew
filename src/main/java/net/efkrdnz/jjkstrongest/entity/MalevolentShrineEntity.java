@@ -2,8 +2,6 @@
 package net.efkrdnz.jjkstrongest.entity;
 
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraftforge.network.PlayMessages;
-import net.minecraftforge.network.NetworkHooks;
 
 import net.minecraft.world.level.Level;
 import net.minecraft.world.entity.projectile.ThrownPotion;
@@ -21,16 +19,11 @@ import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.network.protocol.game.ClientGamePacketListener;
-import net.minecraft.network.protocol.Packet;
 import net.minecraft.nbt.CompoundTag;
 
 import net.efkrdnz.jjkstrongest.init.JjkStrongestModEntities;
 
 public class MalevolentShrineEntity extends PathfinderMob {
-	public MalevolentShrineEntity(PlayMessages.SpawnEntity packet, Level world) {
-		this(JjkStrongestModEntities.MALEVOLENT_SHRINE.get(), world);
-	}
 
 	public MalevolentShrineEntity(EntityType<MalevolentShrineEntity> type, Level world) {
 		super(type, world);
@@ -40,10 +33,6 @@ public class MalevolentShrineEntity extends PathfinderMob {
 		setPersistenceRequired();
 	}
 
-	@Override
-	public Packet<ClientGamePacketListener> getAddEntityPacket() {
-		return NetworkHooks.getEntitySpawningPacket(this);
-	}
 
 	@Override
 	public MobType getMobType() {

@@ -52,12 +52,12 @@ public class WorldSlashExecuteProcedure {
 		// MARK WORLD SLASH AS ACTIVE RIGHT AT THE START
 		entity.getPersistentData().putLong("world_slash_tick", ((Level) world).getGameTime());
 		// get saved coordinates from player variables
-		double x1 = (entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).wcs_x1;
-		double y1 = (entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).wcs_y1;
-		double z1 = (entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).wcs_z1;
-		double x2 = (entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).wcs_x2;
-		double y2 = (entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).wcs_y2;
-		double z2 = (entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).wcs_z2;
+		double x1 = (entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).wcs_x1;
+		double y1 = (entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).wcs_y1;
+		double z1 = (entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).wcs_z1;
+		double x2 = (entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).wcs_x2;
+		double y2 = (entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).wcs_y2;
+		double z2 = (entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).wcs_z2;
 		// point 3 is player eye position
 		double x3 = entity.getX();
 		double y3 = entity.getY() + entity.getEyeHeight();
@@ -91,7 +91,7 @@ public class WorldSlashExecuteProcedure {
 		}
 		double planeThickness = 0.8;
 		// wcs power
-		double wcs_pwr = (entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).wcs_power;
+		double wcs_pwr = (entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).wcs_power;
 		if (wcs_pwr == 100) {
 			planeThickness = 1.5;
 		}

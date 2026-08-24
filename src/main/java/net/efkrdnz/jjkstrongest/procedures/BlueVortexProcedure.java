@@ -107,7 +107,7 @@ public class BlueVortexProcedure {
 	}
 
 	private static boolean isGojoBlue(Entity entity) {
-		return "gojo_blue".equals(entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables()).current_moveset);
+		return "gojo_blue".equals(entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES).current_moveset);
 	}
 
 	private static Entity ensureAnchor(Level world, Entity owner) {

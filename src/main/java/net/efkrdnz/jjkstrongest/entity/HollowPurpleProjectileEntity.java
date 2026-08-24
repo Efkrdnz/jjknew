@@ -11,8 +11,6 @@ import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache
 import software.bernie.geckolib.animatable.GeoEntity;
 
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraftforge.network.PlayMessages;
-import net.minecraftforge.network.NetworkHooks;
 
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.Level;
@@ -38,8 +36,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.EntityDataAccessor;
-import net.minecraft.network.protocol.game.ClientGamePacketListener;
-import net.minecraft.network.protocol.Packet;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.core.BlockPos;
 
@@ -57,9 +53,6 @@ public class HollowPurpleProjectileEntity extends PathfinderMob implements GeoEn
 	private long lastSwing;
 	public String animationprocedure = "empty";
 
-	public HollowPurpleProjectileEntity(PlayMessages.SpawnEntity packet, Level world) {
-		this(JjkStrongestModEntities.HOLLOW_PURPLE_PROJECTILE.get(), world);
-	}
 
 	public HollowPurpleProjectileEntity(EntityType<HollowPurpleProjectileEntity> type, Level world) {
 		super(type, world);
@@ -87,10 +80,6 @@ public class HollowPurpleProjectileEntity extends PathfinderMob implements GeoEn
 		return this.entityData.get(TEXTURE);
 	}
 
-	@Override
-	public Packet<ClientGamePacketListener> getAddEntityPacket() {
-		return NetworkHooks.getEntitySpawningPacket(this);
-	}
 
 	@Override
 	protected PathNavigation createNavigation(Level world) {

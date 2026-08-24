@@ -23,7 +23,7 @@ public class ReturnOutputDismantleProcedure {
 		double emptyhand = 0;
 		double overworld = 0;
 		base = ReturnOutputGeneralProcedure.execute(world, entity);
-		if ((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).vow_dismantleimbue) {
+		if ((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).vow_dismantleimbue) {
 			if (((entity instanceof LivingEntity _entity) ? _entity.getMainHandItem() : ItemStack.EMPTY).getItem() instanceof SwordItem
 					|| (entity instanceof LivingEntity _entity ? _entity.getOffhandItem() : ItemStack.EMPTY).getItem() instanceof SwordItem
 					|| ((entity instanceof LivingEntity _entity) ? _entity.getMainHandItem() : ItemStack.EMPTY).getItem() instanceof TridentItem

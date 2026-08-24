@@ -1,46 +1,35 @@
-
 package net.efkrdnz.jjkstrongest.network;
 
-import net.minecraftforge.network.NetworkEvent;
-import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import net.minecraft.world.level.Level;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 
 import net.efkrdnz.jjkstrongest.procedures.Technique4OnKeyReleasedProcedure;
 import net.efkrdnz.jjkstrongest.procedures.Technique4OnKeyPressedProcedure;
+
 import net.efkrdnz.jjkstrongest.JjkStrongestMod;
 
-import java.util.function.Supplier;
+public record Technique4Message(int type, int pressedms) implements CustomPacketPayload {
+	public static final CustomPacketPayload.Type<Technique4Message> TYPE = new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(JjkStrongestMod.MODID, "technique_4"));
 
-@EventBusSubscriber(bus = EventBusSubscriber.Bus.MOD)
-public class Technique4Message {
-	int type, pressedms;
+	public static final StreamCodec<RegistryFriendlyByteBuf, Technique4Message> STREAM_CODEC = StreamCodec.of((buffer, message) -> {
+		buffer.writeInt(message.type());
+		buffer.writeInt(message.pressedms());
+	}, buffer -> new Technique4Message(buffer.readInt(), buffer.readInt()));
 
-	public Technique4Message(int type, int pressedms) {
-		this.type = type;
-		this.pressedms = pressedms;
+	@Override
+	public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {
+		return TYPE;
 	}
 
-	public Technique4Message(FriendlyByteBuf buffer) {
-		this.type = buffer.readInt();
-		this.pressedms = buffer.readInt();
-	}
-
-	public static void buffer(Technique4Message message, FriendlyByteBuf buffer) {
-		buffer.writeInt(message.type);
-		buffer.writeInt(message.pressedms);
-	}
-
-	public static void handler(Technique4Message message, Supplier<NetworkEvent.Context> contextSupplier) {
-		NetworkEvent.Context context = contextSupplier.get();
-		context.enqueueWork(() -> {
-			pressAction(context.getSender(), message.type, message.pressedms);
-		});
-		context.setPacketHandled(true);
+	public static void handler(Technique4Message message, IPayloadContext context) {
+		// payload handlers already run on the main thread (HandlerThread.MAIN)
+		pressAction(context.player(), message.type(), message.pressedms());
 	}
 
 	public static void pressAction(Player entity, int type, int pressedms) {
@@ -59,10 +48,5 @@ public class Technique4Message {
 
 			Technique4OnKeyReleasedProcedure.execute(world, x, y, z, entity);
 		}
-	}
-
-	@SubscribeEvent
-	public static void registerMessage(FMLCommonSetupEvent event) {
-		JjkStrongestMod.addNetworkMessage(Technique4Message.class, Technique4Message::buffer, Technique4Message::new, Technique4Message::handler);
 	}
 }

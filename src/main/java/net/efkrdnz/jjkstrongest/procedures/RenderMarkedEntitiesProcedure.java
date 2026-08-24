@@ -43,8 +43,8 @@ public class RenderMarkedEntitiesProcedure {
 		Player player = mc.player;
 		if (player == null || mc.level == null)
 			return;
-		String currentTechnique = (player.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).sorcerer;
-		String markedJson = (player.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).marked_entities;
+		String currentTechnique = (player.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).sorcerer;
+		String markedJson = (player.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).marked_entities;
 		if (markedJson == null || markedJson.isEmpty() || currentTechnique == null || currentTechnique.isEmpty())
 			return;
 		JsonArray markedArray;

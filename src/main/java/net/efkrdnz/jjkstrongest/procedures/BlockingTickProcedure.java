@@ -28,7 +28,7 @@ public class BlockingTickProcedure {
 		Entity ent = null;
 		ent = entity;
 		// get guard variable
-		boolean isGuarding = (entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).block;
+		boolean isGuarding = (entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).block;
 		// get current animation state
 		String currentAnim = entity.getPersistentData().getString("current_arm_animation");
 		boolean isPlaying = entity.getPersistentData().getBoolean("arm_anim_playing");

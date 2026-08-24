@@ -8,7 +8,7 @@ public class WCSProgressionReturn2Procedure {
 	public static boolean execute(Entity entity) {
 		if (entity == null)
 			return false;
-		if ((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).wcs_chant_progress == 2) {
+		if ((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).wcs_chant_progress == 2) {
 			return true;
 		}
 		return false;

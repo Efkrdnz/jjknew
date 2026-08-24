@@ -2,8 +2,6 @@
 package net.efkrdnz.jjkstrongest.entity;
 
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraftforge.network.PlayMessages;
-import net.minecraftforge.network.NetworkHooks;
 
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.Level;
@@ -31,16 +29,11 @@ import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.network.protocol.game.ClientGamePacketListener;
-import net.minecraft.network.protocol.Packet;
 import net.minecraft.core.BlockPos;
 
 import net.efkrdnz.jjkstrongest.init.JjkStrongestModEntities;
 
 public class BFEntityEntity extends PathfinderMob {
-	public BFEntityEntity(PlayMessages.SpawnEntity packet, Level world) {
-		this(JjkStrongestModEntities.BF_ENTITY.get(), world);
-	}
 
 	public BFEntityEntity(EntityType<BFEntityEntity> type, Level world) {
 		super(type, world);
@@ -51,10 +44,6 @@ public class BFEntityEntity extends PathfinderMob {
 		this.moveControl = new FlyingMoveControl(this, 10, true);
 	}
 
-	@Override
-	public Packet<ClientGamePacketListener> getAddEntityPacket() {
-		return NetworkHooks.getEntitySpawningPacket(this);
-	}
 
 	@Override
 	protected PathNavigation createNavigation(Level world) {

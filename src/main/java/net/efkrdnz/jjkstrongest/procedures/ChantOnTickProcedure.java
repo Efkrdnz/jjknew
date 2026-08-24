@@ -207,10 +207,11 @@ public class ChantOnTickProcedure {
 				}
 				{
 					double _setval = 1;
-					entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+					{
+						JjkStrongestModVariables.PlayerVariables capability = entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 						capability.wcs_chant_progress = _setval;
 						capability.syncPlayerVariables(entity);
-					});
+					}
 				}
 			}
 		} else if ((entity.getPersistentData().getString("chanting")).equals("wcs2")) {
@@ -241,10 +242,11 @@ public class ChantOnTickProcedure {
 				}
 				{
 					double _setval = 2;
-					entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+					{
+						JjkStrongestModVariables.PlayerVariables capability = entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 						capability.wcs_chant_progress = _setval;
 						capability.syncPlayerVariables(entity);
-					});
+					}
 				}
 			}
 		} else if ((entity.getPersistentData().getString("chanting")).equals("wcs3")) {
@@ -275,10 +277,11 @@ public class ChantOnTickProcedure {
 				}
 				{
 					double _setval = 3;
-					entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+					{
+						JjkStrongestModVariables.PlayerVariables capability = entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 						capability.wcs_chant_progress = _setval;
 						capability.syncPlayerVariables(entity);
-					});
+					}
 				}
 			}
 		} else if ((entity.getPersistentData().getString("chanting")).equals("dis_net")) {

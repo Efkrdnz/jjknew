@@ -16,10 +16,11 @@ public class RTCToggleProcedure {
 			for (Entity entityiterator : EntityArgument.getEntities(arguments, "target")) {
 				{
 					boolean _setval = BoolArgumentType.getBool(arguments, "logic");
-					entityiterator.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+					{
+						JjkStrongestModVariables.PlayerVariables capability = entityiterator.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 						capability.RTC_unlocked = _setval;
 						capability.syncPlayerVariables(entityiterator);
-					});
+					}
 				}
 			}
 		} catch (CommandSyntaxException e) {

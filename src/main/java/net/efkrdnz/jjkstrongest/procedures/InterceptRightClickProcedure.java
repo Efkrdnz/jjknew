@@ -22,7 +22,7 @@ public class InterceptRightClickProcedure {
 	private static boolean checkAndExecuteMarkAbility(Player player) {
 		if (player == null || player.level().isClientSide)
 			return false;
-		String markedJson = (player.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).marked_entities;
+		String markedJson = (player.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).marked_entities;
 		if (markedJson == null || markedJson.isEmpty())
 			return false;
 		JsonArray markedArray;

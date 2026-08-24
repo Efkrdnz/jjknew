@@ -25,7 +25,7 @@ public class BlackFlashExecuteProcedure {
 		double zone_level = 0;
 		double max_zone_level = 5;
 		// check if attacker is yuji for higher zone cap
-		if (((sourceentity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).sorcerer).equals("yuji")) {
+		if (((sourceentity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).sorcerer).equals("yuji")) {
 			max_zone_level = 8;
 		}
 		// add zone effect to attacker

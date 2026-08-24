@@ -26,9 +26,9 @@ public class Hold2UseOnTickProcedure {
 	private static void execute(@Nullable Event event, LevelAccessor world, Entity entity) {
 		if (entity == null)
 			return;
-		if ((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).dismantle_barrage) {
+		if ((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).dismantle_barrage) {
 			if (!world.isClientSide()) {
-				if ((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).precision) {
+				if ((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).precision) {
 					DismantleBarrageOnTickAlternativeProcedure.execute(entity.level(), entity);
 				} else {
 					DismantleBarrageProjectileOnTickProcedure.execute(entity.level(), entity);

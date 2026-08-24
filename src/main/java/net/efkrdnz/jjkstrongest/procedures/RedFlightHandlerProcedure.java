@@ -25,7 +25,7 @@ public class RedFlightHandlerProcedure {
 		if (entity == null)
 			return;
 		if (entity instanceof Player player && !player.level().isClientSide()) {
-			boolean redFlight = (entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).red_flight;
+			boolean redFlight = (entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).red_flight;
 			if (redFlight && !player.isCreative() && !player.isSpectator()) {
 				if (!player.getAbilities().mayfly) {
 					player.getAbilities().mayfly = true;

@@ -18,9 +18,9 @@ public class ValidateMarkedEntitiesProcedure {
 			return;
 		Player player = (Player) entity;
 		ServerLevel serverLevel = (ServerLevel) world;
-		String sorcerer = (player.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).sorcerer;
-		String markedJson = (player.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).marked_entities;
-		String timestampJson = (player.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).marked_timestamps;
+		String sorcerer = (player.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).sorcerer;
+		String markedJson = (player.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).marked_entities;
+		String timestampJson = (player.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).marked_timestamps;
 		// check if markedJson is null or empty - if so, skip validation
 		if (markedJson == null || markedJson.isEmpty())
 			return;
@@ -43,11 +43,12 @@ public class ValidateMarkedEntitiesProcedure {
 			timestampArray = JsonParser.parseString(timestampJson).getAsJsonArray();
 		} catch (Exception e) {
 			// if parsing fails, initialize empty arrays and save them
-			player.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+			{
+				JjkStrongestModVariables.PlayerVariables capability = player.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 				capability.marked_entities = "[]";
 				capability.marked_timestamps = "[]";
 				capability.syncPlayerVariables(player);
-			});
+			}
 			return;
 		}
 		JsonArray newMarkedArray = new JsonArray();
@@ -85,10 +86,11 @@ public class ValidateMarkedEntitiesProcedure {
 			}
 		}
 		// save cleaned arrays
-		player.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+		{
+			JjkStrongestModVariables.PlayerVariables capability = player.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 			capability.marked_entities = newMarkedArray.toString();
 			capability.marked_timestamps = newTimestampArray.toString();
 			capability.syncPlayerVariables(player);
-		});
+		}
 	}
 }

@@ -2,8 +2,6 @@
 package net.efkrdnz.jjkstrongest.entity;
 
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraftforge.network.PlayMessages;
-import net.minecraftforge.network.NetworkHooks;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.api.distmarker.Dist;
 
@@ -19,8 +17,6 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.util.RandomSource;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.network.protocol.game.ClientGamePacketListener;
-import net.minecraft.network.protocol.Packet;
 
 import net.efkrdnz.jjkstrongest.procedures.FlameArrowWhileProjectileFlyingTickProcedure;
 import net.efkrdnz.jjkstrongest.procedures.FlameArrowProjectileHitsLivingEntityProcedure;
@@ -31,9 +27,6 @@ import net.efkrdnz.jjkstrongest.init.JjkStrongestModEntities;
 public class FlameArrowEntity extends AbstractArrow implements ItemSupplier {
 	public static final ItemStack PROJECTILE_ITEM = new ItemStack(Blocks.AIR);
 
-	public FlameArrowEntity(PlayMessages.SpawnEntity packet, Level world) {
-		super(JjkStrongestModEntities.FLAME_ARROW.get(), world);
-	}
 
 	public FlameArrowEntity(EntityType<? extends FlameArrowEntity> type, Level world) {
 		super(type, world);
@@ -47,10 +40,6 @@ public class FlameArrowEntity extends AbstractArrow implements ItemSupplier {
 		super(type, entity, world);
 	}
 
-	@Override
-	public Packet<ClientGamePacketListener> getAddEntityPacket() {
-		return NetworkHooks.getEntitySpawningPacket(this);
-	}
 
 	@Override
 	@OnlyIn(Dist.CLIENT)

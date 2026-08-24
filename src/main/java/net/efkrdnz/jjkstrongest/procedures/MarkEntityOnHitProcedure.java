@@ -20,9 +20,9 @@ public class MarkEntityOnHitProcedure {
 			return;
 		Player player = (Player) attacker;
 		// get player variables using MCreator capability system
-		String currentTechnique = (player.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).sorcerer;
-		boolean blueToggle = (player.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).blue_fist_toggle;
-		boolean cleaveToggle = (player.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).cleave_melee_toggle;
+		String currentTechnique = (player.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).sorcerer;
+		boolean blueToggle = (player.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).blue_fist_toggle;
+		boolean cleaveToggle = (player.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).cleave_melee_toggle;
 		//System.out.println("DEBUG: current_technique = " + currentTechnique);
 		//System.out.println("DEBUG: blue_fist_toggle = " + blueToggle);
 		//System.out.println("DEBUG: cleave_melee_toggle = " + cleaveToggle);
@@ -48,8 +48,8 @@ public class MarkEntityOnHitProcedure {
 			return;
 		}
 		// get current marks from player variables
-		String markedJson = (player.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).marked_entities;
-		String timestampJson = (player.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).marked_timestamps;
+		String markedJson = (player.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).marked_entities;
+		String timestampJson = (player.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).marked_timestamps;
 		JsonArray markedArray = (markedJson == null || markedJson.isEmpty()) ? new JsonArray() : JsonParser.parseString(markedJson).getAsJsonArray();
 		JsonArray timestampArray = (timestampJson == null || timestampJson.isEmpty()) ? new JsonArray() : JsonParser.parseString(timestampJson).getAsJsonArray();
 		String targetUUID = target.getStringUUID();
@@ -75,11 +75,12 @@ public class MarkEntityOnHitProcedure {
 		markedArray.add(targetUUID);
 		timestampArray.add(System.currentTimeMillis());
 		// save back using MCreator capability system
-		player.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).ifPresent(capability -> {
+		{
+			JjkStrongestModVariables.PlayerVariables capability = player.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 			capability.marked_entities = markedArray.toString();
 			capability.marked_timestamps = timestampArray.toString();
 			capability.syncPlayerVariables(player);
-		});
+		}
 		//System.out.println("DEBUG: Marked entity! UUID: " + targetUUID);
 		//System.out.println("DEBUG: Total marks: " + markedArray.size());
 		// visual feedback

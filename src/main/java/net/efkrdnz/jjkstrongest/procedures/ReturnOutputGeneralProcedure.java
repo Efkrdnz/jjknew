@@ -19,7 +19,7 @@ public class ReturnOutputGeneralProcedure {
 		double overtime = 0;
 		double emptyhand = 0;
 		double overworld = 0;
-		if ((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).vow_overtime) {
+		if ((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).vow_overtime) {
 			if (world.getLevelData().getGameTime() % 24000 > 15000 && world.getLevelData().getGameTime() % 24000 < 3000) {
 				overtime = 0.2;
 			} else {
@@ -28,12 +28,12 @@ public class ReturnOutputGeneralProcedure {
 		} else {
 			overtime = 0;
 		}
-		if ((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).vow_recoil) {
+		if ((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).vow_recoil) {
 			recoil = 0.1;
 		} else {
 			recoil = 0;
 		}
-		if ((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).vow_fairweatherfighter) {
+		if ((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).vow_fairweatherfighter) {
 			if (world.getLevelData().isRaining()) {
 				weather = 0.1;
 			} else {
@@ -42,7 +42,7 @@ public class ReturnOutputGeneralProcedure {
 		} else {
 			weather = 0;
 		}
-		if ((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).vow_overworlddominance) {
+		if ((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).vow_overworlddominance) {
 			if ((entity.level().dimension()) == Level.OVERWORLD) {
 				overworld = 0.1;
 			} else {
