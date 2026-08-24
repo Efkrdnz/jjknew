@@ -1,0 +1,18 @@
+package net.efkrdnz.jjkstrongest.procedures;
+
+import net.minecraft.world.entity.Entity;
+
+import net.efkrdnz.jjkstrongest.network.JjkStrongestModVariables;
+
+public class SparkPurpleReturnProcedure {
+	public static boolean execute(Entity entity) {
+		if (entity == null)
+			return false;
+		if (((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).sorcerer).equals("gojo")) {
+			if ((entity.getCapability(JjkStrongestModVariables.PLAYER_VARIABLES_CAPABILITY, null).orElse(new JjkStrongestModVariables.PlayerVariables())).charge_purple >= 1) {
+				return true;
+			}
+		}
+		return false;
+	}
+}
