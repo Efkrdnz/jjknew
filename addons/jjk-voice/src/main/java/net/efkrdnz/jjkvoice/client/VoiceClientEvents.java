@@ -1,5 +1,6 @@
 package net.efkrdnz.jjkvoice.client;
 
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -17,6 +18,7 @@ import net.efkrdnz.jjkvoice.JjkVoiceMod;
 import net.efkrdnz.jjkvoice.audio.MicrophoneCapture;
 import net.efkrdnz.jjkvoice.audio.VoicechatBridge;
 import net.efkrdnz.jjkvoice.config.VoiceConfig;
+import net.efkrdnz.jjkvoice.client.hud.ChantHudState;
 import net.efkrdnz.jjkvoice.compat.JjkBridge;
 import net.efkrdnz.jjkvoice.network.VoiceCastPayload;
 import net.efkrdnz.jjkvoice.recognize.PhraseRecognizer;
@@ -48,6 +50,8 @@ public final class VoiceClientEvents {
 		Minecraft minecraft = Minecraft.getInstance();
 		if (minecraft.player == null) {
 			resetCapture();
+			// A recital must not outlive the world it was running in.
+			ChantHudState.clear();
 			return;
 		}
 
@@ -144,10 +148,15 @@ public final class VoiceClientEvents {
 					return;
 				// What this name does -- select, charge, release or cast -- depends on
 				// state only the server has, so only how it was heard is sent.
-				PacketDistributor.sendToServer(new VoiceCastPayload(result.commandKey(), result.exact(),
-						result.line(), result.incantation()
-								? VoiceConfig.get().incantationsFor(result.commandKey()).size()
-								: 0));
+				// A shared line belongs to every ability that opens on it, so all of
+				// them travel and the server decides which the recital meant.
+				List<String> keys = result.incantation()
+						? config.abilitiesWithLine(result.phrase(), result.line(), JjkBridge.allowedKeys(minecraft.player))
+						: List.of(result.commandKey());
+				if (keys.isEmpty())
+					keys = List.of(result.commandKey());
+				PacketDistributor.sendToServer(new VoiceCastPayload(keys, result.exact(), result.line(),
+						result.incantation() ? config.incantationsFor(result.commandKey()).size() : 0));
 				if (config.announceMatches)
 					actionBar(minecraft, Component.translatable(
 							result.incantation() ? "message.jjkvoice.incanted" : "message.jjkvoice.matched",

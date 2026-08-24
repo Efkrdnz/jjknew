@@ -8,6 +8,7 @@ import com.mojang.brigadier.suggestion.SuggestionProvider;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.client.Minecraft;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.network.chat.Component;
@@ -19,6 +20,7 @@ import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent;
 import net.efkrdnz.jjkvoice.JjkVoiceMod;
 import net.efkrdnz.jjkvoice.audio.VoicechatBridge;
 import net.efkrdnz.jjkvoice.compat.JjkBridge;
+import net.efkrdnz.jjkvoice.client.hud.ChantHudScreen;
 import net.efkrdnz.jjkvoice.config.VoiceConfig;
 import net.efkrdnz.jjkvoice.recognize.VoicePrintStore;
 
@@ -73,6 +75,8 @@ public final class VoiceClientCommands {
 								.executes(context -> setMode(context.getSource(), VoiceConfig.MODE_VOICEPRINT)))
 						.then(Commands.literal(VoiceConfig.MODE_SHOUT)
 								.executes(context -> setMode(context.getSource(), VoiceConfig.MODE_SHOUT))))
+				.then(Commands.literal("hud")
+						.executes(context -> openHud()))
 				.then(Commands.literal("reload")
 						.executes(context -> reload(context.getSource()))));
 	}
@@ -85,6 +89,18 @@ public final class VoiceClientCommands {
 			return 0;
 		}
 		return phrases.size();
+	}
+
+	/**
+	 * Opens the position editor.
+	 *
+	 * <p>Deferred by a tick rather than opened here: the chat screen is still up
+	 * while the command runs, and closing it afterwards would take the editor with
+	 * it.
+	 */
+	private static int openHud() {
+		Minecraft.getInstance().tell(() -> Minecraft.getInstance().setScreen(new ChantHudScreen()));
+		return 1;
 	}
 
 	private static int enrollCommand(CommandSourceStack source, String rawCommand) {

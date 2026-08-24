@@ -96,6 +96,17 @@ public final class VoiceConfig {
 	/** Print the matched phrase and its distance to chat. Useful while tuning. */
 	public boolean announceMatches = true;
 
+	/** Show the on-screen list of lines you can say next. */
+	public boolean hudEnabled = true;
+
+	/**
+	 * Where that list sits, as fractions of the screen rather than pixels, so it
+	 * stays put across a resolution or GUI-scale change. Set by dragging it in
+	 * {@code /jjkvoice hud}.
+	 */
+	public double hudX = 0.012D;
+	public double hudY = 0.62D;
+
 	/**
 	 * Which shape this file was written in.
 	 *
@@ -481,12 +492,36 @@ public final class VoiceConfig {
 		});
 		chants = cleanedChants;
 		chantNearMultiplier = clamp(chantNearMultiplier, 1.0D, 4.0D);
+		hudX = clamp(hudX, 0.0D, 1.0D);
+		hudY = clamp(hudY, 0.0D, 1.0D);
 	}
 
 	/**
 	 * Everything that counts as chanting {@code moveset}: its own selection phrases
 	 * plus any extra incantations configured for it.
 	 */
+	/**
+	 * Every ability whose incantation has this exact line in this exact position.
+	 *
+	 * <p>Usually one. Blue and Red both open on "Phase", though, and the client has
+	 * no business choosing between them -- they are the same sound. All of them go
+	 * to the server, which narrows against the recital already running.
+	 */
+	public List<String> abilitiesWithLine(String phrase, int index, Set<String> allowed) {
+		String wanted = normalisePhrase(phrase);
+		List<String> sharing = new ArrayList<>();
+		if (wanted.isEmpty() || index < 0)
+			return sharing;
+		for (Map.Entry<String, List<String>> entry : chants.entrySet()) {
+			if (allowed != null && !allowed.contains(entry.getKey()))
+				continue;
+			List<String> lines = entry.getValue();
+			if (lines != null && index < lines.size() && wanted.equals(normalisePhrase(lines.get(index))))
+				sharing.add(entry.getKey());
+		}
+		return sharing;
+	}
+
 	/** Everything worth enrolling for one command: what selects it, and what chants it. */
 	public List<String> allPhrasesFor(String command) {
 		List<String> phrases = new ArrayList<>(phrasesFor(command));

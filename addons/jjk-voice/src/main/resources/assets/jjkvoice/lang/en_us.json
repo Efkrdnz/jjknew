@@ -44,5 +44,7 @@
   "message.jjkvoice.command.not_enrolled_phrase": "\"%s\" was not enrolled.",
   "message.jjkvoice.command.forgot_all": "Forgot every voiceprint.",
   "message.jjkvoice.command.mode_set": "Recognition mode set to %s.",
-  "message.jjkvoice.command.reloaded": "Reloaded jjkvoice.json."
+  "message.jjkvoice.command.reloaded": "Reloaded jjkvoice.json.",
+  "screen.jjkvoice.hud": "Chant overlay position",
+  "screen.jjkvoice.hud.hint": "Drag to move · Esc to save"
 }

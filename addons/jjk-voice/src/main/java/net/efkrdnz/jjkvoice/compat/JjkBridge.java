@@ -1,5 +1,6 @@
 package net.efkrdnz.jjkvoice.compat;
 
+import java.util.List;
 import java.util.Set;
 
 import net.minecraft.server.level.ServerPlayer;
@@ -35,8 +36,13 @@ public final class JjkBridge {
 	 *
 	 * @return what actually happened, for telling the speaker
 	 */
-	public static JjkVoiceApi.Spoken speak(ServerPlayer player, String commandKey, boolean exact, int line, int lines) {
-		return JjkVoiceApi.speak(player, commandKey, exact, line, lines);
+	public static JjkVoiceApi.Spoken speak(ServerPlayer player, List<String> commandKeys, boolean exact, int line, int lines) {
+		return JjkVoiceApi.speak(player, commandKeys, exact, line, lines);
+	}
+
+	/** How far through an incantation the player is, for the overlay to draw. */
+	public static JjkVoiceApi.Recital recital(ServerPlayer player) {
+		return JjkVoiceApi.recital(player);
 	}
 
 	/** True when this key selects an ability rather than firing one. */

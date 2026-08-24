@@ -1,5 +1,7 @@
 package net.efkrdnz.jjkvoice.server;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
@@ -43,16 +45,20 @@ public final class VoiceServerHandler {
 			if (!(context.player() instanceof ServerPlayer player))
 				return;
 
-			String commandKey = payload.commandKey() == null ? ""
-					: payload.commandKey().trim().toLowerCase(Locale.ROOT);
-			if (!JjkBridge.commandKeys().contains(commandKey))
+			List<String> keys = new ArrayList<>();
+			for (String raw : payload.commandKeys()) {
+				String key = raw == null ? "" : raw.trim().toLowerCase(Locale.ROOT);
+				if (JjkBridge.commandKeys().contains(key) && !keys.contains(key))
+					keys.add(key);
+			}
+			if (keys.isEmpty())
 				return;
 			if (isThrottled(player.getUUID()))
 				return;
 
-			// The host mod decides what this name means for this player, and whether
-			// their technique includes it at all.
-			JjkBridge.speak(player, commandKey, payload.exact(), payload.line(), payload.lines());
+			// The host mod decides what these mean for this player, which of them
+			// their technique includes, and which the recital rules out.
+			JjkBridge.speak(player, keys, payload.exact(), payload.line(), payload.lines());
 		});
 	}
 

@@ -60,6 +60,7 @@ All client-side — a server never sees your voiceprints or settings.
 | `/jjkvoice cancel` | Abort a running enrollment |
 | `/jjkvoice forget <phrase>` / `forget all` | Delete voiceprints |
 | `/jjkvoice mode voiceprint\|shout` | Switch recognition mode |
+| `/jjkvoice hud` | Drag the chant overlay somewhere else |
 | `/jjkvoice reload` | Re-read `jjkvoice.json` |
 
 `<technique>` tab-completes from the host mod's own command list, so there is
@@ -189,6 +190,25 @@ can start with *"Dragon Scales"* from anywhere.
 `/jjkvoice enroll <ability>` records the ability's name and its incantation lines
 together, since a line with no voiceprint can never match.
 
+### The overlay
+
+The lines you can say next are listed on screen, so an incantation is something
+you read rather than memorise.
+
+At rest it shows the opening line of every chantable ability your technique
+includes. Say one and it narrows to what could follow: because Blue and Red both
+open on *"Phase"*, saying it leaves **both** rows up — *Twilight* and *Paramita* —
+and the line you say next is what chooses between them. Nothing is charged while
+it is still undecided; the tiers owed are banked and paid the moment one wins.
+
+Once an incantation is recited through, the row shows the word that throws it and
+the pips fill. Lines with no voiceprint are dim and struck, because saying one
+cannot work however clearly you say it.
+
+`/jjkvoice hud` opens an editor: drag it where you want, it snaps to edges and
+centre lines, Esc saves. The position is kept as a fraction of the screen, so it
+stays put if you change resolution or GUI scale. `hudEnabled` turns it off.
+
 ### Releasing
 
 Three ways, all equivalent:
@@ -268,6 +288,8 @@ deliberately or bind a longer phrase to it.
 | `maxIncantationSeconds` | `6.0` | The same ceiling for a recited line, which is allowed to run longer. A long clip is only kept if a line is what it matched |
 | `shoutRmsThreshold` | `0.06` | Loudness required in `shout` mode |
 | `announceMatches` | `true` | Print the matched phrase and distance. Useful while tuning |
+| `hudEnabled` | `true` | Show the on-screen list of lines you can say next |
+| `hudX` / `hudY` | `0.012` / `0.62` | Where it sits, as fractions of the screen. Set these by dragging in `/jjkvoice hud` |
 
 Thresholds are **not** guessed. Enrollment measures how much your own repeats of
 a phrase differ from each other and derives the accept threshold from that, so it

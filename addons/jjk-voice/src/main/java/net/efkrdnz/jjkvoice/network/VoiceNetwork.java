@@ -3,9 +3,10 @@ package net.efkrdnz.jjkvoice.network;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 
+import net.efkrdnz.jjkvoice.client.hud.ChantHudState;
 import net.efkrdnz.jjkvoice.server.VoiceServerHandler;
 
-/** Registers the one client-to-server request this addon needs. */
+/** Registers the request going out and the recital state coming back. */
 public final class VoiceNetwork {
 	private static final String PROTOCOL_VERSION = "1";
 
@@ -16,5 +17,7 @@ public final class VoiceNetwork {
 		PayloadRegistrar registrar = event.registrar(PROTOCOL_VERSION);
 		registrar.playToServer(VoiceCastPayload.TYPE, VoiceCastPayload.STREAM_CODEC,
 				VoiceServerHandler::handleSpeak);
+		registrar.playToClient(ChantStatePayload.TYPE, ChantStatePayload.STREAM_CODEC,
+				ChantHudState::accept);
 	}
 }

@@ -1,5 +1,6 @@
 package net.efkrdnz.jjkstrongest.api;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -234,9 +235,22 @@ public final class JjkVoiceApi {
 	 */
 	public static final String CEILING = "jjkvoice_ceiling";
 
-	/** How far through an incantation the player has recited, and for what. */
+	/**
+	 * How far through an incantation the player has recited, and for which
+	 * abilities it could still be.
+	 *
+	 * <p>A set rather than one ability, because incantations may share a line: Blue
+	 * and Red both open on "Phase" and no amount of listening will separate them.
+	 * Both stay live until a later line rules one out.
+	 */
 	private static final String INCANT_ABILITY = "jjkvoice_incant";
 	private static final String INCANT_LINE = "jjkvoice_incant_line";
+
+	/**
+	 * Tiers owed for lines recited while it was still unclear which ability they
+	 * belonged to, paid out when one of them wins.
+	 */
+	private static final String INCANT_CREDIT = "jjkvoice_incant_credit";
 
 	private JjkVoiceApi() {
 	}
@@ -345,11 +359,19 @@ public final class JjkVoiceApi {
 	 *              when the ability's own name was spoken instead
 	 * @param lines how many lines that incantation has
 	 */
-	public static Spoken speak(ServerPlayer player, String key, boolean exact, int line, int lines) {
+	public static Spoken speak(ServerPlayer player, List<String> keys, boolean exact, int line, int lines) {
+		if (player == null || keys == null || keys.isEmpty())
+			return Spoken.UNRECOGNISED;
+		if (line >= 0)
+			return recite(player, keys, exact, line, lines);
+		return speak(player, keys.get(0), exact);
+	}
+
+	/** Acts on a name rather than an incantation line. */
+	public static Spoken speak(ServerPlayer player, String key, boolean exact) {
 		if (player == null)
 			return Spoken.UNRECOGNISED;
 		String command = normalise(key);
-		boolean incantation = line >= 0;
 		JjkStrongestModVariables.PlayerVariables variables = player.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 		String sorcerer = normalise(variables.sorcerer);
 
@@ -366,18 +388,7 @@ public final class JjkVoiceApi {
 				// Switching ability drops any charge being built, the same way it is
 				// not possible to hold Red's charge while reaching for Blue.
 				cancel(player);
-				if (!incantation)
-					return selectMoveset(player, command) ? Spoken.SELECTED : Spoken.UNRECOGNISED;
-				if (!selectMoveset(player, command))
-					return Spoken.UNRECOGNISED;
-			}
-
-			if (incantation) {
-				// Only reciting to the end tops the technique out. A line out of order
-				// is still worth its tier, so a mishearing costs progress rather than
-				// the words, but opening at the last line earns nothing.
-				boolean completed = advanceRecital(player, command, line, lines);
-				return chant(player, exact, completed).isEmpty() ? Spoken.UNRECOGNISED : Spoken.CHARGED;
+				return selectMoveset(player, command) ? Spoken.SELECTED : Spoken.UNRECOGNISED;
 			}
 
 			// Named, and already selected: throw it.
@@ -471,28 +482,126 @@ public final class JjkVoiceApi {
 	}
 
 	/**
-	 * Records one line of an incantation and reports whether that finished it.
+	 * Takes one line of an incantation.
 	 *
-	 * <p>Lines count only when spoken in order. Being out of order is not punished
-	 * -- the line still charges its tier -- it simply does not advance the recital,
-	 * so the only way to full output is to actually recite the thing.
+	 * <p>The caller offers every ability whose line at this position matches what it
+	 * heard, because a shared line genuinely belongs to all of them. Those are
+	 * narrowed against the ones still standing from earlier lines, and nothing is
+	 * charged while more than one survives -- there is no way to wind up Blue and
+	 * Red at once, and guessing would be wrong half the time. The tiers owed are
+	 * banked and paid when a line finally rules the others out.
 	 */
-	private static boolean advanceRecital(ServerPlayer player, String ability, int line, int lines) {
-		CompoundTag data = player.getPersistentData();
-		int recited = ability.equals(data.getString(INCANT_ABILITY)) ? data.getInt(INCANT_LINE) : 0;
-		data.putString(INCANT_ABILITY, ability);
+	private static Spoken recite(ServerPlayer player, List<String> keys, boolean exact, int line, int lines) {
+		JjkStrongestModVariables.PlayerVariables variables = player.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
+		String sorcerer = normalise(variables.sorcerer);
 
-		if (line != recited) {
-			data.putInt(INCANT_LINE, recited);
-			return false;
+		List<String> offered = new ArrayList<>();
+		for (String key : keys) {
+			String command = normalise(key);
+			if (CHANTABLE.containsKey(command) && owns(sorcerer, command) && !offered.contains(command))
+				offered.add(command);
 		}
-		recited = line + 1;
-		if (lines > 0 && recited >= lines) {
-			data.putInt(INCANT_LINE, 0);
-			return true;
+		if (offered.isEmpty())
+			return Spoken.UNRECOGNISED;
+
+		CompoundTag data = player.getPersistentData();
+		List<String> held = heldCandidates(player);
+		int recited = data.getInt(INCANT_LINE);
+		double credit = data.getDouble(INCANT_CREDIT);
+
+		List<String> standing = new ArrayList<>();
+		if (!held.isEmpty() && line == recited)
+			for (String candidate : held)
+				if (offered.contains(candidate))
+					standing.add(candidate);
+
+		if (!standing.isEmpty()) {
+			recited = line + 1;
+		} else if (line == 0) {
+			// An opening line always starts over, whatever was part-recited before.
+			cancel(player);
+			standing = offered;
+			recited = 1;
+			credit = 0.0D;
+		} else if (offered.size() == 1) {
+			// Out of order, but it names one ability outright, so it can still be
+			// worth its tier even though it advances no recital.
+			return chargeOutOfOrder(player, offered.get(0), exact);
+		} else {
+			return Spoken.UNRECOGNISED;
 		}
-		data.putInt(INCANT_LINE, recited);
-		return false;
+
+		credit += exact ? 1.0D : 0.5D;
+
+		if (standing.size() > 1) {
+			// Still undecided. Hold the line and wait for one that separates them.
+			storeCandidates(player, standing, recited, credit);
+			return Spoken.CHARGED;
+		}
+
+		String ability = standing.get(0);
+		if (!ability.equals(normalise(variables.current_moveset)) && !selectMoveset(player, ability))
+			return Spoken.UNRECOGNISED;
+
+		// Reciting the whole thing cleanly is what tops a technique out; a recital
+		// carrying any near miss has to settle for the tiers it earned.
+		boolean complete = lines > 0 && recited >= lines && credit >= lines - 0.01D;
+		String running = chant(player, credit, complete);
+		if (running.isEmpty())
+			return Spoken.UNRECOGNISED;
+
+		// Held rather than forgotten even when finished, so anything showing the
+		// recital can say the technique is ready and what will throw it. Spending
+		// the charge is what clears it.
+		storeCandidates(player, standing, recited, 0.0D);
+		return Spoken.CHARGED;
+	}
+
+	/** A line spoken out of its place: worth its tier, but it advances no recital. */
+	private static Spoken chargeOutOfOrder(ServerPlayer player, String ability, boolean exact) {
+		JjkStrongestModVariables.PlayerVariables variables = player.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
+		if (!ability.equals(normalise(variables.current_moveset)) && !selectMoveset(player, ability))
+			return Spoken.UNRECOGNISED;
+		return chant(player, exact ? 1.0D : 0.5D, false).isEmpty() ? Spoken.UNRECOGNISED : Spoken.CHARGED;
+	}
+
+	private static List<String> heldCandidates(ServerPlayer player) {
+		String stored = player.getPersistentData().getString(INCANT_ABILITY);
+		if (stored == null || stored.isEmpty())
+			return List.of();
+		List<String> candidates = new ArrayList<>();
+		for (String part : stored.split(","))
+			if (!part.isEmpty())
+				candidates.add(part);
+		return candidates;
+	}
+
+	private static void storeCandidates(ServerPlayer player, List<String> candidates, int recited, double credit) {
+		player.getPersistentData().putString(INCANT_ABILITY, String.join(",", candidates));
+		player.getPersistentData().putInt(INCANT_LINE, recited);
+		player.getPersistentData().putDouble(INCANT_CREDIT, credit);
+	}
+
+	/**
+	 * What the player is part way through reciting, for anything that wants to show
+	 * it. Empty candidates mean no recital is running.
+	 *
+	 * @param tier how much output the charge has actually reached
+	 */
+	public record Recital(List<String> candidates, int recited, int tier) {
+	}
+
+	public static Recital recital(ServerPlayer player) {
+		if (player == null)
+			return new Recital(List.of(), 0, 0);
+		List<String> candidates = heldCandidates(player);
+		int tier = 0;
+		if (candidates.size() == 1) {
+			Chantable ability = CHANTABLE.get(candidates.get(0));
+			if (ability != null)
+				tier = tierReached(player, ability.tiers());
+		}
+		return new Recital(candidates, player.getPersistentData().getInt(INCANT_LINE), tier);
 	}
 
 	/**
@@ -515,6 +624,14 @@ public final class JjkVoiceApi {
 	 * @return the chant now running, or empty when the ability cannot be chanted
 	 */
 	public static String chant(ServerPlayer player, boolean exact, boolean full) {
+		return chant(player, exact ? 1.0D : 0.5D, full);
+	}
+
+	/**
+	 * @param credit how many tiers to pay out, halves included, so lines banked
+	 *               while the recital was undecided all land at once
+	 */
+	public static String chant(ServerPlayer player, double credit, boolean full) {
 		if (player == null)
 			return "";
 		JjkStrongestModVariables.PlayerVariables variables = player.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
@@ -537,7 +654,7 @@ public final class JjkVoiceApi {
 			return "";
 		}
 
-		advance(player, ability, exact, full);
+		advance(player, ability, credit, full);
 		player.getPersistentData().putInt(HOLD_TICKS, EXPIRY_TICKS);
 		return active;
 	}
@@ -554,12 +671,22 @@ public final class JjkVoiceApi {
 	 * means. Anything else is worth a tier, and a near miss half of one, so two
 	 * mishearings add up rather than each being wasted.
 	 */
-	private static void advance(ServerPlayer player, Chantable ability, boolean exact, boolean full) {
+	private static void advance(ServerPlayer player, Chantable ability, double credit, boolean full) {
 		int[] tiers = ability.tiers();
-		if (full && exact) {
+		if (full) {
 			park(player, tiers[tiers.length - 1] - 1);
 			return;
 		}
+		// Banked credit is paid a tier at a time rather than jumped, so every
+		// threshold in between is crossed and sounds as it would have done.
+		for (double owed = credit; owed >= 0.99D; owed -= 1.0D)
+			step(player, ability, true);
+		if (credit % 1.0D >= 0.49D)
+			step(player, ability, false);
+	}
+
+	private static void step(ServerPlayer player, Chantable ability, boolean exact) {
+		int[] tiers = ability.tiers();
 
 		double counter = player.getPersistentData().getDouble("ChantCounter");
 		int next = 0;
@@ -619,6 +746,7 @@ public final class JjkVoiceApi {
 	private static void forgetRecital(ServerPlayer player) {
 		player.getPersistentData().putString(INCANT_ABILITY, "");
 		player.getPersistentData().putInt(INCANT_LINE, 0);
+		player.getPersistentData().putDouble(INCANT_CREDIT, 0.0D);
 	}
 
 	/**

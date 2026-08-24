@@ -1,5 +1,7 @@
 package net.efkrdnz.jjkvoice.network;
 
+import java.util.List;
+
 import io.netty.buffer.ByteBuf;
 
 import net.minecraft.network.codec.ByteBufCodecs;
@@ -21,20 +23,29 @@ import net.efkrdnz.jjkvoice.JjkVoiceMod;
  * the same ability name selects, charges or releases depending on server state.
  * Only how it was heard travels.
  *
+ * <p>More than one key, because incantations may share a line: "Phase" opens both
+ * Blue and Red, and the client has no business deciding which was meant. It sends
+ * everything the line could belong to and the server narrows it against the
+ * recital already in progress.
+ *
  * @param exact heard cleanly, rather than close enough to be worth half
  * @param line  which line of the ability's incantation this was, or -1 when the
  *              ability's own name was spoken instead
  * @param lines how many lines that incantation has, so the server can tell when
  *              one has been recited to the end
  */
-public record VoiceCastPayload(String commandKey, boolean exact, int line, int lines) implements CustomPacketPayload {
+public record VoiceCastPayload(List<String> commandKeys, boolean exact, int line, int lines) implements CustomPacketPayload {
 	/** Long enough for a command key, short enough that spam costs the sender more than us. */
-	public static final int MAX_KEY_LENGTH = 32;
+	public static final int MAX_KEY_LENGTH = 48;
+
+	/** No line is shared by more abilities than this. */
+	public static final int MAX_KEYS = 8;
 
 	public static final Type<VoiceCastPayload> TYPE = new Type<>(JjkVoiceMod.id("voice_cast"));
 
 	public static final StreamCodec<ByteBuf, VoiceCastPayload> STREAM_CODEC = StreamCodec.composite(
-			ByteBufCodecs.stringUtf8(MAX_KEY_LENGTH), VoiceCastPayload::commandKey,
+			ByteBufCodecs.stringUtf8(MAX_KEY_LENGTH).apply(ByteBufCodecs.list(MAX_KEYS)),
+			VoiceCastPayload::commandKeys,
 			ByteBufCodecs.BOOL, VoiceCastPayload::exact,
 			ByteBufCodecs.VAR_INT, VoiceCastPayload::line,
 			ByteBufCodecs.VAR_INT, VoiceCastPayload::lines,
