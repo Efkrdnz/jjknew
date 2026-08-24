@@ -33,6 +33,7 @@ import java.util.List;
 
 import java.lang.reflect.Field;
 
+import com.mojang.blaze3d.vertex.MeshData;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.VertexBuffer;
 import com.mojang.blaze3d.vertex.Tesselator;
@@ -89,7 +90,11 @@ public class SkyBoxOverrideShrineProcedure {
 				}
 				abyssBuffer = new VertexBuffer(VertexBuffer.Usage.STATIC);
 				abyssBuffer.bind();
-				abyssBuffer.upload(bufferBuilder.buildOrThrow());
+				{
+					MeshData mesh = bufferBuilder.build();
+					if (mesh != null)
+						abyssBuffer.upload(mesh);
+				}
 			} else {
 				abyssBuffer.bind();
 			}
@@ -114,7 +119,11 @@ public class SkyBoxOverrideShrineProcedure {
 			}
 			deepSkyBuffer = new VertexBuffer(VertexBuffer.Usage.STATIC);
 			deepSkyBuffer.bind();
-			deepSkyBuffer.upload(bufferBuilder.buildOrThrow());
+			{
+				MeshData mesh = bufferBuilder.build();
+				if (mesh != null)
+					deepSkyBuffer.upload(mesh);
+			}
 		} else {
 			deepSkyBuffer.bind();
 		}
@@ -177,7 +186,11 @@ public class SkyBoxOverrideShrineProcedure {
 						break;
 				}
 			}
-			BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
+			{
+				MeshData mesh = bufferBuilder.build();
+				if (mesh != null)
+					BufferUploader.drawWithShader(mesh);
+			}
 			RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 			poseStack.popPose();
 		}
@@ -212,7 +225,11 @@ public class SkyBoxOverrideShrineProcedure {
 		bufferBuilder.addVertex(matrix4f, -r, -100.0F, r).setUv(u0, v1);
 		bufferBuilder.addVertex(matrix4f, r, -100.0F, r).setUv(u0, v0);
 		bufferBuilder.addVertex(matrix4f, r, -100.0F, -r).setUv(u1, v0);
-		BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
+		{
+			MeshData mesh = bufferBuilder.build();
+			if (mesh != null)
+				BufferUploader.drawWithShader(mesh);
+		}
 		RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 		poseStack.popPose();
 	}
@@ -304,7 +321,11 @@ public class SkyBoxOverrideShrineProcedure {
 				}
 				skyboxBuffer = new VertexBuffer(VertexBuffer.Usage.STATIC);
 				skyboxBuffer.bind();
-				skyboxBuffer.upload(bufferBuilder.buildOrThrow());
+				{
+					MeshData mesh = bufferBuilder.build();
+					if (mesh != null)
+						skyboxBuffer.upload(mesh);
+				}
 			} else {
 				skyboxBuffer.bind();
 			}
@@ -370,7 +391,11 @@ public class SkyBoxOverrideShrineProcedure {
 				starBuffer.close();
 			starBuffer = new VertexBuffer(VertexBuffer.Usage.STATIC);
 			starBuffer.bind();
-			starBuffer.upload(bufferBuilder.buildOrThrow());
+			{
+				MeshData mesh = bufferBuilder.build();
+				if (mesh != null)
+					starBuffer.upload(mesh);
+			}
 		} else {
 			starBuffer.bind();
 		}
@@ -406,7 +431,11 @@ public class SkyBoxOverrideShrineProcedure {
 		bufferBuilder.addVertex(matrix4f, r, 100.0F, r).setUv(1.0F, 0.0F);
 		bufferBuilder.addVertex(matrix4f, -r, 100.0F, r).setUv(1.0F, 1.0F);
 		bufferBuilder.addVertex(matrix4f, -r, 100.0F, -r).setUv(0.0F, 1.0F);
-		BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
+		{
+			MeshData mesh = bufferBuilder.build();
+			if (mesh != null)
+				BufferUploader.drawWithShader(mesh);
+		}
 		RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 		poseStack.popPose();
 	}
@@ -439,7 +468,11 @@ public class SkyBoxOverrideShrineProcedure {
 					bufferBuilder.addVertex(matrix4f, -cos * 120.0F, cos * 40.0F * rawColor[3], sin * 120.0F).setColor(red, green, blue, 0);
 				}
 			}
-			BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
+			{
+				MeshData mesh = bufferBuilder.build();
+				if (mesh != null)
+					BufferUploader.drawWithShader(mesh);
+			}
 		}
 	}
 
@@ -460,7 +493,11 @@ public class SkyBoxOverrideShrineProcedure {
 		bufferBuilder.addVertex(matrix4f, r, -r, 100.0F).setUv(0.0F, 1.0F);
 		bufferBuilder.addVertex(matrix4f, -r, -r, 100.0F).setUv(1.0F, 1.0F);
 		bufferBuilder.addVertex(matrix4f, -r, r, 100.0F).setUv(1.0F, 0.0F);
-		BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
+		{
+			MeshData mesh = bufferBuilder.build();
+			if (mesh != null)
+				BufferUploader.drawWithShader(mesh);
+		}
 		RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 		poseStack.popPose();
 	}

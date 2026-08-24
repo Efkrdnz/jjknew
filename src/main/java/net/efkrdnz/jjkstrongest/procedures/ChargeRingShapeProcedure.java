@@ -6,6 +6,7 @@ import net.minecraft.client.Minecraft;
 
 import javax.annotation.Nullable;
 
+import com.mojang.blaze3d.vertex.MeshData;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.VertexBuffer;
 import com.mojang.blaze3d.vertex.Tesselator;
@@ -67,7 +68,11 @@ public class ChargeRingShapeProcedure {
 			vertexBuffer.close();
 		vertexBuffer = new VertexBuffer(VertexBuffer.Usage.DYNAMIC);
 		vertexBuffer.bind();
-		vertexBuffer.upload(bufferBuilder.buildOrThrow());
+		{
+			MeshData mesh = bufferBuilder.build();
+			if (mesh != null)
+				vertexBuffer.upload(mesh);
+		}
 		VertexBuffer.unbind();
 		bufferBuilder = null;
 	}

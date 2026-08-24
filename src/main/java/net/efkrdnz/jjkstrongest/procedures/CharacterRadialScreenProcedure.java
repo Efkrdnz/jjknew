@@ -21,6 +21,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.List;
 import java.util.ArrayList;
 
+import com.mojang.blaze3d.vertex.MeshData;
 import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.Tesselator;
@@ -230,7 +231,11 @@ public class CharacterRadialScreenProcedure {
 				float y = centerY + CENTER_CIRCLE_RADIUS * (float) Math.sin(angle);
 				buffer.addVertex(matrix, x, y, 0.0F).setColor(cr, cg, cb, ca);
 			}
-			BufferUploader.drawWithShader(buffer.buildOrThrow());
+			{
+				MeshData mesh = buffer.build();
+				if (mesh != null)
+					BufferUploader.drawWithShader(mesh);
+			}
 			// main slots
 			buffer = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
 			for (int i = 0; i < items.size(); i++) {
@@ -252,7 +257,11 @@ public class CharacterRadialScreenProcedure {
 				}
 				drawSlot(guiGraphics.pose(), buffer, centerX, centerY, startAngle, endAngle, fillColor);
 			}
-			BufferUploader.drawWithShader(buffer.buildOrThrow());
+			{
+				MeshData mesh = buffer.build();
+				if (mesh != null)
+					BufferUploader.drawWithShader(mesh);
+			}
 			// colored outlines
 			buffer = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
 			for (int i = 0; i < items.size(); i++) {
@@ -264,7 +273,11 @@ public class CharacterRadialScreenProcedure {
 				int outlineColor = toRGB24((abilityColor >> 16) & 0xFF, (abilityColor >> 8) & 0xFF, abilityColor & 0xFF, alpha);
 				drawOutline(guiGraphics.pose(), buffer, centerX, centerY, startAngle, endAngle, outlineColor);
 			}
-			BufferUploader.drawWithShader(buffer.buildOrThrow());
+			{
+				MeshData mesh = buffer.build();
+				if (mesh != null)
+					BufferUploader.drawWithShader(mesh);
+			}
 			// inner glow for hovered
 			if (this.hovered >= 0 && this.hovered < items.size()) {
 				buffer = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
@@ -277,7 +290,11 @@ public class CharacterRadialScreenProcedure {
 				int gb = glowColor & 0xFF;
 				int innerGlow = toRGB24(gr, gg, gb, 100);
 				drawSlot(guiGraphics.pose(), buffer, centerX, centerY, startAngle, endAngle, innerGlow);
-				BufferUploader.drawWithShader(buffer.buildOrThrow());
+				{
+					MeshData mesh = buffer.build();
+					if (mesh != null)
+						BufferUploader.drawWithShader(mesh);
+				}
 			}
 			guiGraphics.pose().popPose();
 			RenderSystem.disableBlend();

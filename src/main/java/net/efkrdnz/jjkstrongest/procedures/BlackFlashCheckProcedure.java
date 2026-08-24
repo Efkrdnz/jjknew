@@ -58,7 +58,7 @@ public class BlackFlashCheckProcedure {
 			return; // Skip all other checks including normal RNG
 		}
 		// check if damage is from jujutsu technique - skip black flash if true
-		if ((damageSource).is(TagKey.create(Registries.DAMAGE_TYPE, ResourceLocation.parse("forge:jujutsu")))) {
+		if ((damageSource).is(TagKey.create(Registries.DAMAGE_TYPE, ResourceLocation.parse("jjk_strongest:jujutsu")))) {
 			return;
 		}
 		if ((damageSource).is(DamageTypes.GENERIC_KILL)) {

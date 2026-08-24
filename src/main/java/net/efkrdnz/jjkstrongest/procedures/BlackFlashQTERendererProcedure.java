@@ -13,6 +13,7 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.Minecraft;
 
+import com.mojang.blaze3d.vertex.MeshData;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -80,7 +81,11 @@ public class BlackFlashQTERendererProcedure {
 			float y = cy + (float) Math.sin(ang) * radius;
 			buf.addVertex(m, x, y, 0).setColor(er, eg, eb, ea);
 		}
-		BufferUploader.drawWithShader(buf.buildOrThrow());
+		{
+			MeshData mesh = buf.build();
+			if (mesh != null)
+				BufferUploader.drawWithShader(mesh);
+		}
 		RenderSystem.enableDepthTest();
 		RenderSystem.disableBlend();
 	}
@@ -102,7 +107,11 @@ public class BlackFlashQTERendererProcedure {
 			buf.addVertex(m, cx + cos * outerR, cy + sin * outerR, 0).setColor(r, g, b, a);
 			buf.addVertex(m, cx + cos * innerR, cy + sin * innerR, 0).setColor(r, g, b, a);
 		}
-		BufferUploader.drawWithShader(buf.buildOrThrow());
+		{
+			MeshData mesh = buf.build();
+			if (mesh != null)
+				BufferUploader.drawWithShader(mesh);
+		}
 		RenderSystem.enableDepthTest();
 		RenderSystem.disableBlend();
 	}
@@ -129,7 +138,11 @@ public class BlackFlashQTERendererProcedure {
 			buf.addVertex(m, cx + cos * outerR, cy + sin * outerR, 0).setColor(r, g, b, a);
 			buf.addVertex(m, cx + cos * innerR, cy + sin * innerR, 0).setColor(r, g, b, a);
 		}
-		BufferUploader.drawWithShader(buf.buildOrThrow());
+		{
+			MeshData mesh = buf.build();
+			if (mesh != null)
+				BufferUploader.drawWithShader(mesh);
+		}
 		RenderSystem.enableDepthTest();
 		RenderSystem.disableBlend();
 	}
@@ -155,7 +168,11 @@ public class BlackFlashQTERendererProcedure {
 		buf.addVertex(m, innerX + px, innerY + py, 0).setColor(r, g, b, a);
 		buf.addVertex(m, outerX + px, outerY + py, 0).setColor(r, g, b, a);
 		buf.addVertex(m, outerX - px, outerY - py, 0).setColor(r, g, b, a);
-		BufferUploader.drawWithShader(buf.buildOrThrow());
+		{
+			MeshData mesh = buf.build();
+			if (mesh != null)
+				BufferUploader.drawWithShader(mesh);
+		}
 		RenderSystem.enableDepthTest();
 		RenderSystem.disableBlend();
 	}

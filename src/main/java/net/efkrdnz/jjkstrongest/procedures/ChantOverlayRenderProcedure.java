@@ -37,6 +37,7 @@ import javax.annotation.Nullable;
 import java.util.Map;
 import java.util.HashMap;
 
+import com.mojang.blaze3d.vertex.MeshData;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexBuffer;
@@ -345,7 +346,11 @@ public class ChantOverlayRenderProcedure {
 		bufferBuilder.addVertex(matrix4f, -0.5F, 0.5F, 0.0F).setUv(0.0F, 1.0F).setColor(red, green, blue, alpha);
 		bufferBuilder.addVertex(matrix4f, 0.5F, 0.5F, 0.0F).setUv(1.0F, 1.0F).setColor(red, green, blue, alpha);
 		bufferBuilder.addVertex(matrix4f, 0.5F, -0.5F, 0.0F).setUv(1.0F, 0.0F).setColor(red, green, blue, alpha);
-		BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
+		{
+			MeshData mesh = bufferBuilder.build();
+			if (mesh != null)
+				BufferUploader.drawWithShader(mesh);
+		}
 		poseStack.popPose();
 	}
 

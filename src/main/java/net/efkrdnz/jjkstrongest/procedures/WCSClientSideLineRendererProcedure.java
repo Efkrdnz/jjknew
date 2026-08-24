@@ -16,6 +16,7 @@ import net.minecraft.client.Minecraft;
 
 import net.efkrdnz.jjkstrongest.network.JjkStrongestModVariables;
 
+import com.mojang.blaze3d.vertex.MeshData;
 import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.Tesselator;
@@ -83,7 +84,11 @@ public class WCSClientSideLineRendererProcedure {
 		drawLine(buffer, matrix, x2 - camPos.x, y2 - camPos.y, z2 - camPos.z, x3 - camPos.x, y3 - camPos.y, z3 - camPos.z, 1.0f, 1.0f, 1.0f, 1.0f); // white
 		// line from point 3 to point 1 (player to press)
 		drawLine(buffer, matrix, x3 - camPos.x, y3 - camPos.y, z3 - camPos.z, x1 - camPos.x, y1 - camPos.y, z1 - camPos.z, 1.0f, 1.0f, 1.0f, 1.0f); // white
-		BufferUploader.drawWithShader(buffer.buildOrThrow());
+		{
+			MeshData mesh = buffer.build();
+			if (mesh != null)
+				BufferUploader.drawWithShader(mesh);
+		}
 		// draw points at vertices
 		buffer = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
 		// point 1 (red)
@@ -92,7 +97,11 @@ public class WCSClientSideLineRendererProcedure {
 		drawPoint(buffer, matrix, x2 - camPos.x, y2 - camPos.y, z2 - camPos.z, 0.0f, 1.0f, 0.0f, 1.0f, 0.3f);
 		// point 3 (blue)
 		drawPoint(buffer, matrix, x3 - camPos.x, y3 - camPos.y, z3 - camPos.z, 0.0f, 0.5f, 1.0f, 1.0f, 0.3f);
-		BufferUploader.drawWithShader(buffer.buildOrThrow());
+		{
+			MeshData mesh = buffer.build();
+			if (mesh != null)
+				BufferUploader.drawWithShader(mesh);
+		}
 		poseStack.popPose();
 		// restore rendering state
 		RenderSystem.enableDepthTest();

@@ -34,7 +34,7 @@ public class WhenEntityIsAttackedProcedure {
 		target = entity;
 		target = sourceentity;
 		target = immediatesourceentity;
-		if (!damagesource.is(TagKey.create(Registries.DAMAGE_TYPE, ResourceLocation.parse("forge:jujutsu")))) {
+		if (!damagesource.is(TagKey.create(Registries.DAMAGE_TYPE, ResourceLocation.parse("jjk_strongest:jujutsu")))) {
 			MarkEntityOnHitProcedure.execute(entity.level(), sourceentity, entity, immediatesourceentity);
 		}
 	}

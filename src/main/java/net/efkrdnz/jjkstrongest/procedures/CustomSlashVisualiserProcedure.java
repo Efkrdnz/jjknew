@@ -18,6 +18,7 @@ import net.efkrdnz.jjkstrongest.network.JjkStrongestModVariables;
 
 import javax.annotation.Nullable;
 
+import com.mojang.blaze3d.vertex.MeshData;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.VertexBuffer;
 import com.mojang.blaze3d.vertex.Tesselator;
@@ -89,7 +90,11 @@ public class CustomSlashVisualiserProcedure {
 			vertexBuffer.close();
 		vertexBuffer = new VertexBuffer(VertexBuffer.Usage.STATIC);
 		vertexBuffer.bind();
-		vertexBuffer.upload(bufferBuilder.buildOrThrow());
+		{
+			MeshData mesh = bufferBuilder.build();
+			if (mesh != null)
+				vertexBuffer.upload(mesh);
+		}
 		VertexBuffer.unbind();
 	}
 

@@ -10,6 +10,7 @@ import net.minecraft.client.Minecraft;
 
 import net.efkrdnz.jjkstrongest.client.JjkShaderManager;
 
+import com.mojang.blaze3d.vertex.MeshData;
 import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -119,6 +120,10 @@ public class RenderBlueFirstPersonProcedure {
 		bb.addVertex(mat, 0.5f, -0.5f, 0f).setUv(u1, v1);
 		bb.addVertex(mat, 0.5f, 0.5f, 0f).setUv(u1, v0);
 		bb.addVertex(mat, -0.5f, 0.5f, 0f).setUv(u0, v0);
-		BufferUploader.drawWithShader(bb.buildOrThrow());
+		{
+			MeshData mesh = bb.build();
+			if (mesh != null)
+				BufferUploader.drawWithShader(mesh);
+		}
 	}
 }
