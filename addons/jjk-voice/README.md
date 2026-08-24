@@ -67,21 +67,23 @@ nothing to memorise.
 
 ## What a name does
 
-Saying a technique's name does one of four things, depending on where you already
-are. That is what lets you recite an incantation and then name the technique and
-have it mean *"charge this, now fire it"*.
+Naming a technique is how you **throw** it, never how you wind it up.
 
 | When you say an ability's name | What happens |
 | --- | --- |
 | It is not selected | It becomes your selection, as the radial menu does |
-| It is selected | It starts charging, as holding its technique key does |
-| It is already charging | It is released, as letting that key up does |
+| It is selected | It comes out, at whatever charge is on it |
 
-**Actions** skip all of that and happen at once: `domain_expansion`, `kaisen`,
-`fuga`, and Inumaki's Cursed Speech words (`die`, `blast`, `crush`, `burst`,
-`sleep`, `flee`, `rot`, `twist`, `burn`, `fall`, `spit`, `pull`, `shrink`,
-`weep`, `kneel`, `dont_move`). Cursed Speech takes effect the moment it is
-spoken and has no charge to build.
+So *"Reversal Red"* fires Red. If an incantation has been building it, that is
+the charge it goes out at; if not, it is a tap of the technique key and fires at
+base output. Charging is the incantation's job and nothing else's — see
+[Chanting](#chanting).
+
+**Actions** skip selection entirely and happen at once: `domain_expansion`,
+`kaisen`, `fuga`, and Inumaki's Cursed Speech words (`die`, `blast`, `crush`,
+`burst`, `sleep`, `flee`, `rot`, `twist`, `burn`, `fall`, `spit`, `pull`,
+`shrink`, `weep`, `kneel`, `dont_move`). Cursed Speech takes effect the moment it
+is spoken and has no charge to build.
 
 The decision is made on the server, because it depends on things the client
 cannot see and should not be trusted about. `/jjkvoice status` labels each
@@ -106,10 +108,13 @@ line, it charges a tier, and getting to the end of the incantation carries the
 technique to full output.
 
 ```
-"Phase, Paramita"     ->  Red, one tier
-"Pillars of Light"    ->  Red, full charge  (incantation complete)
-"Reversal Red"        ->  fires it
+"Phase, Paramita"     ->  selects Red, charges one tier
+"Pillars of Light"    ->  full charge  (incantation complete)
+"Reversal Red"        ->  fires it, at full
 ```
+
+Saying *"Reversal Red"* at any point fires whatever is on it, so a half-recited
+incantation still throws a half-charged technique.
 
 Lines are not optional flavour, they are how it has to work. Recognition matches
 one fixed utterance at a time rather than listening continuously, and a whole
@@ -126,9 +131,10 @@ the base output, the charge animation and the charging effect all apply exactly
 as they do from the keyboard — and if that handler refuses you (no Blue charges,
 fewer than three Purple) its decision stands and nothing happens.
 
-Saying the **ability's own name** instead charges one tier, so output rises per
-chant without any incantation at all. A **near miss** is worth half a tier, so
-two of them add up to one and being slightly off is never simply wasted.
+A **near miss** on a line is worth half a tier, so two of them add up to one and
+being slightly off is never simply wasted. Nothing else charges: an ability's
+name throws it, which is why an incantation is the only way to get a technique
+out above base output by voice.
 
 | Ability | Tiers | Default incantation |
 | --- | --- | --- |
@@ -158,7 +164,7 @@ together, since a line with no voiceprint can never match.
 Three ways, all equivalent:
 
 - say the ability's name
-- say *"release"*
+- say *"release"*, which fires whatever is charged without naming it
 - tap its technique key
 
 A chant you never release lapses after ten seconds, the same as letting the key

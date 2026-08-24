@@ -27,26 +27,23 @@ import net.efkrdnz.jjkstrongest.procedures.VCTexeProcedure;
  * thing a spoken name means, and the check that the speaker is entitled to it at
  * all.
  *
- * <p>{@link #speak} is the whole interface. A name does one of four things
- * depending on what is already true of the player, which is what lets an
- * incantation and a technique name be spoken in sequence and mean "charge this,
- * now fire it":
+ * <p>{@link #speak} is the whole interface, and the split is between naming a
+ * technique and reciting one:
  *
  * <ul>
  * <li><b>An action</b> ({@link #actionKeys()}) happens immediately — a domain, a
  *     Dismantle, an Inumaki Cursed Speech word.
- * <li><b>An ability not currently selected</b> becomes the selection, exactly as
- *     picking it in the radial menu does.
- * <li><b>An ability already selected</b> starts charging it, as holding its
- *     technique key does.
- * <li><b>An ability already being chanted</b> releases it, as letting that key up
- *     does — so the technique comes out at whatever tier the chanting reached.
+ * <li><b>An ability's name</b> selects it if it is not already selected, and
+ *     otherwise <em>uses</em> it, at whatever charge is on it. Naming a technique
+ *     is how you throw it, never how you wind it up.
+ * <li><b>An incantation</b> is the only thing that charges, and arrives a line at
+ *     a time: each line is worth a tier, and reciting one to its end carries the
+ *     technique to full output. It selects its ability first if needed, since it
+ *     names it unambiguously.
  * </ul>
  *
- * <p>An <b>incantation</b> is the charging step on its own, and arrives a line at
- * a time: each line charges a tier, and reciting one to its end carries the
- * technique to full output, which is what reciting the whole thing is for. It
- * selects its ability first if needed, since it names it unambiguously.
+ * <p>So an incantation and a name spoken in sequence read the way they should —
+ * recite it, then call it, and it comes out at full.
  *
  * <p>Everything is gated on the speaker's own technique. Saying another
  * sorcerer's ability is not merely ineffective, it is unrecognised — it will not
@@ -328,21 +325,16 @@ public final class JjkVoiceApi {
 					return Spoken.UNRECOGNISED;
 			}
 
-			Chantable ability = CHANTABLE.get(command);
-			if (ability == null)
-				// Selectable but not chargeable; saying its name again is a no-op
-				// rather than a second selection message.
-				return Spoken.SELECTED;
+			if (incantation) {
+				// Only reciting to the end tops the technique out. A line out of order
+				// is still worth its tier, so a mishearing costs progress rather than
+				// the words, but opening at the last line earns nothing.
+				boolean completed = advanceRecital(player, command, line, lines);
+				return chant(player, exact, completed).isEmpty() ? Spoken.UNRECOGNISED : Spoken.CHARGED;
+			}
 
-			// Already chanting this one: the name is the cue to let it go.
-			if (!incantation && ability.chant().equals(player.getPersistentData().getString("chanting")))
-				return release(player) ? Spoken.RELEASED : Spoken.UNRECOGNISED;
-
-			// Only reciting an incantation to its end tops the technique out. Any
-			// single line is worth a tier, so starting in the middle gains nothing
-			// that saying the ability's name would not.
-			boolean completed = incantation && advanceRecital(player, command, line, lines);
-			return chant(player, exact, completed).isEmpty() ? Spoken.UNRECOGNISED : Spoken.CHARGED;
+			// Named, and already selected: throw it.
+			return use(player, command) ? Spoken.RELEASED : Spoken.UNRECOGNISED;
 		}
 
 		if (ACTIONS.containsKey(command)) {
@@ -352,6 +344,24 @@ public final class JjkVoiceApi {
 			return Spoken.CAST;
 		}
 		return Spoken.UNRECOGNISED;
+	}
+
+	/**
+	 * Uses the ability now selected, at whatever charge is on it.
+	 *
+	 * <p>Naming a technique throws it. If an incantation has been building one, this
+	 * lets that go at the tier it reached; if not, it is a tap of the technique key
+	 * — press and release together — which is what fires it at base output. Either
+	 * way the mod's own handlers decide whether anything comes out.
+	 */
+	private static boolean use(ServerPlayer player, String moveset) {
+		Chantable ability = CHANTABLE.get(moveset);
+		if (ability == null)
+			// Nothing here knows how to throw this one; the technique keys do.
+			return false;
+		if (!ability.chant().equals(player.getPersistentData().getString("chanting")))
+			ability.key().press(player);
+		return release(player);
 	}
 
 	/**
