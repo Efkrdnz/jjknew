@@ -112,3 +112,15 @@ tasks.named('jar') {
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 }
+
+// Sanity check used during setup: confirms the host jar is actually on both
+// classpaths, which a dependency report cannot show for a file dependency.
+tasks.register('verifyHostJar') {
+    doLast {
+        println "host jar exists : ${jjkJar.isFile()}  (${jjkJar})"
+        println "on compileOnly  : ${configurations.compileClasspath.files.any { it.name.startsWith('jjk_strongest') }}"
+        println "on runtime      : ${configurations.runtimeClasspath.files.any { it.name.startsWith('jjk_strongest') }}"
+        println "voicechat api   : ${configurations.compileClasspath.files.any { it.name.contains('voicechat-api') }}"
+        println "svc at runtime  : ${configurations.runtimeClasspath.files.any { it.name.contains('simple-voice-chat') }}"
+    }
+}
