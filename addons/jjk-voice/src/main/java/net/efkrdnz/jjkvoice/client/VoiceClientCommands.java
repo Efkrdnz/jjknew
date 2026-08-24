@@ -155,10 +155,15 @@ public final class VoiceClientCommands {
 			if (!done.isEmpty())
 				enrolled++;
 
-			// One line per technique rather than per phrase: nineteen techniques with
-			// two phrases each would otherwise bury the chat.
+			// One line per command rather than per phrase, and the kind is shown
+			// because it changes what saying it does: an action fires immediately,
+			// a selection just makes that ability active for the technique keys.
 			feedback(source, Component.translatable("message.jjkvoice.command.status_command",
-					command, done.size(), phrases.size(),
+					command,
+					Component.translatable(JjkBridge.isSelection(command)
+							? "message.jjkvoice.command.kind_selection"
+							: "message.jjkvoice.command.kind_action"),
+					done.size(), phrases.size(),
 					missing.isEmpty() ? "-" : String.join(", ", missing))
 					.withStyle(done.isEmpty() ? ChatFormatting.YELLOW : ChatFormatting.AQUA));
 		}

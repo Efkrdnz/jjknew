@@ -26,8 +26,18 @@ public final class JjkBridge {
 		return JjkVoiceApi.commandKeys();
 	}
 
-	/** @return true when the host mod accepted the request */
-	public static boolean cast(ServerPlayer player, String commandKey) {
-		return JjkVoiceApi.cast(player, commandKey);
+	/**
+	 * Runs a command key, which the host mod resolves to either an immediate
+	 * technique or an ability selection.
+	 *
+	 * @return true when the host mod accepted the request
+	 */
+	public static boolean run(ServerPlayer player, String commandKey) {
+		return JjkVoiceApi.run(player, commandKey);
+	}
+
+	/** True when this key selects an ability rather than firing one. */
+	public static boolean isSelection(String commandKey) {
+		return JjkVoiceApi.movesetKeys().contains(JjkVoiceApi.normalise(commandKey));
 	}
 }

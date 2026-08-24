@@ -34,10 +34,12 @@ The addon refuses to load without both, rather than half-working.
    release.
 3. In play: hold the key, say *"Dismantle"*, release.
 
-There are nineteen techniques configured out of the box, which is far too many to
-enroll in one sitting — so don't. Partial enrollment is a supported state: a
-technique with nothing recorded is skipped during matching, so teach the two or
-three you use and leave the rest. `/jjkvoice status` shows where you are.
+Seven abilities are configured out of the box — the ones the old phrase file
+covered. You do not have to enroll all of them: partial enrollment is a supported
+state, and a command with nothing recorded is simply skipped during matching. So
+teach the two or three you actually use and leave the rest. `/jjkvoice status`
+shows where you are, and everything else the mod exposes is still reachable with
+`/jjkvoice add`.
 
 Your voice never reaches other players. Simple Voice Chat's proximity
 transmission is cancelled for exactly as long as the key is held, so the
@@ -61,17 +63,55 @@ All client-side — a server never sees your voiceprints or settings.
 `<technique>` tab-completes from the host mod's own command list, so there is
 nothing to memorise.
 
-## Techniques
+## Two kinds of command
 
-Which ones do anything depends on your sorcerer — the host mod decides that, not
-this addon. A Gojo player saying "dismantle" is simply ignored, exactly as it is
-from any other input.
+The mod works in two steps, so voice does too.
 
-| Sorcerer | Techniques |
+**Actions** fire immediately: `domain_expansion`, `dismantle`, `fuga`, and
+Inumaki's Cursed Speech words (`die`, `blast`, `crush`, `burst`, `sleep`, `flee`,
+`rot`, `twist`, `burn`, `fall`, `spit`, `pull`, `shrink`, `weep`, `kneel`,
+`dont_move`).
+
+**Selections** switch which ability is active, exactly as picking it in the
+radial menu does — the technique keybinds then act on it. These are the mod's own
+moveset names: `gojo_blue`, `gojo_red`, `gojo_purple`, `gojo_limitless`,
+`sukuna_cleave`, `sukuna_wcs`, `sukuna_shrine`, `inumaki_*`, `yuji_*`, and the
+rest.
+
+`/jjkvoice status` labels each configured command `[action]` or `[select]`.
+
+The split is not a stylistic choice. Several abilities are charge-and-release —
+Hollow Purple will not fire until `charge_purple >= 3` and the charging effect is
+on you — so there is no honest way to express them as a single spoken action.
+Selecting is what a player does first anyway.
+
+Which commands do anything depends on your sorcerer; the host mod decides that,
+not this addon. A Gojo player saying "dismantle" is simply ignored, exactly as it
+is from any other input.
+
+### Coming from the old phrase file
+
+The previous setup's `phrases.txt` used four keys the mod has no action for.
+They were ability names, and they map straight across:
+
+| Old key | Now |
 | --- | --- |
-| Gojo | `domain_expansion` |
-| Sukuna | `domain_expansion`, `dismantle`, `fuga` |
-| Inumaki | `dont_move`, `die`, `blast`, `crush`, `burst`, `sleep`, `flee`, `rot`, `twist`, `burn`, `fall`, `spit`, `pull`, `shrink`, `weep`, `kneel` |
+| `hollow_purple` | `gojo_purple` (selection) |
+| `reversal_red` | `gojo_red` (selection) |
+| `lapse_blue` | `gojo_blue` (selection) |
+| `cleave` | `sukuna_cleave` (selection) |
+
+The spoken phrases are unchanged — you still say "hollow purple". Only the key
+the config files it under is different, and tab-complete shows the real names.
+
+Its long lists of near-spellings are gone on purpose. Entries like
+"domain expression", "hello purple" and "this mantle" were not alternatives you
+might say; they were the transcriber's mistakes, written down so a wrong
+transcript still landed on the right ability. Nothing here transcribes — matching
+is acoustic and has no dictionary, so there is no wrong transcript to catch.
+Enrolling a misreading would only widen what counts as the phrase and make false
+triggers *more* likely. Genuine alternatives ("imaginary purple", "open the
+furnace", "kaisen") are kept, because those are things you would actually say.
 
 ## Sound-alikes
 
@@ -98,7 +138,7 @@ deliberately or bind a longer phrase to it.
 | Key | Default | Meaning |
 | --- | --- | --- |
 | `mode` | `voiceprint` | `shout` fires `shoutCommand` on any loud vocalisation — useful to verify your mic works before enrolling |
-| `commands` | 19 techniques | Technique key to the phrases that fire it |
+| `commands` | 7 abilities | Command key to the phrases that trigger it |
 | `shoutCommand` | `domain_expansion` | What `shout` mode triggers |
 | `thresholdMultiplier` | `1.35` | How far past your own natural variation still counts. Raise if it refuses you, lower if unrelated words trigger it |
 | `absoluteMaxDistance` | `60.0` | Safety ceiling so an inconsistent enrollment cannot accept everything |

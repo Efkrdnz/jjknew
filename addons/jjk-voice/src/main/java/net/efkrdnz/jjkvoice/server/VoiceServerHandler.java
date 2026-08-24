@@ -50,7 +50,7 @@ public final class VoiceServerHandler {
 			if (isThrottled(player.getUUID()))
 				return;
 
-			JjkBridge.cast(player, commandKey);
+			JjkBridge.run(player, commandKey);
 		});
 	}
 

@@ -88,34 +88,39 @@ public final class VoiceConfig {
 	public boolean announceMatches = true;
 
 	/**
-	 * The starting phrase list. One or two phrases per technique, because the
-	 * player pays for every extra phrase in enrollment time -- more can be added
-	 * with {@code /jjkvoice add <command> <phrase>}.
+	 * The starting phrase list, carried over from the phrase map the previous
+	 * speech-to-text app used.
+	 *
+	 * <p>Only the phrasings a player would actually choose to say are kept. That
+	 * old map also listed things like "domain expression", "hello purple" and
+	 * "this mantle" -- those were not alternatives, they were the transcriber's
+	 * mistakes, written down so the wrong transcript still mapped to the right
+	 * ability. Nothing here transcribes, so there is no wrong transcript to catch:
+	 * matching is acoustic and has no dictionary, which means it cannot confuse one
+	 * word for another. Enrolling a misreading would only widen what counts as the
+	 * phrase and make false triggers more likely.
+	 *
+	 * <p>Seven abilities rather than every command the mod exposes, because that is
+	 * what the old map covered and every extra phrase costs enrollment time. The
+	 * rest are still reachable with {@code /jjkvoice add <command> <phrase>}, and
+	 * tab-complete lists them.
 	 */
 	private static Map<String, List<String>> defaultCommands() {
 		Map<String, List<String>> defaults = new LinkedHashMap<>();
-		// Gojo and Sukuna
+
+		// Immediate actions.
 		defaults.put("domain_expansion", new ArrayList<>(List.of("domain expansion", "ryouiki tenkai")));
-		// Sukuna
-		defaults.put("dismantle", new ArrayList<>(List.of("dismantle", "kaisen")));
-		defaults.put("fuga", new ArrayList<>(List.of("fuga", "open")));
-		// Inumaki - Cursed Speech
-		defaults.put("dont_move", new ArrayList<>(List.of("don't move")));
-		defaults.put("die", new ArrayList<>(List.of("die")));
-		defaults.put("blast", new ArrayList<>(List.of("blast", "get blown away")));
-		defaults.put("crush", new ArrayList<>(List.of("crush")));
-		defaults.put("burst", new ArrayList<>(List.of("burst", "explode")));
-		defaults.put("sleep", new ArrayList<>(List.of("sleep")));
-		defaults.put("flee", new ArrayList<>(List.of("flee", "run away")));
-		defaults.put("rot", new ArrayList<>(List.of("rot")));
-		defaults.put("twist", new ArrayList<>(List.of("twist")));
-		defaults.put("burn", new ArrayList<>(List.of("burn")));
-		defaults.put("fall", new ArrayList<>(List.of("fall")));
-		defaults.put("spit", new ArrayList<>(List.of("spit")));
-		defaults.put("pull", new ArrayList<>(List.of("pull", "come here")));
-		defaults.put("shrink", new ArrayList<>(List.of("shrink")));
-		defaults.put("weep", new ArrayList<>(List.of("weep", "cry")));
-		defaults.put("kneel", new ArrayList<>(List.of("kneel", "bow")));
+		defaults.put("dismantle", new ArrayList<>(List.of("dismantle", "kaisen", "slash")));
+		defaults.put("fuga", new ArrayList<>(List.of("fuga", "open the furnace", "divine flames", "flame arrow")));
+
+		// Ability selections. The old map called these hollow_purple, reversal_red,
+		// lapse_blue and cleave; those are the spoken names, while the keys below are
+		// what the mod calls the abilities in its own radial menu.
+		defaults.put("gojo_purple", new ArrayList<>(List.of("hollow purple", "imaginary purple", "imaginary technique purple")));
+		defaults.put("gojo_red", new ArrayList<>(List.of("reversal red")));
+		defaults.put("gojo_blue", new ArrayList<>(List.of("lapse blue")));
+		defaults.put("sukuna_cleave", new ArrayList<>(List.of("cleave")));
+
 		return defaults;
 	}
 
