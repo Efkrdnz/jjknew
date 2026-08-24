@@ -81,25 +81,31 @@ public record ChantRow(String ability, String label, String line, int colour, bo
 			// happens when the server knows an ability this config was edited to drop.
 			if (lines.isEmpty())
 				continue;
-			// Recited to the end: there is no next line, so show the word that throws
-			// it instead. The pips being full is what says it is charged.
-			String next = recited < lines.size() ? lines.get(recited) : firingWord(config, ability);
-			if (next.isEmpty())
+			if (recited < lines.size()) {
+				String next = lines.get(recited);
+				rows.add(new ChantRow(ability, labelOf(ability), next, colourOf(ability),
+						VoicePrintStore.isEnrolled(next), recited, lines.size()));
 				continue;
-			rows.add(new ChantRow(ability, labelOf(ability), next, colourOf(ability),
-					VoicePrintStore.isEnrolled(next), recited, lines.size()));
+			}
+			// Recited to the end, so there is no next line. What is left to say is
+			// how to throw it -- one row each, because Dismantle has three shapes and
+			// listing only the first would hide the other two.
+			for (String phrase : firingWords(config, ability))
+				rows.add(new ChantRow(ability, labelOf(ability), phrase, colourOf(ability),
+						VoicePrintStore.isEnrolled(phrase), recited, lines.size()));
 		}
 		return rows;
 	}
 
-	/** What the player says to throw a charged ability, for the finished row. */
-	private static String firingWord(VoiceConfig config, String ability) {
-		List<String> phrases = config.phrasesFor(ability);
-		if (!phrases.isEmpty())
-			return phrases.get(0);
-		// Dismantle is thrown by naming a shape rather than the ability.
-		List<String> dismantle = config.phrasesFor("dismantle");
-		return "sukuna_dismantle".equals(ability) && !dismantle.isEmpty() ? dismantle.get(0) : "";
+	/** Every way of throwing a charged ability, one phrase each. */
+	private static List<String> firingWords(VoiceConfig config, String ability) {
+		List<String> words = new ArrayList<>();
+		for (String firing : JjkBridge.firingKeys(ability)) {
+			List<String> phrases = config.phrasesFor(firing);
+			if (!phrases.isEmpty())
+				words.add(phrases.get(0));
+		}
+		return words;
 	}
 
 	/** A stand-in mid-recital row, so the editor positions something real-looking. */

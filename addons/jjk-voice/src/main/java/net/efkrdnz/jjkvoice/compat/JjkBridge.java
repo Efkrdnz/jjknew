@@ -50,6 +50,14 @@ public final class JjkBridge {
 		return JjkVoiceApi.movesetKeys().contains(JjkVoiceApi.normalise(commandKey));
 	}
 
+	/**
+	 * The commands that throw this ability once charged. Dismantle has three; every
+	 * other chantable ability is thrown by its own name.
+	 */
+	public static List<String> firingKeys(String movesetKey) {
+		return JjkVoiceApi.firingKeys(movesetKey);
+	}
+
 	/** True when this ability charges by holding, and so can be chanted. */
 	public static boolean isChantable(String movesetKey) {
 		return JjkVoiceApi.chantableMovesets().contains(JjkVoiceApi.normalise(movesetKey));

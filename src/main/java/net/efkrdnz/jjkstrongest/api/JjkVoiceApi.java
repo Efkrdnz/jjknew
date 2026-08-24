@@ -205,10 +205,15 @@ public final class JjkVoiceApi {
 		BARRAGE
 	}
 
-	private static final Map<String, DismantleForm> DISMANTLE_FORMS = Map.of(
-			"dismantle", DismantleForm.SINGLE,
-			"dismantle_net", DismantleForm.NET,
-			"dismantle_barrage", DismantleForm.BARRAGE);
+	private static final Map<String, DismantleForm> DISMANTLE_FORMS = buildDismantleForms();
+
+	private static Map<String, DismantleForm> buildDismantleForms() {
+		Map<String, DismantleForm> forms = new LinkedHashMap<>();
+		forms.put("dismantle", DismantleForm.SINGLE);
+		forms.put("dismantle_net", DismantleForm.NET);
+		forms.put("dismantle_barrage", DismantleForm.BARRAGE);
+		return java.util.Collections.unmodifiableMap(forms);
+	}
 
 	/** How long a barrage runs: this, plus the same again for every tier chanted. */
 	private static final int BARRAGE_BASE_TICKS = 20;
@@ -269,6 +274,24 @@ public final class JjkVoiceApi {
 	/** Abilities that can be selected, i.e. made the active moveset. */
 	public static Set<String> movesetKeys() {
 		return MOVESETS.keySet();
+	}
+
+	/**
+	 * The commands that throw a charged ability.
+	 *
+	 * <p>Usually the ability's own name, which is how naming a technique throws it.
+	 * Dismantle is the exception: it is thrown by naming a shape instead, and the
+	 * three shapes spend the same charge differently. Grouping them under the
+	 * ability is what lets one enrollment cover everything it takes to use it,
+	 * rather than leaving two of the three as separate things to discover.
+	 */
+	public static List<String> firingKeys(String moveset) {
+		String key = normalise(moveset);
+		if (!CHANTABLE.containsKey(key))
+			return List.of();
+		if ("sukuna_dismantle".equals(key))
+			return List.copyOf(DISMANTLE_FORMS.keySet());
+		return List.of(key);
 	}
 
 	/** Movesets that can be charged by chanting, i.e. that accept an incantation. */

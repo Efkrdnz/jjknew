@@ -31,6 +31,7 @@
   "message.jjkvoice.command.ready": "connected",
   "message.jjkvoice.command.not_ready": "not connected",
   "message.jjkvoice.command.status_command": "%s [%s]: %s/%s enrolled  (missing: %s)",
+  "message.jjkvoice.command.kind_chant": "chant",
   "message.jjkvoice.command.kind_action": "action",
   "message.jjkvoice.command.kind_selection": "select",
   "message.jjkvoice.command.status_summary": "%s of %s techniques have at least one enrolled phrase.",

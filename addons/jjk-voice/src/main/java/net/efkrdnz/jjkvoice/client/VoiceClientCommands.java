@@ -163,6 +163,18 @@ public final class VoiceClientCommands {
 						: Component.translatable("message.jjkvoice.command.not_ready").withStyle(ChatFormatting.RED))
 				.withStyle(ChatFormatting.GRAY));
 
+		// Chantable abilities are listed first and in their own right. They are not
+		// command keys -- an ability is charged by its incantation and thrown by
+		// naming a shape -- so iterating the command map alone would leave the
+		// incantations invisible, which is the one place enrollment is easy to miss.
+		List<String> listed = new ArrayList<>();
+		for (String ability : JjkBridge.chantableMovesets()) {
+			if (!config.incantationsFor(ability).isEmpty()) {
+				listed.add(ability);
+				statusLine(source, config, ability, "message.jjkvoice.command.kind_chant");
+			}
+		}
+
 		int enrolled = 0;
 		for (String command : config.commands.keySet()) {
 			List<String> phrases = config.allPhrasesFor(command);
@@ -176,18 +188,27 @@ public final class VoiceClientCommands {
 			// One line per command rather than per phrase, and the kind is shown
 			// because it changes what saying it does: an action fires immediately,
 			// a selection just makes that ability active for the technique keys.
-			feedback(source, Component.translatable("message.jjkvoice.command.status_command",
-					command,
-					Component.translatable(JjkBridge.isSelection(command)
-							? "message.jjkvoice.command.kind_selection"
-							: "message.jjkvoice.command.kind_action"),
-					done.size(), phrases.size(),
-					missing.isEmpty() ? "-" : String.join(", ", missing))
-					.withStyle(done.isEmpty() ? ChatFormatting.YELLOW : ChatFormatting.AQUA));
+			statusLine(source, config, command, JjkBridge.isSelection(command)
+					? "message.jjkvoice.command.kind_selection"
+					: "message.jjkvoice.command.kind_action");
 		}
 		feedback(source, Component.translatable("message.jjkvoice.command.status_summary",
 				enrolled, config.commands.size()).withStyle(ChatFormatting.GRAY));
 		return enrolled;
+	}
+
+	/** One line for one command or ability: how much of it is enrolled, and what is not. */
+	private static void statusLine(CommandSourceStack source, VoiceConfig config, String key, String kind) {
+		List<String> phrases = config.allPhrasesFor(key);
+		List<String> done = new ArrayList<>();
+		List<String> missing = new ArrayList<>();
+		for (String phrase : phrases)
+			(VoicePrintStore.isEnrolled(phrase) ? done : missing).add(phrase);
+
+		feedback(source, Component.translatable("message.jjkvoice.command.status_command",
+				key, Component.translatable(kind), done.size(), phrases.size(),
+				missing.isEmpty() ? "-" : String.join(", ", missing))
+				.withStyle(done.isEmpty() ? ChatFormatting.YELLOW : ChatFormatting.AQUA));
 	}
 
 	private static int forget(CommandSourceStack source, String rawPhrase) {

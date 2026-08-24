@@ -80,9 +80,23 @@ public final class ChantHud {
 	}
 
 	static int heightOf(List<ChantRow> rows) {
-		// One extra line for the pips, which only appear once a single ability is left.
-		boolean committed = rows.size() == 1;
-		return rows.size() * LINE_HEIGHT + (committed ? LINE_HEIGHT : 0) + PAD * 2;
+		return rows.size() * LINE_HEIGHT + (committed(rows) ? LINE_HEIGHT : 0) + PAD * 2;
+	}
+
+	/**
+	 * Whether one ability has won, which is when pips are worth drawing.
+	 *
+	 * <p>Not simply one row: a Dismantle recited through shows three, one per shape
+	 * it can be thrown in, and they are all the same ability.
+	 */
+	private static boolean committed(List<ChantRow> rows) {
+		if (rows.isEmpty())
+			return false;
+		String first = rows.get(0).ability();
+		for (ChantRow row : rows)
+			if (!row.ability().equals(first))
+				return false;
+		return true;
 	}
 
 	static void draw(GuiGraphics graphics, Font font, List<ChantRow> rows, int x, int y) {
@@ -104,7 +118,7 @@ public final class ChantHud {
 			textY += LINE_HEIGHT;
 		}
 
-		if (rows.size() == 1)
+		if (committed(rows))
 			drawPips(graphics, rows.get(0), textX, textY);
 	}
 

@@ -187,8 +187,21 @@ is nothing being aimed at the moment the word lands.
 Saying any of the three selects Dismantle first if it is not already, so a chant
 can start with *"Dragon Scales"* from anywhere.
 
-`/jjkvoice enroll <ability>` records the ability's name and its incantation lines
-together, since a line with no voiceprint can never match.
+All three enroll together with the ability:
+
+```bash
+/jjkvoice enroll sukuna_dismantle
+```
+
+That covers the incantation's three lines and all three shapes in one sitting —
+six phrases. Enrolling `dismantle` alone gets you the single slash and nothing
+else, which is why the other two answer with *no match* until you do this.
+
+`/jjkvoice enroll <ability>` records everything it takes to use that ability —
+its name, its incantation lines, and whatever throws it — since a phrase with no
+voiceprint can never match however clearly it is said. `/jjkvoice status` lists
+the chantable abilities first, so a half-enrolled incantation is visible rather
+than something you find out about mid-fight.
 
 ### The overlay
 

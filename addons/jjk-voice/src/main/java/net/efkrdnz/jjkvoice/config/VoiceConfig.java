@@ -524,10 +524,18 @@ public final class VoiceConfig {
 
 	/** Everything worth enrolling for one command: what selects it, and what chants it. */
 	public List<String> allPhrasesFor(String command) {
-		List<String> phrases = new ArrayList<>(phrasesFor(command));
-		for (String line : incantationsFor(command))
+		String key = normaliseCommand(command);
+		List<String> phrases = new ArrayList<>(phrasesFor(key));
+		for (String line : incantationsFor(key))
 			if (!phrases.contains(line))
 				phrases.add(line);
+		// Everything it takes to use the ability, in one sitting. Dismantle is thrown
+		// by naming a shape rather than itself, and two of its three shapes would
+		// otherwise be separate things to find out about.
+		for (String firing : JjkBridge.firingKeys(key))
+			for (String phrase : phrasesFor(firing))
+				if (!phrases.contains(phrase))
+					phrases.add(phrase);
 		return phrases;
 	}
 
