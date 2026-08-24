@@ -35,8 +35,8 @@ public final class JjkBridge {
 	 *
 	 * @return what actually happened, for telling the speaker
 	 */
-	public static JjkVoiceApi.Spoken speak(ServerPlayer player, String commandKey, boolean exact, boolean incantation) {
-		return JjkVoiceApi.speak(player, commandKey, exact, incantation);
+	public static JjkVoiceApi.Spoken speak(ServerPlayer player, String commandKey, boolean exact, int line, int lines) {
+		return JjkVoiceApi.speak(player, commandKey, exact, line, lines);
 	}
 
 	/** True when this key selects an ability rather than firing one. */

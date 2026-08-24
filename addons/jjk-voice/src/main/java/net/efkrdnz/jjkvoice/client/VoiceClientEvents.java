@@ -143,8 +143,10 @@ public final class VoiceClientEvents {
 					return;
 				// What this name does -- select, charge, release or cast -- depends on
 				// state only the server has, so only how it was heard is sent.
-				PacketDistributor.sendToServer(new VoiceCastPayload(
-						result.commandKey(), result.exact(), result.incantation()));
+				PacketDistributor.sendToServer(new VoiceCastPayload(result.commandKey(), result.exact(),
+						result.line(), result.incantation()
+								? VoiceConfig.get().incantationsFor(result.commandKey()).size()
+								: 0));
 				if (config.announceMatches)
 					actionBar(minecraft, Component.translatable(
 							result.incantation() ? "message.jjkvoice.incanted" : "message.jjkvoice.matched",

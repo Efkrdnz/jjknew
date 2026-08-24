@@ -94,7 +94,9 @@ public final class VoiceClientCommands {
 					.withStyle(ChatFormatting.RED));
 			return 0;
 		}
-		List<String> phrases = VoiceConfig.get().phrasesFor(command);
+		// Incantation lines are enrolled with the ability they charge; they are
+		// useless without a voiceprint, and nothing else would ever ask for them.
+		List<String> phrases = VoiceConfig.get().allPhrasesFor(command);
 		if (phrases.isEmpty() || !EnrollmentSession.start(phrases)) {
 			feedback(source, Component.translatable("message.jjkvoice.command.no_phrases_for", command)
 					.withStyle(ChatFormatting.RED));
@@ -147,7 +149,7 @@ public final class VoiceClientCommands {
 
 		int enrolled = 0;
 		for (String command : config.commands.keySet()) {
-			List<String> phrases = config.phrasesFor(command);
+			List<String> phrases = config.allPhrasesFor(command);
 			List<String> done = new ArrayList<>();
 			List<String> missing = new ArrayList<>();
 			for (String phrase : phrases)

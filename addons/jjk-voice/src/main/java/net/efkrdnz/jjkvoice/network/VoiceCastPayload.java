@@ -21,10 +21,13 @@ import net.efkrdnz.jjkvoice.JjkVoiceMod;
  * the same ability name selects, charges or releases depending on server state.
  * Only how it was heard travels.
  *
- * @param exact       heard cleanly, rather than close enough to be worth half
- * @param incantation a full incantation rather than the ability's name
+ * @param exact heard cleanly, rather than close enough to be worth half
+ * @param line  which line of the ability's incantation this was, or -1 when the
+ *              ability's own name was spoken instead
+ * @param lines how many lines that incantation has, so the server can tell when
+ *              one has been recited to the end
  */
-public record VoiceCastPayload(String commandKey, boolean exact, boolean incantation) implements CustomPacketPayload {
+public record VoiceCastPayload(String commandKey, boolean exact, int line, int lines) implements CustomPacketPayload {
 	/** Long enough for a command key, short enough that spam costs the sender more than us. */
 	public static final int MAX_KEY_LENGTH = 32;
 
@@ -33,7 +36,8 @@ public record VoiceCastPayload(String commandKey, boolean exact, boolean incanta
 	public static final StreamCodec<ByteBuf, VoiceCastPayload> STREAM_CODEC = StreamCodec.composite(
 			ByteBufCodecs.stringUtf8(MAX_KEY_LENGTH), VoiceCastPayload::commandKey,
 			ByteBufCodecs.BOOL, VoiceCastPayload::exact,
-			ByteBufCodecs.BOOL, VoiceCastPayload::incantation,
+			ByteBufCodecs.VAR_INT, VoiceCastPayload::line,
+			ByteBufCodecs.VAR_INT, VoiceCastPayload::lines,
 			VoiceCastPayload::new);
 
 	@Override

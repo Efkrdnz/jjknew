@@ -7,6 +7,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 
@@ -42,9 +43,10 @@ import net.efkrdnz.jjkstrongest.procedures.VCTexeProcedure;
  *     does — so the technique comes out at whatever tier the chanting reached.
  * </ul>
  *
- * <p>An <b>incantation</b> ({@link #speak} with {@code incantation} set) is the
- * charging step on its own: it selects the ability if needed and, heard cleanly,
- * carries it straight to full output, which is what reciting one is for.
+ * <p>An <b>incantation</b> is the charging step on its own, and arrives a line at
+ * a time: each line charges a tier, and reciting one to its end carries the
+ * technique to full output, which is what reciting the whole thing is for. It
+ * selects its ability first if needed, since it names it unambiguously.
  *
  * <p>Everything is gated on the speaker's own technique. Saying another
  * sorcerer's ability is not merely ineffective, it is unrecognised — it will not
@@ -194,6 +196,10 @@ public final class JjkVoiceApi {
 	public static final String HOLD_TICKS = "jjkvoice_hold";
 	public static final String HOLD_STATE = "jjkvoice_hold_state";
 
+	/** How far through an incantation the player has recited, and for what. */
+	private static final String INCANT_ABILITY = "jjkvoice_incant";
+	private static final String INCANT_LINE = "jjkvoice_incant_line";
+
 	private JjkVoiceApi() {
 	}
 
@@ -289,15 +295,17 @@ public final class JjkVoiceApi {
 	 * ability is selected, and whether one is mid-chant — and because a client that
 	 * decided for itself could ask for a release it had not earned.
 	 *
-	 * @param exact       whether the name was heard cleanly; a near miss still
-	 *                    charges, at half a tier, so it is not simply wasted
-	 * @param incantation whether this was a full incantation rather than the
-	 *                    ability's name, which is what carries it to full output
+	 * @param exact whether the name was heard cleanly; a near miss still charges,
+	 *              at half a tier, so it is not simply wasted
+	 * @param line  which line of the ability's incantation this was, or negative
+	 *              when the ability's own name was spoken instead
+	 * @param lines how many lines that incantation has
 	 */
-	public static Spoken speak(ServerPlayer player, String key, boolean exact, boolean incantation) {
+	public static Spoken speak(ServerPlayer player, String key, boolean exact, int line, int lines) {
 		if (player == null)
 			return Spoken.UNRECOGNISED;
 		String command = normalise(key);
+		boolean incantation = line >= 0;
 		JjkStrongestModVariables.PlayerVariables variables = player.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
 		String sorcerer = normalise(variables.sorcerer);
 
@@ -330,7 +338,11 @@ public final class JjkVoiceApi {
 			if (!incantation && ability.chant().equals(player.getPersistentData().getString("chanting")))
 				return release(player) ? Spoken.RELEASED : Spoken.UNRECOGNISED;
 
-			return chant(player, exact, incantation).isEmpty() ? Spoken.UNRECOGNISED : Spoken.CHARGED;
+			// Only reciting an incantation to its end tops the technique out. Any
+			// single line is worth a tier, so starting in the middle gains nothing
+			// that saying the ability's name would not.
+			boolean completed = incantation && advanceRecital(player, command, line, lines);
+			return chant(player, exact, completed).isEmpty() ? Spoken.UNRECOGNISED : Spoken.CHARGED;
 		}
 
 		if (ACTIONS.containsKey(command)) {
@@ -340,6 +352,31 @@ public final class JjkVoiceApi {
 			return Spoken.CAST;
 		}
 		return Spoken.UNRECOGNISED;
+	}
+
+	/**
+	 * Records one line of an incantation and reports whether that finished it.
+	 *
+	 * <p>Lines count only when spoken in order. Being out of order is not punished
+	 * -- the line still charges its tier -- it simply does not advance the recital,
+	 * so the only way to full output is to actually recite the thing.
+	 */
+	private static boolean advanceRecital(ServerPlayer player, String ability, int line, int lines) {
+		CompoundTag data = player.getPersistentData();
+		int recited = ability.equals(data.getString(INCANT_ABILITY)) ? data.getInt(INCANT_LINE) : 0;
+		data.putString(INCANT_ABILITY, ability);
+
+		if (line != recited) {
+			data.putInt(INCANT_LINE, recited);
+			return false;
+		}
+		recited = line + 1;
+		if (lines > 0 && recited >= lines) {
+			data.putInt(INCANT_LINE, 0);
+			return true;
+		}
+		data.putInt(INCANT_LINE, recited);
+		return false;
 	}
 
 	/**
@@ -356,9 +393,12 @@ public final class JjkVoiceApi {
 	 * <p>The chant then stays up until it is released or lapses, so the charge can
 	 * be spent rather than evaporating the moment the words stop.
 	 *
+	 * @param exact whether the chant was heard cleanly; a near miss is worth half a
+	 *              tier, so two of them add up to one and neither is wasted
+	 * @param full  whether this completed an incantation, which tops the ability out
 	 * @return the chant now running, or empty when the ability cannot be chanted
 	 */
-	public static String chant(ServerPlayer player, boolean exact, boolean incantation) {
+	public static String chant(ServerPlayer player, boolean exact, boolean full) {
 		if (player == null)
 			return "";
 		JjkStrongestModVariables.PlayerVariables variables = player.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
@@ -381,7 +421,7 @@ public final class JjkVoiceApi {
 			return "";
 		}
 
-		advance(player, ability, exact, incantation);
+		advance(player, ability, exact, full);
 		player.getPersistentData().putInt(HOLD_TICKS, EXPIRY_TICKS);
 		return active;
 	}
@@ -398,9 +438,9 @@ public final class JjkVoiceApi {
 	 * means. Anything else is worth a tier, and a near miss half of one, so two
 	 * mishearings add up rather than each being wasted.
 	 */
-	private static void advance(ServerPlayer player, Chantable ability, boolean exact, boolean incantation) {
+	private static void advance(ServerPlayer player, Chantable ability, boolean exact, boolean full) {
 		int[] tiers = ability.tiers();
-		if (incantation && exact) {
+		if (full && exact) {
 			player.getPersistentData().putDouble("ChantCounter", tiers[tiers.length - 1] - 1);
 			return;
 		}
@@ -442,6 +482,13 @@ public final class JjkVoiceApi {
 			player.getPersistentData().putString("chanting", "");
 		player.getPersistentData().putInt(HOLD_TICKS, 0);
 		player.getPersistentData().putString(HOLD_STATE, "");
+		forgetRecital(player);
+	}
+
+	/** Drops any part-recited incantation, so the next one starts from its opening. */
+	private static void forgetRecital(ServerPlayer player) {
+		player.getPersistentData().putString(INCANT_ABILITY, "");
+		player.getPersistentData().putInt(INCANT_LINE, 0);
 	}
 
 	/**
@@ -464,6 +511,7 @@ public final class JjkVoiceApi {
 			ability.key().release(player);
 			player.getPersistentData().putInt(HOLD_TICKS, 0);
 			player.getPersistentData().putString(HOLD_STATE, "");
+			forgetRecital(player);
 			return true;
 		}
 		return false;

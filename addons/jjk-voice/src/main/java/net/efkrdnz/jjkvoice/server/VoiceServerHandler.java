@@ -52,7 +52,7 @@ public final class VoiceServerHandler {
 
 			// The host mod decides what this name means for this player, and whether
 			// their technique includes it at all.
-			JjkBridge.speak(player, commandKey, payload.exact(), payload.incantation());
+			JjkBridge.speak(player, commandKey, payload.exact(), payload.line(), payload.lines());
 		});
 	}
 

@@ -59,15 +59,16 @@ public final class PhraseRecognizer {
 	 * @param phrase      the winning phrase, for feedback
 	 * @param exact       inside the calibrated threshold, rather than merely near
 	 * @param incantation matched an incantation rather than the ability's name
+	 * @param line        which line of that incantation, or -1 when not one
 	 */
 	public record Result(Outcome outcome, String commandKey, String phrase, boolean exact, boolean incantation,
-			double distance, double threshold) {
+			int line, double distance, double threshold) {
 		public boolean matched() {
 			return outcome == Outcome.MATCHED;
 		}
 
 		static Result rejected(Outcome outcome) {
-			return new Result(outcome, "", "", false, false, Double.MAX_VALUE, 0.0D);
+			return new Result(outcome, "", "", false, false, -1, Double.MAX_VALUE, 0.0D);
 		}
 	}
 
@@ -93,13 +94,16 @@ public final class PhraseRecognizer {
 
 		if (seconds < config.minSpeechSeconds)
 			return Result.rejected(Outcome.TOO_SHORT);
-		if (seconds > config.maxSpeechSeconds)
+		// A recited line is allowed to run longer than a shouted word, but only if a
+		// line is what it turns out to be -- checked once there is a winner.
+		boolean recitable = !vocabulary.incantations().isEmpty();
+		if (seconds > (recitable ? config.maxIncantationSeconds : config.maxSpeechSeconds))
 			return Result.rejected(Outcome.TOO_LONG);
 
 		if (VoiceConfig.MODE_SHOUT.equals(config.mode)) {
 			double loudness = PcmResampler.rootMeanSquare(speech);
 			return loudness >= config.shoutRmsThreshold
-					? new Result(Outcome.MATCHED, config.shoutCommand, "(shout)", true, false, loudness,
+					? new Result(Outcome.MATCHED, config.shoutCommand, "(shout)", true, false, -1, loudness,
 							config.shoutRmsThreshold)
 					: Result.rejected(Outcome.TOO_QUIET);
 		}
@@ -118,16 +122,19 @@ public final class PhraseRecognizer {
 
 		if (!best.anyEnrolled)
 			return Result.rejected(Outcome.NOT_ENROLLED);
+		if (!best.incantation && seconds > config.maxSpeechSeconds)
+			// Long, but not a recited line. The extra room was not for this.
+			return Result.rejected(Outcome.TOO_LONG);
 		if (best.distance <= best.threshold)
 			return new Result(Outcome.MATCHED, best.commandKey, best.phrase, true, best.incantation,
-					best.distance, best.threshold);
+					best.line, best.distance, best.threshold);
 		// A near miss is only worth taking where being one step under-charged is
 		// recoverable. Casting on a near miss would spend a cooldown on a guess.
 		if ((best.incantation || vocabulary.loose().contains(best.commandKey))
 				&& best.distance <= best.threshold * config.chantNearMultiplier)
 			return new Result(Outcome.MATCHED, best.commandKey, best.phrase, false, best.incantation,
-					best.distance, best.threshold);
-		return new Result(Outcome.NO_MATCH, "", best.phrase, false, false, best.distance, best.threshold);
+					best.line, best.distance, best.threshold);
+		return new Result(Outcome.NO_MATCH, "", best.phrase, false, false, -1, best.distance, best.threshold);
 	}
 
 	/** Running best across every phrase searched, whatever bucket it came from. */
@@ -135,6 +142,7 @@ public final class PhraseRecognizer {
 		private String commandKey = "";
 		private String phrase = "";
 		private boolean incantation;
+		private int line = -1;
 		private double distance = Double.MAX_VALUE;
 		private double threshold;
 		private boolean anyEnrolled;
@@ -142,7 +150,8 @@ public final class PhraseRecognizer {
 		private void consider(float[][] spoken, String commandKey, List<String> phrases, boolean incantation) {
 			if (phrases == null)
 				return;
-			for (String candidate : phrases) {
+			for (int index = 0; index < phrases.size(); index++) {
+				String candidate = phrases.get(index);
 				VoicePrintStore.PhrasePrint print = VoicePrintStore.find(candidate).orElse(null);
 				if (print == null || print.templates == null || print.templates.isEmpty())
 					continue;
@@ -158,6 +167,7 @@ public final class PhraseRecognizer {
 					phrase = print.phrase;
 					this.commandKey = commandKey;
 					this.incantation = incantation;
+					this.line = incantation ? index : -1;
 				}
 			}
 		}

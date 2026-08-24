@@ -82,6 +82,14 @@ public final class VoiceConfig {
 	public double minSpeechSeconds = 0.25D;
 	public double maxSpeechSeconds = 3.0D;
 
+	/**
+	 * The same ceiling for a line of an incantation, which is allowed to run longer
+	 * because it is a recited line rather than a shouted word. A clip past
+	 * {@link #maxSpeechSeconds} is only kept if an incantation line is what it
+	 * turned out to match.
+	 */
+	public double maxIncantationSeconds = 6.0D;
+
 	/** Loudness a clip must reach in {@code shout} mode, as normalised RMS. */
 	public double shoutRmsThreshold = 0.06D;
 
@@ -97,32 +105,40 @@ public final class VoiceConfig {
 	 * Dismantle stance permanently unchantable, because one phrase cannot mean both
 	 * "do it now" and "wind it up".
 	 */
-	public int configVersion = CURRENT_VERSION;
+	public int configVersion;
 
 	/** Bumped when an upgrade needs more than new keys being filled in. */
-	private static final int CURRENT_VERSION = 2;
+	private static final int CURRENT_VERSION = 3;
 
 	/**
 	 * The incantations that charge an ability, keyed by the ability they charge.
 	 *
 	 * <p>Separate from {@link #commands} because they mean something different.
 	 * An ability's name selects it, charges it a step, or lets it go, depending on
-	 * where you already are. Reciting its incantation charges it outright -- heard
-	 * cleanly it carries the technique to full output, which is what reciting one
-	 * is for.
+	 * where you already are. An incantation only ever charges.
+	 *
+	 * <p><b>These are lines, in order, not alternatives.</b> You say them one at a
+	 * time and each one charges a tier; getting to the end of the list carries the
+	 * technique to full output, which is what reciting the whole thing is for. That
+	 * is also the only shape that works acoustically -- a whole incantation in one
+	 * breath runs past {@link #maxSpeechSeconds}, and the recogniser matches a fixed
+	 * utterance rather than listening continuously.
+	 *
+	 * <p>Every line must be unique across the whole config, incantations and
+	 * commands alike, because a voiceprint is stored per phrase. Two abilities
+	 * cannot both open with "cursed technique".
 	 *
 	 * <p>The entries below are a starting point, not scripture. Put whatever you
-	 * actually say here; the recogniser has no dictionary and does not care whether
-	 * it is canon.
+	 * actually say here, split however you actually pause; the recogniser has no
+	 * dictionary and does not care whether it is canon.
 	 */
 	public Map<String, List<String>> chants = defaultChants();
 
 	private static Map<String, List<String>> defaultChants() {
 		Map<String, List<String>> chants = new LinkedHashMap<>();
-		chants.put("gojo_blue", new ArrayList<>(List.of("cursed technique lapse blue")));
-		chants.put("gojo_red", new ArrayList<>(List.of("phase paramita pillars of light",
-				"cursed technique reversal red")));
-		chants.put("gojo_purple", new ArrayList<>(List.of("imaginary technique hollow purple")));
+		chants.put("gojo_blue", new ArrayList<>(List.of("cursed technique lapse", "maximum output blue")));
+		chants.put("gojo_red", new ArrayList<>(List.of("phase paramita", "pillars of light")));
+		chants.put("gojo_purple", new ArrayList<>(List.of("imaginary technique", "imaginary purple")));
 		chants.put("sukuna_dismantle", new ArrayList<>(List.of("cursed technique dismantle")));
 		chants.put("sukuna_wcs", new ArrayList<>(List.of("world dismantling slash")));
 		return chants;
@@ -188,7 +204,7 @@ public final class VoiceConfig {
 		// slashes; "dismantle" is the stance you charge.
 		defaults.put("gojo_blue", new ArrayList<>(List.of("lapse blue")));
 		defaults.put("gojo_red", new ArrayList<>(List.of("reversal red")));
-		defaults.put("gojo_purple", new ArrayList<>(List.of("hollow purple", "imaginary purple")));
+		defaults.put("gojo_purple", new ArrayList<>(List.of("hollow purple")));
 		defaults.put("sukuna_dismantle", new ArrayList<>(List.of("dismantle")));
 		defaults.put("sukuna_cleave", new ArrayList<>(List.of("cleave")));
 		defaults.put("sukuna_wcs", new ArrayList<>(List.of("world slash")));
@@ -269,6 +285,10 @@ public final class VoiceConfig {
 		Path path = path();
 		if (!Files.isRegularFile(path)) {
 			VoiceConfig defaults = new VoiceConfig();
+			// Stamped here rather than in the field, so that a file written before
+			// versioning -- which names no version at all -- reads as the oldest
+			// rather than as whatever the current one happens to be.
+			defaults.configVersion = CURRENT_VERSION;
 			defaults.save();
 			return defaults;
 		}
@@ -311,6 +331,22 @@ public final class VoiceConfig {
 		if (chants == null)
 			chants = new LinkedHashMap<>();
 
+		if (configVersion < 3) {
+			// Incantations were single alternative phrases and are now ordered lines.
+			// Only replace one that was never touched; anything written by hand is
+			// already in whatever shape its owner wanted.
+			for (Map.Entry<String, List<String>> entry : SUPERSEDED_CHANTS.entrySet()) {
+				List<String> stored = chants.get(entry.getKey());
+				if (stored != null && normalisedEquals(stored, entry.getValue()))
+					chants.remove(entry.getKey());
+			}
+			// "imaginary purple" became a line of Purple's incantation, and a phrase
+			// cannot be bound in two places.
+			List<String> purple = commands.get("gojo_purple");
+			if (purple != null)
+				purple.removeIf(phrase -> "imaginary purple".equals(normalisePhrase(phrase)));
+		}
+
 		if (configVersion < 2) {
 			// "dismantle" now selects and charges the stance; the immediate slash
 			// answers to "kaisen" and "slash", which that entry already carried.
@@ -331,6 +367,21 @@ public final class VoiceConfig {
 			configVersion = CURRENT_VERSION;
 			save();
 		}
+	}
+
+	/** What {@link #defaultChants} used to hold, so an untouched copy can be replaced. */
+	private static final Map<String, List<String>> SUPERSEDED_CHANTS = Map.of(
+			"gojo_blue", List.of("cursed technique lapse blue"),
+			"gojo_red", List.of("phase paramita pillars of light", "cursed technique reversal red"),
+			"gojo_purple", List.of("imaginary technique hollow purple"));
+
+	private boolean normalisedEquals(List<String> stored, List<String> reference) {
+		if (stored.size() != reference.size())
+			return false;
+		for (int i = 0; i < stored.size(); i++)
+			if (!reference.get(i).equals(normalisePhrase(stored.get(i))))
+				return false;
+		return true;
 	}
 
 	private void sanitise() {
@@ -373,6 +424,7 @@ public final class VoiceConfig {
 		enrollmentSamples = (int) clamp(enrollmentSamples, 2, 10);
 		minSpeechSeconds = clamp(minSpeechSeconds, 0.05D, 2.0D);
 		maxSpeechSeconds = clamp(maxSpeechSeconds, minSpeechSeconds + 0.1D, 5.0D);
+		maxIncantationSeconds = clamp(maxIncantationSeconds, maxSpeechSeconds, 12.0D);
 		shoutRmsThreshold = clamp(shoutRmsThreshold, 0.001D, 1.0D);
 
 		if (chants == null)
@@ -384,7 +436,16 @@ public final class VoiceConfig {
 	 * Everything that counts as chanting {@code moveset}: its own selection phrases
 	 * plus any extra incantations configured for it.
 	 */
-	/** The incantations enrolled for one ability. */
+	/** Everything worth enrolling for one command: what selects it, and what chants it. */
+	public List<String> allPhrasesFor(String command) {
+		List<String> phrases = new ArrayList<>(phrasesFor(command));
+		for (String line : incantationsFor(command))
+			if (!phrases.contains(line))
+				phrases.add(line);
+		return phrases;
+	}
+
+	/** The incantation lines enrolled for one ability, in the order they are said. */
 	public List<String> incantationsFor(String moveset) {
 		List<String> phrases = chants.get(normaliseCommand(moveset));
 		return phrases == null ? List.of() : List.copyOf(phrases);

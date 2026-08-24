@@ -101,13 +101,24 @@ specific your sorcerer is. The server checks the same thing again.
 
 ## Chanting
 
-Reciting an ability's incantation charges it. Heard cleanly, a full incantation
-takes it straight to maximum output — which is what reciting one is for.
+Reciting an ability's incantation charges it. **One line at a time** — you say a
+line, it charges a tier, and getting to the end of the incantation carries the
+technique to full output.
 
 ```
-"Phase, Paramita, Pillars of Light"   -> Red, fully charged
-"Reversal Red"                        -> fires it
+"Phase, Paramita"     ->  Red, one tier
+"Pillars of Light"    ->  Red, full charge  (incantation complete)
+"Reversal Red"        ->  fires it
 ```
+
+Lines are not optional flavour, they are how it has to work. Recognition matches
+one fixed utterance at a time rather than listening continuously, and a whole
+incantation in one breath runs past the clip length limit. Saying it in pieces is
+also simply what reciting one sounds like.
+
+Only reciting **in order, to the end** tops the technique out. A line out of
+order still charges its tier, so nothing is wasted, but starting from the last
+line gains you nothing that saying the ability's name would not.
 
 Nothing about the charge is reimplemented, and neither is the setup. Starting a
 chant runs the mod's own press handler, so the charge cost, the sorcerer check,
@@ -115,15 +126,15 @@ the base output, the charge animation and the charging effect all apply exactly
 as they do from the keyboard — and if that handler refuses you (no Blue charges,
 fewer than three Purple) its decision stands and nothing happens.
 
-Saying the **ability's own name** instead of its incantation charges it one tier,
-so output rises per chant. A **near miss** is worth half a tier, so two of them
-add up to one and being slightly off is never simply wasted.
+Saying the **ability's own name** instead charges one tier, so output rises per
+chant without any incantation at all. A **near miss** is worth half a tier, so
+two of them add up to one and being slightly off is never simply wasted.
 
 | Ability | Tiers | Default incantation |
 | --- | --- | --- |
-| Blue | 3 | *Cursed Technique Lapse: Blue* |
-| Red | 3 | *Phase, Paramita, Pillars of Light* |
-| Purple | 4 | *Imaginary Technique: Hollow Purple* |
+| Blue | 3 | *Cursed Technique Lapse* → *Maximum Output: Blue* |
+| Red | 3 | *Phase, Paramita* → *Pillars of Light* |
+| Purple | 4 | *Imaginary Technique* → *Imaginary Purple* |
 | Dismantle | 3 | *Cursed Technique: Dismantle* |
 | World Slash | 3 | *World Dismantling Slash* |
 
@@ -133,8 +144,14 @@ it: Limitless and Fuga have no such counter, and Cleave's "hold" state *performs
 the technique rather than powering it up, so chanting Cleave would cast it.
 
 The incantations above are a starting point, not scripture. Put whatever you
-actually say in `chants`; matching is acoustic and has no dictionary, so it does
-not care whether your wording is canon.
+actually say in `chants`, split however you actually pause — matching is acoustic
+and has no dictionary, so it does not care whether your wording is canon. Two
+rules only: the lines are **in order**, and every line must be unique across the
+whole config, because a voiceprint is stored per phrase. Two abilities cannot
+both open with *"cursed technique"*.
+
+`/jjkvoice enroll <ability>` records the ability's name and its incantation lines
+together, since a line with no voiceprint can never match.
 
 ### Releasing
 
@@ -145,8 +162,8 @@ Three ways, all equivalent:
 - tap its technique key
 
 A chant you never release lapses after ten seconds, the same as letting the key
-go without firing. Switching to another ability drops it too — you cannot hold
-Red's charge while reaching for Blue.
+go without firing. Switching to another ability drops it, and any part-recited
+incantation with it — you cannot hold Red's charge while reaching for Blue.
 
 ### Coming from the old phrase file
 
@@ -202,13 +219,14 @@ deliberately or bind a longer phrase to it.
 | --- | --- | --- |
 | `mode` | `voiceprint` | `shout` fires `shoutCommand` on any loud vocalisation — useful to verify your mic works before enrolling |
 | `commands` | 26 commands | Command key to the phrases that trigger it |
-| `chants` | 5 abilities | Ability to the incantations that charge it to full |
+| `chants` | 5 abilities | Ability to its incantation, as ordered lines |
 | `chantNearMultiplier` | `1.75` | How far past the threshold still counts as a near chant, worth half a tier. Ability names and incantations get this looser band; actions keep the tight one |
 | `shoutCommand` | `domain_expansion` | What `shout` mode triggers |
 | `thresholdMultiplier` | `1.35` | How far past your own natural variation still counts. Raise if it refuses you, lower if unrelated words trigger it |
 | `absoluteMaxDistance` | `60.0` | Safety ceiling so an inconsistent enrollment cannot accept everything |
 | `enrollmentSamples` | `3` | Recordings taken per phrase. More is steadier and slower |
 | `minSpeechSeconds` / `maxSpeechSeconds` | `0.25` / `3.0` | Clips outside this range are discarded before any matching |
+| `maxIncantationSeconds` | `6.0` | The same ceiling for a recited line, which is allowed to run longer. A long clip is only kept if a line is what it matched |
 | `shoutRmsThreshold` | `0.06` | Loudness required in `shout` mode |
 | `announceMatches` | `true` | Print the matched phrase and distance. Useful while tuning |
 
