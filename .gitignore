@@ -11,3 +11,8 @@ out/
 .classpath
 .project
 bin/
+
+# addon build output
+addons/*/build/
+addons/*/.gradle/
+addons/*/run/

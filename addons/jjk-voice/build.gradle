@@ -1,0 +1,114 @@
+plugins {
+    id 'java-library'
+    id 'eclipse'
+    id 'idea'
+    id 'net.neoforged.moddev' version '2.0.143'
+}
+
+version = project.mod_version
+group = project.mod_group_id
+
+base {
+    archivesName = 'jjkvoice'
+}
+
+// Minecraft 1.21.1 and NeoForge use Java 21.
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+
+// The host mod is compiled against, never bundled. Players install JJK Strongest
+// separately; the CurseForge required-dependency relation resolves it for them.
+def jjkJar = file("${project.jjk_project_dir}/build/libs/jjk_strongest-${project.jjk_version}.jar")
+// Named exactly rather than globbed: build/libs keeps older releases, and a stale
+// jar on the compile classpath would shadow the API this addon needs.
+def jjkJars = files(jjkJar)
+
+neoForge {
+    version = project.neo_version
+
+    parchment {
+        minecraftVersion = project.parchment_minecraft_version
+        mappingsVersion = project.parchment_mappings_version
+    }
+
+    runs {
+        client {
+            client()
+            gameDirectory = project.file('run')
+            jvmArguments.addAll '-Xms512M', '-Xmx4G'
+        }
+
+        configureEach {
+            logLevel = org.slf4j.event.Level.DEBUG
+        }
+    }
+
+    mods {
+        jjkvoice {
+            sourceSet sourceSets.main
+        }
+    }
+}
+
+configurations {
+    runtimeClasspath.extendsFrom localRuntime
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        name = 'SimpleVoiceChat'
+        url = 'https://maven.maxhenkel.de/repository/public'
+        content {
+            includeGroup 'de.maxhenkel.voicechat'
+        }
+    }
+    maven {
+        name = 'Modrinth'
+        url = 'https://api.modrinth.com/maven'
+        content {
+            includeGroup 'maven.modrinth'
+        }
+    }
+    maven {
+        name = 'GeckoLib'
+        url = 'https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/'
+        content {
+            includeGroup 'software.bernie.geckolib'
+        }
+    }
+}
+
+dependencies {
+    // Simple Voice Chat is a hard dependency: this addon does nothing without a
+    // microphone feed. We compile against the API only and never shade either jar.
+    implementation "de.maxhenkel.voicechat:voicechat-api:${voicechat_api_version}"
+    localRuntime "maven.modrinth:simple-voice-chat:neoforge-${voicechat_version}"
+
+    // JJK Strongest. compileOnly so it is never packaged into our jar;
+    // localRuntime so the dev client boots with the real mod installed.
+    compileOnly jjkJars
+    localRuntime jjkJars
+
+    // The host mod's own required dependency, needed for the dev client to start.
+    localRuntime "software.bernie.geckolib:geckolib-neoforge-${minecraft_version}:${geckolib_version}"
+}
+
+tasks.named('compileJava') {
+    doFirst {
+        if (!jjkJar.isFile()) {
+            throw new GradleException(
+                    "JJK Strongest jar not found:\n  ${jjkJar}\n" +
+                            "This addon compiles against the host mod. Build it first:\n" +
+                            "  cd \"${file(project.jjk_project_dir).canonicalPath}\" && ./gradlew.bat build\n" +
+                            "If you meant a different release, set jjk_version in gradle.properties.")
+        }
+    }
+}
+
+tasks.named('jar') {
+    archiveFileName = "JJKVoice${version}-neoforge-${minecraft_version}.jar"
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}

@@ -1,0 +1,52 @@
+modLoader="javafml"
+loaderVersion="[1,)"
+license="Academic Free License v3.0"
+
+[[mods]]
+modId="jjkvoice"
+version="0.1.0"
+displayName="JJK Strongest: Voice Commands"
+credits="efkrdnz"
+authors="efkrdnz"
+description='''
+Speak the incantation. Hold the Voice Command key and say "Domain Expansion",
+"Dismantle", or any of Inumaki's Cursed Speech words to use the technique.
+
+Recognition runs entirely on your own machine. No AI, no accounts, no network
+calls, and nothing leaves your computer -- your voiceprint is matched locally
+against samples you record yourself.
+
+Requires JJK Strongest and Simple Voice Chat.
+'''
+
+[[dependencies.jjkvoice]]
+modId="neoforge"
+type="required"
+versionRange="[21.1.0,)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.jjkvoice]]
+modId="minecraft"
+type="required"
+versionRange="[1.21.1]"
+ordering="NONE"
+side="BOTH"
+
+# The host mod. Every technique is run through its own public entry point, so this
+# addon refuses to load rather than half-work without it.
+[[dependencies.jjkvoice]]
+modId="jjk_strongest"
+type="required"
+versionRange="[1.0.0,)"
+ordering="AFTER"
+side="BOTH"
+
+# Simple Voice Chat ships both "voicechat" and "voicechat_api" from one jar.
+# We depend on the API version, because that is what the addon compiles against.
+[[dependencies.jjkvoice]]
+modId="voicechat_api"
+type="required"
+versionRange="[2.6.20,3)"
+ordering="AFTER"
+side="BOTH"
