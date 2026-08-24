@@ -66,15 +66,18 @@ public class ChargeRingShapeProcedure {
 			return;
 		if (vertexBuffer != null)
 			vertexBuffer.close();
+		MeshData mesh = bufferBuilder.build();
+		bufferBuilder = null;
+		if (mesh == null) {
+			// nothing was emitted this frame; a VertexBuffer that was never
+			// uploaded to has no draw mode and NPEs if drawn, so leave none
+			vertexBuffer = null;
+			return;
+		}
 		vertexBuffer = new VertexBuffer(VertexBuffer.Usage.DYNAMIC);
 		vertexBuffer.bind();
-		{
-			MeshData mesh = bufferBuilder.build();
-			if (mesh != null)
-				vertexBuffer.upload(mesh);
-		}
+		vertexBuffer.upload(mesh);
 		VertexBuffer.unbind();
-		bufferBuilder = null;
 	}
 
 	private static VertexBuffer shape() {

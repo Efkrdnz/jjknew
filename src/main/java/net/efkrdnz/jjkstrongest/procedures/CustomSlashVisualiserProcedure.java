@@ -88,13 +88,16 @@ public class CustomSlashVisualiserProcedure {
 			return;
 		if (vertexBuffer != null)
 			vertexBuffer.close();
+		MeshData mesh = bufferBuilder.build();
+		if (mesh == null) {
+			// see ChargeRingShapeProcedure: never hand back a buffer with no
+			// draw mode, renderShape null-checks for exactly this
+			vertexBuffer = null;
+			return;
+		}
 		vertexBuffer = new VertexBuffer(VertexBuffer.Usage.STATIC);
 		vertexBuffer.bind();
-		{
-			MeshData mesh = bufferBuilder.build();
-			if (mesh != null)
-				vertexBuffer.upload(mesh);
-		}
+		vertexBuffer.upload(mesh);
 		VertexBuffer.unbind();
 	}
 

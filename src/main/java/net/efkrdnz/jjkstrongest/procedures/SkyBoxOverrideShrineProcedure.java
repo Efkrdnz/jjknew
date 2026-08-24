@@ -90,11 +90,7 @@ public class SkyBoxOverrideShrineProcedure {
 				}
 				abyssBuffer = new VertexBuffer(VertexBuffer.Usage.STATIC);
 				abyssBuffer.bind();
-				{
-					MeshData mesh = bufferBuilder.build();
-					if (mesh != null)
-						abyssBuffer.upload(mesh);
-				}
+				abyssBuffer.upload(bufferBuilder.buildOrThrow());
 			} else {
 				abyssBuffer.bind();
 			}
@@ -119,11 +115,7 @@ public class SkyBoxOverrideShrineProcedure {
 			}
 			deepSkyBuffer = new VertexBuffer(VertexBuffer.Usage.STATIC);
 			deepSkyBuffer.bind();
-			{
-				MeshData mesh = bufferBuilder.build();
-				if (mesh != null)
-					deepSkyBuffer.upload(mesh);
-			}
+			deepSkyBuffer.upload(bufferBuilder.buildOrThrow());
 		} else {
 			deepSkyBuffer.bind();
 		}
@@ -321,11 +313,7 @@ public class SkyBoxOverrideShrineProcedure {
 				}
 				skyboxBuffer = new VertexBuffer(VertexBuffer.Usage.STATIC);
 				skyboxBuffer.bind();
-				{
-					MeshData mesh = bufferBuilder.build();
-					if (mesh != null)
-						skyboxBuffer.upload(mesh);
-				}
+				skyboxBuffer.upload(bufferBuilder.buildOrThrow());
 			} else {
 				skyboxBuffer.bind();
 			}
@@ -391,11 +379,7 @@ public class SkyBoxOverrideShrineProcedure {
 				starBuffer.close();
 			starBuffer = new VertexBuffer(VertexBuffer.Usage.STATIC);
 			starBuffer.bind();
-			{
-				MeshData mesh = bufferBuilder.build();
-				if (mesh != null)
-					starBuffer.upload(mesh);
-			}
+			starBuffer.upload(bufferBuilder.buildOrThrow());
 		} else {
 			starBuffer.bind();
 		}
