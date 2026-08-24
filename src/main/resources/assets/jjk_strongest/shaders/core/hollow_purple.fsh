@@ -1,7 +1,7 @@
 #version 150
 
 uniform sampler2D SceneSampler;
-uniform vec2 OutSize;
+uniform mat4 ProjMat;
 uniform float Time;
 uniform float Intensity;
 uniform float Radius;
@@ -33,34 +33,96 @@ void main() {
     vec2 toCenter = uv - center;
     float dist = length(toCenter);
     
-    float gravityStrength = smoothstep(Radius * 2.0, 0.0, dist) * Intensity;
+    // smooth distortion falloff - much gentler fade
+    float distortionRange = 0.5; // how far distortion reaches
+    float distortionFalloff = smoothstep(distortionRange, 0.0, dist);
+    distortionFalloff = distortionFalloff * distortionFalloff; // extra smoothing
     
-    float angle = atan(toCenter.y, toCenter.x);
-    float spiralAngle = angle + gravityStrength * 3.14159 * sin(Time * 2.0);
-    float spiralDist = dist * (1.0 - gravityStrength * 0.3);
+    // only apply distortion if within range
+    vec2 sampleUV = uv;
+    if (distortionFalloff > 0.001) {
+        float angle = atan(toCenter.y, toCenter.x);
+        float spiralAngle = angle + distortionFalloff * 3.14159 * sin(Time * 2.0);
+        float spiralDist = dist * (1.0 - distortionFalloff * 0.2);
+        
+        vec2 spiralOffset = vec2(
+            cos(spiralAngle) * spiralDist,
+            sin(spiralAngle) * spiralDist
+        );
+        
+        float aberration = distortionFalloff * DistortStrength * 0.015;
+        sampleUV = center + spiralOffset;
+        
+        // chromatic aberration with smooth blending
+        float r = texture(SceneSampler, sampleUV + toCenter * aberration * 1.2).r;
+        float g = texture(SceneSampler, sampleUV + toCenter * aberration).g;
+        float b = texture(SceneSampler, sampleUV - toCenter * aberration * 0.8).b;
+        
+        vec3 distortedScene = vec3(r, g, b);
+        vec3 normalScene = texture(SceneSampler, uv).rgb;
+        
+        // blend distorted and normal scene for ultra-smooth transition
+        float blendFactor = smoothstep(distortionRange * 0.9, distortionRange * 0.6, dist);
+        vec3 sceneColor = mix(normalScene, distortedScene, blendFactor);
+        
+    } else {
+        // no distortion, use normal scene
+        vec3 sceneColor = texture(SceneSampler, uv).rgb;
+    }
     
-    vec2 spiralOffset = vec2(
-        cos(spiralAngle) * spiralDist,
-        sin(spiralAngle) * spiralDist
-    );
+    vec3 sceneColor = texture(SceneSampler, sampleUV).rgb;
     
-    float aberration = gravityStrength * DistortStrength * 0.02;
-    vec2 distortUV = center + spiralOffset;
+    // create purple sphere
+    float sphereRadius = 0.15; // core sphere size
+    float glowRadius = 0.25;   // outer glow size
     
-    float r = texture(SceneSampler, distortUV + toCenter * aberration * 1.2).r;
-    float g = texture(SceneSampler, distortUV + toCenter * aberration).g;
-    float b = texture(SceneSampler, distortUV - toCenter * aberration * 0.8).b;
+    // core sphere (solid purple)
+    float coreMask = smoothstep(sphereRadius + 0.02, sphereRadius, dist);
+    vec3 coreColor = vec3(0.8, 0.4, 1.0); // bright purple
     
-    float edgeNoise = noise(uv * 10.0 + Time * 2.0) * 0.5 + 0.5;
-    float edgeGlow = smoothstep(Radius * 1.5, Radius * 0.8, dist) * 
-                     (1.0 - smoothstep(Radius * 0.8, Radius * 0.4, dist));
+    // animated energy waves
+    float wave1 = sin(dist * 20.0 - Time * 3.0) * 0.5 + 0.5;
+    float wave2 = sin(dist * 15.0 + Time * 2.0) * 0.5 + 0.5;
+    float energyPattern = (wave1 * 0.5 + wave2 * 0.5);
     
-    vec3 purpleTint = vec3(0.6, 0.2, 1.0) * edgeGlow * edgeNoise * Intensity * 0.3;
+    // pulsing brightness
+    float pulse = sin(Time * 2.0) * 0.2 + 0.8;
+    coreColor *= (1.0 + energyPattern * 0.3) * pulse;
     
-    float darken = smoothstep(Radius * 0.5, 0.0, dist) * Intensity * 0.6;
+    // outer glow layers with smoother falloff
+    float glow1 = smoothstep(glowRadius + 0.05, sphereRadius, dist) * 0.8;
+    float glow2 = smoothstep(glowRadius * 1.5 + 0.05, sphereRadius, dist) * 0.4;
+    float glow3 = smoothstep(glowRadius * 2.0 + 0.1, sphereRadius, dist) * 0.2;
     
-    vec3 finalColor = vec3(r, g, b) + purpleTint;
-    finalColor = mix(finalColor, vec3(0.1, 0.0, 0.2), darken);
+    vec3 glowColor1 = vec3(0.7, 0.3, 1.0); // purple glow
+    vec3 glowColor2 = vec3(0.6, 0.2, 0.9); // darker purple
+    vec3 glowColor3 = vec3(0.5, 0.1, 0.8); // outermost glow
     
-    fragColor = vec4(finalColor, 1.0);
+    // bright center core
+    float centerGlow = smoothstep(0.05, 0.0, dist);
+    vec3 centerColor = vec3(1.0, 0.9, 1.0); // white-purple center
+    
+    // combine all layers
+    vec3 finalColor = sceneColor;
+    
+    // add outer glows (farthest first)
+    finalColor = mix(finalColor, glowColor3, glow3);
+    finalColor = mix(finalColor, glowColor2, glow2);
+    finalColor = mix(finalColor, glowColor1, glow1);
+    
+    // add core sphere
+    finalColor = mix(finalColor, coreColor, coreMask);
+    
+    // add bright center
+    finalColor = mix(finalColor, centerColor, centerGlow);
+    
+    // add sparkles
+    float sparkleNoise = noise(uv * 100.0 + Time * 5.0);
+    float sparkle = step(0.98, sparkleNoise) * smoothstep(glowRadius * 1.2, 0.0, dist);
+    finalColor += vec3(1.0, 0.8, 1.0) * sparkle * 0.5;
+    
+    // smooth alpha fade at very edges to prevent hard cutoff
+    float edgeFade = smoothstep(0.5, 0.4, dist);
+    
+    fragColor = vec4(finalColor, edgeFade);
 }

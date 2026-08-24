@@ -14,6 +14,8 @@ public abstract class DisableHotbarKeymappingMixin {
 	@Inject(method = "consumeClick", at = @At("HEAD"), cancellable = true)
 	public void inject1(CallbackInfoReturnable<Boolean> cir) {
 		Entity entity = Minecraft.getInstance().player;
+		if (entity == null)
+			return;
 		String animName = entity.getPersistentData().getString("current_arm_animation");
 		if (((KeyMapping) (Object) this).getName().contains("key.hotbar.1")) {
 			if (!animName.isEmpty()) {

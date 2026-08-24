@@ -4,7 +4,7 @@
   ],
   "passes": [
     {
-      "name": "blackflash_shatter",
+      "name": "jjk_strongest:blackflash_shatter",
       "intarget": "minecraft:main",
       "outtarget": "swap",
       "uniforms": [

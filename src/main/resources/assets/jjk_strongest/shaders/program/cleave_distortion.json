@@ -4,8 +4,8 @@
     "srcrgb": "one",
     "dstrgb": "zero"
   },
-  "vertex": "cleave_distortion",
-  "fragment": "cleave_distortion",
+  "vertex": "jjk_strongest:cleave_distortion",
+  "fragment": "jjk_strongest:cleave_distortion",
   "attributes": [
     "Position"
   ],

@@ -4,8 +4,8 @@
     "srcrgb": "srcalpha",
     "dstrgb": "1-srcalpha"
   },
-  "vertex": "hollow_nuke",
-  "fragment": "hollow_nuke",
+  "vertex": "jjk_strongest:hollow_nuke",
+  "fragment": "jjk_strongest:hollow_nuke",
   "attributes": [ "Position", "UV0" ],
   "samplers": [ { "name": "SceneSampler" } ],
   "uniforms": [

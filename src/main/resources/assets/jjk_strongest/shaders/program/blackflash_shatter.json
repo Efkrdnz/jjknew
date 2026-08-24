@@ -5,7 +5,7 @@
     "dstrgb": "zero"
   },
   "vertex": "sobel",
-  "fragment": "blackflash_shatter",
+  "fragment": "jjk_strongest:blackflash_shatter",
   "attributes": [
     "Position"
   ],

@@ -4,8 +4,8 @@
     "srcrgb": "srcalpha",
     "dstrgb": "1-srcalpha"
   },
-  "vertex": "hollow_purple",
-  "fragment": "hollow_purple",
+  "vertex": "jjk_strongest:hollow_purple",
+  "fragment": "jjk_strongest:hollow_purple",
   "attributes": [
     "Position",
     "UV0"

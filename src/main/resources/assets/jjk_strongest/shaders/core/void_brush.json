@@ -4,8 +4,8 @@
     "srcrgb": "srcalpha",
     "dstrgb": "1-srcalpha"
   },
-  "vertex": "void_brush",
-  "fragment": "void_brush",
+  "vertex": "jjk_strongest:void_brush",
+  "fragment": "jjk_strongest:void_brush",
   "attributes": [
     "Position",
     "UV0"

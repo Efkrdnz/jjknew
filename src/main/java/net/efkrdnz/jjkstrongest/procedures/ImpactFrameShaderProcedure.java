@@ -14,26 +14,11 @@ import net.minecraft.client.Minecraft;
 
 import java.util.List;
 
-import java.lang.reflect.Field;
 
 @EventBusSubscriber(value = Dist.CLIENT)
 public class ImpactFrameShaderProcedure {
-	private static final ResourceLocation CHARGED_SHADER = ResourceLocation.fromNamespaceAndPath("minecraft", "shaders/post/impact_charged.json");
+	private static final ResourceLocation CHARGED_SHADER = ResourceLocation.fromNamespaceAndPath("jjk_strongest", "shaders/post/impact_charged.json");
 	private static boolean shaderLoaded = false;
-	private static Field passesField = null;
-	static {
-		try {
-			passesField = PostChain.class.getDeclaredField("passes");
-			passesField.setAccessible(true);
-		} catch (Exception e) {
-			try {
-				passesField = PostChain.class.getDeclaredField("f_110008_");
-				passesField.setAccessible(true);
-			} catch (Exception ignored) {
-			}
-		}
-	}
-
 	@OnlyIn(Dist.CLIENT)
 	@SubscribeEvent
 	public static void onRenderLevel(RenderLevelStageEvent event) {
@@ -70,12 +55,11 @@ public class ImpactFrameShaderProcedure {
 	}
 
 	@OnlyIn(Dist.CLIENT)
-	@SuppressWarnings("unchecked")
 	private static void updateShaderUniforms(PostChain postChain, ImpactFrameStateProcedure state) {
-		if (passesField == null)
-			return;
 		try {
-			List<PostPass> passes = (List<PostPass>) passesField.get(postChain);
+			// PostChain#passes is opened by the mod's access transformer; on
+			// 1.20.1 this needed reflection plus an SRG-name fallback
+			List<PostPass> passes = postChain.passes;
 			if (passes == null)
 				return;
 			float prog = state.getProgress01();

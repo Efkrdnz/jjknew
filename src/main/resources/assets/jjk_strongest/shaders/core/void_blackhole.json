@@ -4,8 +4,8 @@
     "srcrgb": "srcalpha",
     "dstrgb": "1-srcalpha"
   },
-  "vertex": "void_blackhole",
-  "fragment": "void_blackhole",
+  "vertex": "jjk_strongest:void_blackhole",
+  "fragment": "jjk_strongest:void_blackhole",
   "attributes": [
     "Position",
     "UV0"

@@ -12,7 +12,7 @@ import net.minecraft.world.entity.item.FallingBlockEntity;
 @Mixin(FallingBlockEntity.class)
 public abstract class FallingBlockEntityMixin {
 	@Shadow
-	private int time;
+	public int time;
 
 	// removes falling block delay
 	@Inject(method = "tick", at = @At("HEAD"))

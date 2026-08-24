@@ -1,6 +1,6 @@
 {
-  "vertex": "shockwave_particle",
-  "fragment": "shockwave_particle",
+  "vertex": "jjk_strongest:shockwave_particle",
+  "fragment": "jjk_strongest:shockwave_particle",
   "attributes": [
     "Position",
     "Color",

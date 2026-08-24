@@ -4,10 +4,10 @@
   ],
   "passes": [
     {
-      "name": "cleave_distortion",
+      "name": "jjk_strongest:cleave_distortion",
       "intarget": "minecraft:main",
       "outtarget": "swap",
-      "program": "cleave_distortion",
+      "program": "jjk_strongest:cleave_distortion",
       "uniforms": [
         {
           "name": "DistortionIntensity",

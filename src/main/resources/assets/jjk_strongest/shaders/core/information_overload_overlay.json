@@ -4,8 +4,8 @@
     "srcrgb": "srcalpha",
     "dstrgb": "1-srcalpha"
   },
-  "vertex": "information_overload_overlay",
-  "fragment": "information_overload_overlay",
+  "vertex": "jjk_strongest:information_overload_overlay",
+  "fragment": "jjk_strongest:information_overload_overlay",
   "attributes": [
     "Position",
     "UV0"

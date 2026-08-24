@@ -4,10 +4,10 @@
   ],
   "passes": [
     {
-      "name": "impact_darken",
+      "name": "jjk_strongest:impact_darken",
       "intarget": "minecraft:main",
       "outtarget": "swap",
-      "program": "impact_darken",
+      "program": "jjk_strongest:impact_darken",
       "uniforms": [
         {
           "name": "DarkenAmount",

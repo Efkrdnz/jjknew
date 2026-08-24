@@ -1,6 +1,6 @@
 {
-  "vertex": "lapse_blue_liquid",
-  "fragment": "lapse_blue_liquid",
+  "vertex": "jjk_strongest:lapse_blue_liquid",
+  "fragment": "jjk_strongest:lapse_blue_liquid",
   "samplers": [],
   "uniforms": [
     { "name": "ModelViewMat", "type": "matrix4x4", "count": 16, "values": [1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1] },

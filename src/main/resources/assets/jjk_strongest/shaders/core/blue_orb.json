@@ -4,8 +4,8 @@
     "srcrgb": "srcalpha",
     "dstrgb": "one"
   },
-  "vertex": "blue_orb",
-  "fragment": "blue_orb",
+  "vertex": "jjk_strongest:blue_orb",
+  "fragment": "jjk_strongest:blue_orb",
   "attributes": [
     "Position",
     "UV0"

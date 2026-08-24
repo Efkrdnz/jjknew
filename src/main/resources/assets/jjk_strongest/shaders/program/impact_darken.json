@@ -4,8 +4,8 @@
     "srcrgb": "one",
     "dstrgb": "zero"
   },
-  "vertex": "impact_darken",
-  "fragment": "impact_darken",
+  "vertex": "jjk_strongest:impact_darken",
+  "fragment": "jjk_strongest:impact_darken",
   "attributes": [
     "Position"
   ],

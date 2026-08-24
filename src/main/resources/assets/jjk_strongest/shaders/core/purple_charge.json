@@ -4,8 +4,8 @@
     "srcrgb": "srcalpha",
     "dstrgb": "one"
   },
-  "vertex": "purple_charge",
-  "fragment": "purple_charge",
+  "vertex": "jjk_strongest:purple_charge",
+  "fragment": "jjk_strongest:purple_charge",
   "attributes": [
     "Position",
     "UV0"

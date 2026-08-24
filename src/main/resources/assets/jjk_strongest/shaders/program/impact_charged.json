@@ -1,7 +1,7 @@
 {
   "blend": { "func": "add", "srcrgb": "one", "dstrgb": "zero" },
-  "vertex": "impact_charged",
-  "fragment": "impact_charged",
+  "vertex": "jjk_strongest:impact_charged",
+  "fragment": "jjk_strongest:impact_charged",
   "attributes": ["Position"],
   "samplers": [{ "name": "DiffuseSampler" }],
   "uniforms": [

@@ -4,8 +4,8 @@
     "srcrgb": "srcalpha",
     "dstrgb": "one"
   },
-  "vertex": "flame_arrow_explosion",
-  "fragment": "flame_arrow_explosion",
+  "vertex": "jjk_strongest:flame_arrow_explosion",
+  "fragment": "jjk_strongest:flame_arrow_explosion",
   "attributes": [
     "Position",
     "UV0"

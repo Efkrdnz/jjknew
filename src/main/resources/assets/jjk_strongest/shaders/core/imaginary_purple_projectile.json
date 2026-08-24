@@ -4,8 +4,8 @@
     "srcrgb": "srcalpha",
     "dstrgb": "one"
   },
-  "vertex": "imaginary_purple_projectile",
-  "fragment": "imaginary_purple_projectile",
+  "vertex": "jjk_strongest:imaginary_purple_projectile",
+  "fragment": "jjk_strongest:imaginary_purple_projectile",
   "attributes": [
     "Position",
     "UV0"

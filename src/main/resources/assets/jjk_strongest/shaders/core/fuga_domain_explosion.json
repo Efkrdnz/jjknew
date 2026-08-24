@@ -4,8 +4,8 @@
     "srcrgb": "srcalpha",
     "dstrgb": "one"
   },
-  "vertex": "fuga_domain_explosion",
-  "fragment": "fuga_domain_explosion",
+  "vertex": "jjk_strongest:fuga_domain_explosion",
+  "fragment": "jjk_strongest:fuga_domain_explosion",
   "attributes": [ "Position", "UV0" ],
   "samplers": [],
   "uniforms": [

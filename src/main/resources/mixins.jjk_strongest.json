@@ -4,11 +4,11 @@
   "compatibilityLevel": "JAVA_21",
   "minVersion": "0.8",
   "mixins": [
-    "FallingBlockEntityMixin"
+    "FallingBlockEntityMixin",
+    "DisableSwingMixin"
   ],
   "client": [
     "FirstPersonRendererMixin",
-    "DisableSwingMixin",
     "DisableHotbarKeymappingMixin"
   ],
   "injectors": {
