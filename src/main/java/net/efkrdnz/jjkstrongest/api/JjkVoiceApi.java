@@ -95,7 +95,79 @@ public final class JjkVoiceApi {
 		return Map.copyOf(movesets);
 	}
 
+	/**
+	 * The chant a moveset starts when its technique key is held.
+	 *
+	 * <p>Some movesets have more than one -- Dismantle can chant {@code dismantle}
+	 * or {@code dis_net}, World Slash steps through {@code wcs1..3} -- so this
+	 * lists the one a spoken chant starts from scratch. A chant already running is
+	 * always extended as-is rather than replaced, which is how a player who opened
+	 * with the keybind can carry on with their voice.
+	 */
+	private static final Map<String, String> MOVESET_CHANTS = buildMovesetChants();
+
+	private static Map<String, String> buildMovesetChants() {
+		Map<String, String> chants = new LinkedHashMap<>();
+		chants.put("gojo_blue", "blue");
+		chants.put("gojo_red", "red");
+		chants.put("gojo_purple", "purple");
+		chants.put("gojo_limitless", "teleport");
+		chants.put("sukuna_dismantle", "dismantle");
+		chants.put("sukuna_cleave", "cleave");
+		chants.put("sukuna_fuga", "flame_arrow");
+		chants.put("sukuna_wcs", "wcs1");
+		return Map.copyOf(chants);
+	}
+
+	/** Persistent-data keys backing a spoken chant. */
+	public static final String HOLD_TICKS = "jjkvoice_hold";
+	public static final String HOLD_OWNED = "jjkvoice_hold_owned";
+
 	private JjkVoiceApi() {
+	}
+
+	/** Movesets that can be chanted, i.e. that start a chant when held. */
+	public static Set<String> chantableMovesets() {
+		return MOVESET_CHANTS.keySet();
+	}
+
+	/**
+	 * Charges the player's current ability as if they had held its technique key
+	 * for {@code holdTicks} ticks.
+	 *
+	 * <p>Nothing about the charge curve is reimplemented here. Holding works by
+	 * leaving {@code chanting} set while ChantOnTickProcedure advances ChantCounter
+	 * one per tick and trips the ability's own thresholds; this simply supplies
+	 * that held state from a spoken chant instead of a key, so the multipliers, the
+	 * tier thresholds and the tier sounds are identical because they are the same
+	 * code running.
+	 *
+	 * <p>A chant already in progress is extended rather than restarted, so chanting
+	 * repeatedly accumulates exactly as holding longer would.
+	 *
+	 * @param holdTicks ticks of hold to grant, normally the spoken duration
+	 * @return the chant state now running, or empty when the ability cannot chant
+	 */
+	public static String chant(ServerPlayer player, int holdTicks) {
+		if (player == null || holdTicks <= 0)
+			return "";
+
+		String active = player.getPersistentData().getString("chanting");
+		if (active == null || active.isEmpty()) {
+			JjkStrongestModVariables.PlayerVariables variables = player.getData(JjkStrongestModVariables.PLAYER_VARIABLES);
+			String chant = MOVESET_CHANTS.get(normalise(variables.current_moveset));
+			if (chant == null)
+				return "";
+			player.getPersistentData().putString("chanting", chant);
+			// Marked as ours so the drain below only ever ends a chant that a voice
+			// started. A player holding the key keeps their own chant.
+			player.getPersistentData().putBoolean(HOLD_OWNED, true);
+			active = chant;
+		}
+
+		double pending = player.getPersistentData().getDouble(HOLD_TICKS);
+		player.getPersistentData().putDouble(HOLD_TICKS, pending + holdTicks);
+		return active;
 	}
 
 	/** Commands that fire a technique immediately. */

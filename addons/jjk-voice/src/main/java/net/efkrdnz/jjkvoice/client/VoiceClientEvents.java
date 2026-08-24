@@ -1,5 +1,6 @@
 package net.efkrdnz.jjkvoice.client;
 
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import net.minecraft.ChatFormatting;
@@ -16,7 +17,9 @@ import net.efkrdnz.jjkvoice.JjkVoiceMod;
 import net.efkrdnz.jjkvoice.audio.MicrophoneCapture;
 import net.efkrdnz.jjkvoice.audio.VoicechatBridge;
 import net.efkrdnz.jjkvoice.config.VoiceConfig;
+import net.efkrdnz.jjkvoice.compat.JjkBridge;
 import net.efkrdnz.jjkvoice.network.VoiceCastPayload;
+import net.efkrdnz.jjkvoice.network.VoiceChantPayload;
 import net.efkrdnz.jjkvoice.recognize.PhraseRecognizer;
 
 /**
@@ -110,16 +113,62 @@ public final class VoiceClientEvents {
 			return;
 		}
 
+		// Chanting is tried first, and only for the ability already selected. That
+		// is what lets one phrase do both jobs: say an ability's name to draw it,
+		// say it again to charge it. Without the "already active" test the two
+		// would be indistinguishable.
+		String moveset = JjkBridge.currentMoveset(minecraft.player);
+		List<String> chantPhrases = JjkBridge.isChantable(moveset)
+				? VoiceConfig.get().chantPhrasesFor(moveset)
+				: List.of();
+
 		Util.backgroundExecutor().execute(() -> {
-			PhraseRecognizer.Result result = PhraseRecognizer.recognise(audio);
+			PhraseRecognizer.ChantResult chant = chantPhrases.isEmpty()
+					? null
+					: PhraseRecognizer.recogniseChant(audio, chantPhrases);
+			PhraseRecognizer.Result result = (chant != null && chant.charged())
+					? null
+					: PhraseRecognizer.recognise(audio);
 			minecraft.execute(() -> {
 				try {
-					applyResult(minecraft, result);
+					if (result == null)
+						applyChant(minecraft, chant);
+					else
+						applyResult(minecraft, result);
 				} finally {
 					PROCESSING.set(false);
 				}
 			});
 		});
+	}
+
+	/**
+	 * Turns a recognised chant into ticks of hold.
+	 *
+	 * <p>The charge is the time actually spoken, so a longer incantation charges
+	 * more -- which is the same relationship holding the key already has. A near
+	 * match is credited at a fraction of it, so being slightly off still progresses
+	 * but saying it cleanly is worth more.
+	 */
+	private static void applyChant(Minecraft minecraft, PhraseRecognizer.ChantResult chant) {
+		if (minecraft.player == null || chant == null || !chant.charged())
+			return;
+		VoiceConfig config = VoiceConfig.get();
+
+		double credit = chant.quality() == PhraseRecognizer.ChantQuality.EXACT ? 1.0D : config.nearChantCredit;
+		int ticks = (int) Math.round(chant.seconds() * 20.0D * credit);
+		ticks = Math.min(Math.max(ticks, 1), config.maxChantTicks);
+
+		PacketDistributor.sendToServer(new VoiceChantPayload(ticks));
+		if (config.announceMatches)
+			actionBar(minecraft, Component.translatable(
+					chant.quality() == PhraseRecognizer.ChantQuality.EXACT
+							? "message.jjkvoice.chant.exact"
+							: "message.jjkvoice.chant.near",
+					chant.phrase(), String.format("%.1f", ticks / 20.0D))
+					.withStyle(chant.quality() == PhraseRecognizer.ChantQuality.EXACT
+							? ChatFormatting.LIGHT_PURPLE
+							: ChatFormatting.GRAY));
 	}
 
 	private static void applyResult(Minecraft minecraft, PhraseRecognizer.Result result) {

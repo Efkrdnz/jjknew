@@ -88,6 +88,32 @@ public final class VoiceConfig {
 	public boolean announceMatches = true;
 
 	/**
+	 * Extra chant phrases per ability, on top of the ability's own phrases.
+	 *
+	 * <p>Empty by default, and that is usually enough: saying an ability's name
+	 * while it is <em>not</em> active selects it, and saying it again once it
+	 * <em>is</em> active chants it. Nothing extra to enroll. Put a real incantation
+	 * here when you would rather charge with different words than you select with.
+	 */
+	public Map<String, List<String>> chants = new LinkedHashMap<>();
+
+	/**
+	 * How far past a phrase's accept threshold still counts as a chant.
+	 *
+	 * <p>Chanting is the safe place to be generous. A near miss here only charges
+	 * slightly, where a near miss on firing would waste a cooldown -- so chants use
+	 * this looser band and are credited at {@link #nearChantCredit} of the time
+	 * spoken, while actions keep the tight threshold.
+	 */
+	public double chantNearMultiplier = 1.75D;
+
+	/** Share of the spoken time a near-miss chant is worth. */
+	public double nearChantCredit = 0.5D;
+
+	/** Ceiling on ticks one chant can grant, so a held key cannot be out-charged. */
+	public int maxChantTicks = 60;
+
+	/**
 	 * The starting phrase list, carried over from the phrase map the previous
 	 * speech-to-text app used.
 	 *
@@ -120,6 +146,26 @@ public final class VoiceConfig {
 		defaults.put("gojo_red", new ArrayList<>(List.of("reversal red")));
 		defaults.put("gojo_blue", new ArrayList<>(List.of("lapse blue")));
 		defaults.put("sukuna_cleave", new ArrayList<>(List.of("cleave")));
+
+		// Inumaki's Cursed Speech. One word each, deliberately: they are spoken as
+		// single commands and every extra phrase is another enrollment sitting.
+		// These fire immediately -- Cursed Speech has no charge state to build.
+		defaults.put("dont_move", new ArrayList<>(List.of("don't move")));
+		defaults.put("die", new ArrayList<>(List.of("die")));
+		defaults.put("blast", new ArrayList<>(List.of("blast")));
+		defaults.put("crush", new ArrayList<>(List.of("crush")));
+		defaults.put("burst", new ArrayList<>(List.of("burst")));
+		defaults.put("sleep", new ArrayList<>(List.of("sleep")));
+		defaults.put("flee", new ArrayList<>(List.of("run away")));
+		defaults.put("rot", new ArrayList<>(List.of("rot")));
+		defaults.put("twist", new ArrayList<>(List.of("twist")));
+		defaults.put("burn", new ArrayList<>(List.of("burn")));
+		defaults.put("fall", new ArrayList<>(List.of("fall")));
+		defaults.put("spit", new ArrayList<>(List.of("spit")));
+		defaults.put("pull", new ArrayList<>(List.of("come here")));
+		defaults.put("shrink", new ArrayList<>(List.of("shrink")));
+		defaults.put("weep", new ArrayList<>(List.of("weep")));
+		defaults.put("kneel", new ArrayList<>(List.of("kneel")));
 
 		return defaults;
 	}
@@ -266,6 +312,30 @@ public final class VoiceConfig {
 		minSpeechSeconds = clamp(minSpeechSeconds, 0.05D, 2.0D);
 		maxSpeechSeconds = clamp(maxSpeechSeconds, minSpeechSeconds + 0.1D, 5.0D);
 		shoutRmsThreshold = clamp(shoutRmsThreshold, 0.001D, 1.0D);
+
+		if (chants == null)
+			chants = new LinkedHashMap<>();
+		chantNearMultiplier = clamp(chantNearMultiplier, 1.0D, 4.0D);
+		nearChantCredit = clamp(nearChantCredit, 0.0D, 1.0D);
+		maxChantTicks = (int) clamp(maxChantTicks, 5, 200);
+	}
+
+	/**
+	 * Everything that counts as chanting {@code moveset}: its own selection phrases
+	 * plus any extra incantations configured for it.
+	 */
+	public List<String> chantPhrasesFor(String moveset) {
+		String key = normaliseCommand(moveset);
+		List<String> phrases = new ArrayList<>(phrasesFor(key));
+		List<String> extra = chants.get(key);
+		if (extra != null) {
+			for (String phrase : extra) {
+				String cleaned = normalisePhrase(phrase);
+				if (!cleaned.isEmpty() && !phrases.contains(cleaned))
+					phrases.add(cleaned);
+			}
+		}
+		return phrases;
 	}
 
 	public static String normalisePhrase(String phrase) {

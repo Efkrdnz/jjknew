@@ -10,6 +10,7 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import net.efkrdnz.jjkvoice.compat.JjkBridge;
 import net.efkrdnz.jjkvoice.network.VoiceCastPayload;
+import net.efkrdnz.jjkvoice.network.VoiceChantPayload;
 
 /**
  * Server side of the voice request.
@@ -51,6 +52,29 @@ public final class VoiceServerHandler {
 				return;
 
 			JjkBridge.run(player, commandKey);
+		});
+	}
+
+	/**
+	 * Upper bound on one chant's grant, in ticks.
+	 *
+	 * <p>Three seconds of hold. The client caps this too, but the client is the
+	 * part a modified install controls, so the real limit lives here. It only
+	 * bounds a single request -- chanting repeatedly still accumulates, exactly as
+	 * holding longer does.
+	 */
+	private static final int MAX_CHANT_TICKS = 60;
+
+	public static void handleChant(VoiceChantPayload payload, IPayloadContext context) {
+		context.enqueueWork(() -> {
+			if (!(context.player() instanceof ServerPlayer player))
+				return;
+			int ticks = Math.min(Math.max(payload.holdTicks(), 0), MAX_CHANT_TICKS);
+			if (ticks <= 0)
+				return;
+			if (isThrottled(player.getUUID()))
+				return;
+			JjkBridge.chant(player, ticks);
 		});
 	}
 

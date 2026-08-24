@@ -3,8 +3,10 @@ package net.efkrdnz.jjkvoice.compat;
 import java.util.Set;
 
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
 
 import net.efkrdnz.jjkstrongest.api.JjkVoiceApi;
+import net.efkrdnz.jjkstrongest.network.JjkStrongestModVariables;
 
 /**
  * The only class in this addon that touches JJK Strongest.
@@ -39,5 +41,29 @@ public final class JjkBridge {
 	/** True when this key selects an ability rather than firing one. */
 	public static boolean isSelection(String commandKey) {
 		return JjkVoiceApi.movesetKeys().contains(JjkVoiceApi.normalise(commandKey));
+	}
+
+	/** True when this ability charges by holding, and so can be chanted. */
+	public static boolean isChantable(String movesetKey) {
+		return JjkVoiceApi.chantableMovesets().contains(JjkVoiceApi.normalise(movesetKey));
+	}
+
+	/**
+	 * The ability the player currently has active.
+	 *
+	 * <p>Readable on the client because the host mod syncs its player variables,
+	 * which is what lets the client tell "select this" from "chant it" without
+	 * asking the server first.
+	 */
+	public static String currentMoveset(Player player) {
+		if (player == null)
+			return "";
+		String moveset = player.getData(JjkStrongestModVariables.PLAYER_VARIABLES).current_moveset;
+		return moveset == null ? "" : JjkVoiceApi.normalise(moveset);
+	}
+
+	/** Grants ticks of hold, as if the technique key had been held that long. */
+	public static void chant(ServerPlayer player, int holdTicks) {
+		JjkVoiceApi.chant(player, holdTicks);
 	}
 }

@@ -33,9 +33,10 @@ The addon refuses to load without both, rather than half-working.
    phrases a few times — hold the **Voice Command** key (default `'`), speak,
    release.
 3. In play: hold the key, say *"Dismantle"*, release.
+4. Say it again to charge it — see [Chanting](#chanting).
 
-Seven abilities are configured out of the box — the ones the old phrase file
-covered. You do not have to enroll all of them: partial enrollment is a supported
+Twenty-three techniques are configured out of the box: the seven the old phrase
+file covered, plus all sixteen Cursed Speech words. You do not have to enroll all of them: partial enrollment is a supported
 state, and a command with nothing recorded is simply skipped during matching. So
 teach the two or three you actually use and leave the rest. `/jjkvoice status`
 shows where you are, and everything else the mod exposes is still reachable with
@@ -79,6 +80,48 @@ moveset names: `gojo_blue`, `gojo_red`, `gojo_purple`, `gojo_limitless`,
 rest.
 
 `/jjkvoice status` labels each configured command `[action]` or `[select]`.
+
+## Chanting
+
+Once an ability is selected, saying its name **again** charges it, exactly as
+holding its technique key does.
+
+Nothing about the charge is reimplemented. Holding the key works by leaving a
+chant state on you while the mod advances a counter one per tick and trips that
+ability's own tiers; a spoken chant supplies the same held state. So the
+multipliers, the tier thresholds and the tier sounds are identical — it is the
+same code running, fed from your voice instead of a key.
+
+The charge you get is **the time you actually spoke**, trimmed of silence. A
+longer incantation charges more, which is the same relationship the keybind
+already has. Chants accumulate, so you can say it three times, or hold the key
+and then finish out loud.
+
+| Ability | Chants |
+| --- | --- |
+| `gojo_blue` | Blue |
+| `gojo_red` | Red |
+| `gojo_purple` | Purple |
+| `gojo_limitless` | Teleport |
+| `sukuna_dismantle` | Dismantle |
+| `sukuna_cleave` | Cleave |
+| `sukuna_fuga` | Flame Arrow |
+| `sukuna_wcs` | World Slash |
+
+**Near misses count.** Chanting uses a second, looser band: inside your
+calibrated threshold is an exact chant worth its full time, and out to
+`chantNearMultiplier` of it is a near chant worth `nearChantCredit` of the time.
+Being generous is safe here in a way it is not for firing — the worst a wrong
+near-match can do is charge an ability you already have selected, where a wrong
+action would spend a cooldown. The action bar tells you which you got.
+
+You do not enroll anything extra. Chanting reuses the phrases already bound to
+that ability, so selecting and charging are the same recording. `chants` in the
+config only exists for adding a *different* phrase to chant with — a real
+incantation, rather than the ability's name.
+
+Cursed Speech is not chantable, and that is not an omission: those words take
+effect the moment they are spoken and have no charge state to build.
 
 The split is not a stylistic choice. Several abilities are charge-and-release —
 Hollow Purple will not fire until `charge_purple >= 3` and the charging effect is
@@ -138,7 +181,11 @@ deliberately or bind a longer phrase to it.
 | Key | Default | Meaning |
 | --- | --- | --- |
 | `mode` | `voiceprint` | `shout` fires `shoutCommand` on any loud vocalisation — useful to verify your mic works before enrolling |
-| `commands` | 7 abilities | Command key to the phrases that trigger it |
+| `commands` | 23 techniques | Command key to the phrases that trigger it |
+| `chants` | empty | Extra phrases that chant an ability, on top of the ones that select it |
+| `chantNearMultiplier` | `1.75` | How far past the threshold still counts as a near chant |
+| `nearChantCredit` | `0.5` | Fraction of the spoken time a near chant is worth |
+| `maxChantTicks` | `60` | Ceiling on one chant's charge. Also enforced server-side |
 | `shoutCommand` | `domain_expansion` | What `shout` mode triggers |
 | `thresholdMultiplier` | `1.35` | How far past your own natural variation still counts. Raise if it refuses you, lower if unrelated words trigger it |
 | `absoluteMaxDistance` | `60.0` | Safety ceiling so an inconsistent enrollment cannot accept everything |
