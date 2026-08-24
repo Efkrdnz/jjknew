@@ -1,0 +1,13 @@
+{
+  "parent": "block/cube",
+  "textures": {
+    "down": "jjk_strongest:block/placeholderdomain",
+    "up": "jjk_strongest:block/placeholderdomain",
+    "north": "jjk_strongest:block/placeholderdomain",
+    "east": "jjk_strongest:block/placeholderdomain",
+    "south": "jjk_strongest:block/placeholderdomain",
+    "west": "jjk_strongest:block/placeholderdomain",
+    "particle": "jjk_strongest:block/placeholderdomain"
+  },
+  "render_type": "translucent"
+}

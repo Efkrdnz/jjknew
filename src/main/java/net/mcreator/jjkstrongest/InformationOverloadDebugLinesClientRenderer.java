@@ -1,0 +1,1411 @@
+package net.mcreator.jjkstrongest;
+
+import org.checkerframework.checker.units.qual.s;
+import org.checkerframework.checker.units.qual.m;
+import org.checkerframework.checker.units.qual.h;
+import org.checkerframework.checker.units.qual.g;
+import org.checkerframework.checker.units.qual.A;
+
+import com.mojang.blaze3d.platform.NativeImage;
+
+@net.minecraftforge.fml.common.Mod.EventBusSubscriber(modid = "jjk_strongest", value = net.minecraftforge.api.distmarker.Dist.CLIENT)
+public class InformationOverloadDebugLinesClientRenderer {
+	public static final String MODID = "jjk_strongest";
+	// ----------------------------
+	// 1x1 white texture for "pixel/line" quads (tintable)
+	// ----------------------------
+	// ----------------------------
+	// 1x1 white texture for "pixel/line" quads (tintable)
+	// ----------------------------
+	private static final net.minecraft.resources.ResourceLocation WHITE_TEX = new net.minecraft.resources.ResourceLocation(MODID, "io_white_1px");
+	private static boolean WHITE_TEX_READY = false;
+
+	private static void ensureWhiteTex(net.minecraft.client.Minecraft mc) {
+		if (WHITE_TEX_READY)
+			return;
+		try {
+			NativeImage img = new NativeImage(1, 1, true);
+			img.setPixelRGBA(0, 0, 0xFFFFFFFF);
+			net.minecraft.client.renderer.texture.DynamicTexture dyn = new net.minecraft.client.renderer.texture.DynamicTexture(img);
+			mc.getTextureManager().register(WHITE_TEX, dyn);
+			WHITE_TEX_READY = true;
+		} catch (Throwable t) {
+			// if this fails, MC will show missing texture but shouldn't crash
+			WHITE_TEX_READY = true;
+		}
+	}
+
+	// ----------------------------
+	// Transparency states
+	// ----------------------------
+	private static final net.minecraft.client.renderer.RenderStateShard.TransparencyStateShard ADDITIVE = new net.minecraft.client.renderer.RenderStateShard.TransparencyStateShard("info_overload_add", () -> {
+		com.mojang.blaze3d.systems.RenderSystem.enableBlend();
+		com.mojang.blaze3d.systems.RenderSystem.blendFunc(org.lwjgl.opengl.GL11.GL_SRC_ALPHA, org.lwjgl.opengl.GL11.GL_ONE);
+	}, () -> {
+		com.mojang.blaze3d.systems.RenderSystem.disableBlend();
+		com.mojang.blaze3d.systems.RenderSystem.defaultBlendFunc();
+	});
+	private static final net.minecraft.client.renderer.RenderStateShard.TransparencyStateShard ALPHA_BLEND = new net.minecraft.client.renderer.RenderStateShard.TransparencyStateShard("info_overload_alpha", () -> {
+		com.mojang.blaze3d.systems.RenderSystem.enableBlend();
+		com.mojang.blaze3d.systems.RenderSystem.blendFunc(org.lwjgl.opengl.GL11.GL_SRC_ALPHA, org.lwjgl.opengl.GL11.GL_ONE_MINUS_SRC_ALPHA);
+	}, () -> {
+		com.mojang.blaze3d.systems.RenderSystem.disableBlend();
+		com.mojang.blaze3d.systems.RenderSystem.defaultBlendFunc();
+	});
+	// ----------------------------
+	// RenderTypes
+	// ----------------------------
+	private static final net.minecraft.client.renderer.RenderType OVERLAY_LINES = net.minecraft.client.renderer.RenderType.create("information_overload_lines", com.mojang.blaze3d.vertex.DefaultVertexFormat.POSITION_TEX_COLOR,
+			com.mojang.blaze3d.vertex.VertexFormat.Mode.QUADS, 256, false, true,
+			net.minecraft.client.renderer.RenderType.CompositeState.builder().setShaderState(new net.minecraft.client.renderer.RenderStateShard.ShaderStateShard(net.minecraft.client.renderer.GameRenderer::getPositionTexColorShader))
+					.setTextureState(new net.minecraft.client.renderer.RenderStateShard.TextureStateShard(WHITE_TEX, false, false)).setTransparencyState(ADDITIVE).setCullState(new net.minecraft.client.renderer.RenderStateShard.CullStateShard(false))
+					.setDepthTestState(new net.minecraft.client.renderer.RenderStateShard.DepthTestStateShard("always", org.lwjgl.opengl.GL11.GL_ALWAYS))
+					.setWriteMaskState(new net.minecraft.client.renderer.RenderStateShard.WriteMaskStateShard(true, false)).createCompositeState(false));
+
+	private static net.minecraft.resources.ResourceLocation rl(String path) {
+		return new net.minecraft.resources.ResourceLocation(MODID, path);
+	}
+
+	private static net.minecraft.client.renderer.RenderType makeEqType(String name, net.minecraft.resources.ResourceLocation tex, net.minecraft.client.renderer.RenderStateShard.TransparencyStateShard transp) {
+		return net.minecraft.client.renderer.RenderType.create(name, com.mojang.blaze3d.vertex.DefaultVertexFormat.POSITION_TEX_COLOR, com.mojang.blaze3d.vertex.VertexFormat.Mode.QUADS, 256, false, true,
+				net.minecraft.client.renderer.RenderType.CompositeState.builder().setShaderState(new net.minecraft.client.renderer.RenderStateShard.ShaderStateShard(net.minecraft.client.renderer.GameRenderer::getPositionTexColorShader))
+						.setTextureState(new net.minecraft.client.renderer.RenderStateShard.TextureStateShard(tex, false, false)).setTransparencyState(transp).setCullState(new net.minecraft.client.renderer.RenderStateShard.CullStateShard(false))
+						.setDepthTestState(new net.minecraft.client.renderer.RenderStateShard.DepthTestStateShard("always", org.lwjgl.opengl.GL11.GL_ALWAYS))
+						.setWriteMaskState(new net.minecraft.client.renderer.RenderStateShard.WriteMaskStateShard(true, false)).createCompositeState(false));
+	}
+
+	// ----------------------------
+	// Edge fractal texture system
+	// ----------------------------
+	private static net.minecraft.resources.ResourceLocation EDGE_RL = null;
+	private static net.minecraft.client.renderer.texture.DynamicTexture EDGE_TEX = null;
+	private static net.minecraft.client.renderer.RenderType EDGE_BASE = null;
+	private static net.minecraft.client.renderer.RenderType EDGE_GLOW = null;
+	private static int EDGE_KEY = 0x7fffffff;
+	private static final int EDGE_W = 320;
+	private static final int EDGE_H = 320;
+	// ----------------------------
+	// Dynamic equation PNG system
+	// ----------------------------
+	private static java.util.List<EqEntry> EQ_LIST = null;
+	private static Object EQ_RM = null;
+	private static int EQ_DYN_ID = 0;
+
+	private static class EqEntry {
+		public final net.minecraft.resources.ResourceLocation src; // original resource
+		public final net.minecraft.resources.ResourceLocation tex; // processed dynamic texture id
+		public final float aspect; // w/h
+		public final net.minecraft.client.renderer.RenderType base; // alpha blend
+		public final net.minecraft.client.renderer.RenderType glow; // additive
+
+		public EqEntry(net.minecraft.resources.ResourceLocation src, net.minecraft.resources.ResourceLocation tex, float aspect, net.minecraft.client.renderer.RenderType base, net.minecraft.client.renderer.RenderType glow) {
+			this.src = src;
+			this.tex = tex;
+			this.aspect = aspect;
+			this.base = base;
+			this.glow = glow;
+		}
+	}
+
+	// ----------------------------
+	// OS world screenshot background system
+	// ----------------------------
+	private static java.util.List<WorldEntry> WORLD_LIST = null;
+	private static Object WORLD_RM = null;
+	private static int WORLD_DYN_ID = 0;
+
+	private static class WorldEntry {
+		public final net.minecraft.resources.ResourceLocation src;
+		public final net.minecraft.resources.ResourceLocation grey;
+		public final net.minecraft.resources.ResourceLocation rmono;
+		public final net.minecraft.resources.ResourceLocation gmono;
+		public final net.minecraft.resources.ResourceLocation bmono;
+		public final float aspect;
+		public final net.minecraft.client.renderer.RenderType greyBase;
+		public final net.minecraft.client.renderer.RenderType greyGlow;
+		public final net.minecraft.client.renderer.RenderType rBase;
+		public final net.minecraft.client.renderer.RenderType gBase;
+		public final net.minecraft.client.renderer.RenderType bBase;
+		public final net.minecraft.client.renderer.RenderType rGlow;
+		public final net.minecraft.client.renderer.RenderType gGlow;
+		public final net.minecraft.client.renderer.RenderType bGlow;
+
+		public WorldEntry(net.minecraft.resources.ResourceLocation src, net.minecraft.resources.ResourceLocation grey, net.minecraft.resources.ResourceLocation rmono, net.minecraft.resources.ResourceLocation gmono,
+				net.minecraft.resources.ResourceLocation bmono, float aspect, net.minecraft.client.renderer.RenderType greyBase, net.minecraft.client.renderer.RenderType greyGlow, net.minecraft.client.renderer.RenderType rBase,
+				net.minecraft.client.renderer.RenderType gBase, net.minecraft.client.renderer.RenderType bBase, net.minecraft.client.renderer.RenderType rGlow, net.minecraft.client.renderer.RenderType gGlow,
+				net.minecraft.client.renderer.RenderType bGlow) {
+			this.src = src;
+			this.grey = grey;
+			this.rmono = rmono;
+			this.gmono = gmono;
+			this.bmono = bmono;
+			this.aspect = aspect;
+			this.greyBase = greyBase;
+			this.greyGlow = greyGlow;
+			this.rBase = rBase;
+			this.gBase = gBase;
+			this.bBase = bBase;
+			this.rGlow = rGlow;
+			this.gGlow = gGlow;
+			this.bGlow = bGlow;
+		}
+	}
+
+	private static void ensureWorldShotsLoaded(net.minecraft.client.Minecraft mc) {
+		Object rm = mc.getResourceManager();
+		if (WORLD_LIST != null && WORLD_RM == rm)
+			return;
+		WORLD_RM = rm;
+		WORLD_LIST = new java.util.ArrayList<>();
+		try {
+			var map = mc.getResourceManager().listResources("textures/os_world", (loc) -> loc.getPath().toLowerCase(java.util.Locale.ROOT).endsWith(".png"));
+			java.util.ArrayList<net.minecraft.resources.ResourceLocation> locs = new java.util.ArrayList<>();
+			for (var loc : map.keySet()) {
+				if (MODID.equals(loc.getNamespace()))
+					locs.add(loc);
+			}
+			java.util.Collections.sort(locs, (a, b) -> a.getPath().compareTo(b.getPath()));
+			// Optional cap so you don't accidentally load 500 huge PNGs
+			System.out.println("[IO] os_world found = " + locs.size());
+			for (int i = 0; i < Math.min(locs.size(), 10); i++) {
+				System.out.println("[IO]  - " + locs.get(i));
+			}
+			int cap = 32;
+			for (int i = 0; i < locs.size() && i < cap; i++) {
+				WorldEntry e = loadWorldEntry(mc, locs.get(i));
+				if (e != null)
+					WORLD_LIST.add(e);
+			}
+		} catch (Throwable t) {
+			// ignore
+		}
+	}
+
+	private static WorldEntry loadWorldEntry(net.minecraft.client.Minecraft mc, net.minecraft.resources.ResourceLocation src) {
+		try {
+			var opt = mc.getResourceManager().getResource(src);
+			if (opt == null || !opt.isPresent())
+				return null;
+			NativeImage img;
+			try (var in = opt.get().open()) {
+				img = NativeImage.read(in);
+			}
+			if (img == null)
+				return null;
+			int w0 = img.getWidth();
+			int h0 = java.lang.Math.max(1, img.getHeight());
+			float aspect = (float) w0 / (float) h0;
+			// Keep performance sane if screenshots are huge
+			int maxDim = 1024;
+			NativeImage base = downscaleIfNeeded(img, maxDim);
+			if (base != img)
+				img.close();
+			NativeImage g = buildWorldFilter(base, 0); // grayscale
+			NativeImage r = buildWorldFilter(base, 1); // red mono
+			NativeImage gg = buildWorldFilter(base, 2); // green mono
+			NativeImage b = buildWorldFilter(base, 3); // blue mono
+			base.close();
+			int id = WORLD_DYN_ID++;
+			net.minecraft.resources.ResourceLocation greyId = new net.minecraft.resources.ResourceLocation(MODID, "io_world_dyn/g_" + id);
+			net.minecraft.resources.ResourceLocation rId = new net.minecraft.resources.ResourceLocation(MODID, "io_world_dyn/r_" + id);
+			net.minecraft.resources.ResourceLocation gId = new net.minecraft.resources.ResourceLocation(MODID, "io_world_dyn/gg_" + id);
+			net.minecraft.resources.ResourceLocation bId = new net.minecraft.resources.ResourceLocation(MODID, "io_world_dyn/b_" + id);
+			mc.getTextureManager().register(greyId, new net.minecraft.client.renderer.texture.DynamicTexture(g));
+			mc.getTextureManager().register(rId, new net.minecraft.client.renderer.texture.DynamicTexture(r));
+			mc.getTextureManager().register(gId, new net.minecraft.client.renderer.texture.DynamicTexture(gg));
+			mc.getTextureManager().register(bId, new net.minecraft.client.renderer.texture.DynamicTexture(b));
+			// RenderTypes (reuse your helper)
+			net.minecraft.client.renderer.RenderType greyBase = makeEqType("io_world_g_base_" + id, greyId, ALPHA_BLEND);
+			net.minecraft.client.renderer.RenderType greyGlow = makeEqType("io_world_g_glow_" + id, greyId, ADDITIVE);
+			net.minecraft.client.renderer.RenderType rBase = makeEqType("io_world_r_base_" + id, rId, ALPHA_BLEND);
+			net.minecraft.client.renderer.RenderType gBase = makeEqType("io_world_gg_base_" + id, gId, ALPHA_BLEND);
+			net.minecraft.client.renderer.RenderType bBase = makeEqType("io_world_b_base_" + id, bId, ALPHA_BLEND);
+			net.minecraft.client.renderer.RenderType rGlow = makeEqType("io_world_r_glow_" + id, rId, ADDITIVE);
+			net.minecraft.client.renderer.RenderType gGlow = makeEqType("io_world_gg_glow_" + id, gId, ADDITIVE);
+			net.minecraft.client.renderer.RenderType bGlow = makeEqType("io_world_b_glow_" + id, bId, ADDITIVE);
+			return new WorldEntry(src, greyId, rId, gId, bId, aspect, greyBase, greyGlow, rBase, gBase, bBase, rGlow, gGlow, bGlow);
+		} catch (Throwable t) {
+			return null;
+		}
+	}
+
+	// mode: 0 grayscale, 1 red mono, 2 green mono, 3 blue mono
+	private static NativeImage buildWorldFilter(NativeImage img, int mode) {
+		int w = img.getWidth();
+		int h = img.getHeight();
+		NativeImage out = new NativeImage(w, h, true);
+		// Tunables for "visible but moody"
+		final float gamma = 0.70f; // <1 brightens midtones (undoes crush)
+		final float lift = 0.06f; // raises blacks a bit (prevents pure-black)
+		final float gain = 0.95f; // overall darkness (keep near 1)
+		final float alphaMul = 0.80f; // soften opacity a touch
+		for (int y = 0; y < h; y++) {
+			for (int x = 0; x < w; x++) {
+				int rgba = img.getPixelRGBA(x, y);
+				int a = (rgba >>> 24) & 255;
+				int r = (rgba) & 255;
+				int g = (rgba >>> 8) & 255;
+				int b = (rgba >>> 16) & 255;
+				float rf = r / 255.0f;
+				float gf = g / 255.0f;
+				float bf = b / 255.0f;
+				float v;
+				if (mode == 1)
+					v = rf;
+				else if (mode == 2)
+					v = gf;
+				else if (mode == 3)
+					v = bf;
+				else
+					v = (0.2126f * rf + 0.7152f * gf + 0.0722f * bf);
+				// --- FIX: remove the "v*v" shadow crush and use a gentle gamma instead
+				v = clamp(v, 0.0f, 1.0f);
+				v = (float) java.lang.Math.pow(v, gamma); // brighten mids
+				v = lift + (1.0f - lift) * v; // lift blacks slightly
+				v = clamp(v * gain, 0.0f, 1.0f);
+				float af = clamp((a / 255.0f) * alphaMul, 0.0f, 1.0f);
+				int o = (int) (v * 255.0f);
+				int A = (int) (af * 255.0f);
+				int outRGBA = (A << 24) | (o << 16) | (o << 8) | (o);
+				out.setPixelRGBA(x, y, outRGBA);
+			}
+		}
+		return out;
+	}
+
+	private static NativeImage downscaleIfNeeded(NativeImage img, int maxDim) {
+		int w = img.getWidth();
+		int h = img.getHeight();
+		int m = java.lang.Math.max(w, h);
+		if (m <= maxDim)
+			return img;
+		float s = maxDim / (float) m;
+		int nw = java.lang.Math.max(1, (int) (w * s));
+		int nh = java.lang.Math.max(1, (int) (h * s));
+		NativeImage out = new NativeImage(nw, nh, true);
+		for (int y = 0; y < nh; y++) {
+			int sy = (int) (y * (h / (float) nh));
+			if (sy >= h)
+				sy = h - 1;
+			for (int x = 0; x < nw; x++) {
+				int sx = (int) (x * (w / (float) nw));
+				if (sx >= w)
+					sx = w - 1;
+				out.setPixelRGBA(x, y, img.getPixelRGBA(sx, sy));
+			}
+		}
+		return out;
+	}
+
+	private static void drawRotatedTexturedQuad(com.mojang.blaze3d.vertex.VertexConsumer vc, org.joml.Matrix4f m, float cx, float cy, float w, float h, float rot, float u0, float v0, float u1, float v1, float r, float g, float b, float a) {
+		float hw = w * 0.5f;
+		float hh = h * 0.5f;
+		float c = (float) java.lang.Math.cos(rot);
+		float s = (float) java.lang.Math.sin(rot);
+		// corners in local space
+		float x0 = -hw, y0 = -hh;
+		float x1 = hw, y1 = -hh;
+		float x2 = hw, y2 = hh;
+		float x3 = -hw, y3 = hh;
+		float ax = cx + x0 * c - y0 * s;
+		float ay = cy + x0 * s + y0 * c;
+		float bx = cx + x1 * c - y1 * s;
+		float by = cy + x1 * s + y1 * c;
+		float cx2 = cx + x2 * c - y2 * s;
+		float cy2 = cy + x2 * s + y2 * c;
+		float dx = cx + x3 * c - y3 * s;
+		float dy = cy + x3 * s + y3 * c;
+		// Match your drawTexturedQuad UV orientation
+		vc.vertex(m, ax, ay, 0).uv(u0, v1).color(r, g, b, a).endVertex();
+		vc.vertex(m, bx, by, 0).uv(u1, v1).color(r, g, b, a).endVertex();
+		vc.vertex(m, cx2, cy2, 0).uv(u1, v0).color(r, g, b, a).endVertex();
+		vc.vertex(m, dx, dy, 0).uv(u0, v0).color(r, g, b, a).endVertex();
+	}
+
+	private static void renderWorldBackground(net.minecraft.client.renderer.MultiBufferSource.BufferSource bufferSource, org.joml.Matrix4f m, net.minecraft.client.Minecraft mc, float t, float strength, float life, float pull, int sceneId) {
+		ensureWorldShotsLoaded(mc);
+		if (WORLD_LIST == null || WORLD_LIST.isEmpty())
+			return;
+		float a0 = (0.18f + 0.55f * strength) * life * (1.0f - 0.60f * pull);
+		if (a0 < 0.002f)
+			return;
+		int n = WORLD_LIST.size();
+		int idxA = fastMod(sceneId, n);
+		int idxB = fastMod(sceneId * 3 + 11, n);
+		WorldEntry A = WORLD_LIST.get(idxA);
+		WorldEntry B = WORLD_LIST.get(idxB);
+		// --- pick a moving UV window (zoom into part of the screenshot)
+		float driftU = 0.05f * (float) java.lang.Math.sin(t * 0.07f + idxA);
+		float driftV = 0.05f * (float) java.lang.Math.cos(t * 0.06f + idxA * 0.7f);
+		float baseU = fract(hash11(sceneId * 7.13f) + 0.11f + driftU);
+		float baseV = fract(hash11(sceneId * 9.91f) + 0.13f + driftV);
+		// WAY less zoom-in than before
+		float zoom = 1.02f + 0.10f * strength + 0.03f * (float) java.lang.Math.sin(t * 0.09f + sceneId);
+		// Keep the crop window fairly large so it doesn't feel "telephoto"
+		float du = clamp(1.0f / zoom, 0.80f, 1.0f);
+		float dv = clamp(1.0f / zoom, 0.80f, 1.0f);
+		float u0 = clamp(baseU - du * 0.5f, 0.0f, 1.0f - du);
+		float v0 = clamp(baseV - dv * 0.5f, 0.0f, 1.0f - dv);
+		float u1 = u0 + du;
+		float v1 = v0 + dv;
+		float rot0 = 0.020f * (float) java.lang.Math.sin(t * 0.12f + sceneId);
+		float rot1 = -0.028f * (float) java.lang.Math.cos(t * 0.10f + sceneId * 0.7f);
+		// --- 1) Fullscreen base grayscale (dark, transparent)
+		{
+			com.mojang.blaze3d.vertex.VertexConsumer vc = bufferSource.getBuffer(A.greyBase);
+			drawRotatedTexturedQuad(vc, m, 0, 0, 2.08f, 2.08f, rot0, u0, v0, u1, v1, 1.0f, 1.0f, 1.0f, a0);
+		}
+		// --- 2) Mirrored fullscreen layer (slight offset, even darker)
+		{
+			float ox = 0.018f * (float) java.lang.Math.sin(t * 0.15f + 9.0f);
+			float oy = 0.018f * (float) java.lang.Math.cos(t * 0.14f + 3.0f);
+			// mirror X by swapping u0/u1
+			com.mojang.blaze3d.vertex.VertexConsumer vc = bufferSource.getBuffer(B.greyBase);
+			drawRotatedTexturedQuad(vc, m, ox, oy, 2.02f, 2.02f, rot1, u1, v0, u0, v1, 1.0f, 1.0f, 1.0f, a0 * 0.55f);
+		}
+		// --- 3) Color “ghost” accents (additive, subtle)
+		{
+			float ga = a0 * (0.10f + 0.18f * strength);
+			// swap which channel mask you use across scenes
+			float pick = hash11(sceneId * 12.7f);
+			net.minecraft.client.renderer.RenderType glowType = (pick < 0.33f) ? A.bGlow : (pick < 0.66f) ? A.gGlow : A.rGlow;
+			com.mojang.blaze3d.vertex.VertexConsumer glow = bufferSource.getBuffer(glowType);
+			// Mostly cyan/blue, sometimes magenta
+			float rr = (pick < 0.66f) ? 0.12f : 0.45f;
+			float gg = (pick < 0.66f) ? 0.38f : 0.12f;
+			float bb = 0.72f;
+			drawRotatedTexturedQuad(glow, m, 0, 0, 2.06f, 2.06f, rot0 * 0.6f, u0, v0, u1, v1, rr, gg, bb, ga);
+		}
+		// --- 4) Kaleidoscope tiles (small mirrored panes drifting around)
+		int panes = 3 + (int) (3 * strength);
+		for (int i = 0; i < panes; i++) {
+			float off = i * 17.3f + sceneId * 3.1f;
+			float px = (hash11(off * 1.7f) - 0.5f) * (0.85f);
+			float py = (hash11(off * 2.9f) - 0.5f) * (0.70f);
+			px += 0.06f * (float) java.lang.Math.sin(t * (0.30f + 0.07f * i) + off);
+			py += 0.06f * (float) java.lang.Math.cos(t * (0.27f + 0.06f * i) + off * 0.7f);
+			float w = 0.55f + 0.20f * hash11(off * 5.1f);
+			float h = w / clamp(A.aspect, 0.35f, 3.5f);
+			float pr = 0.04f * (float) java.lang.Math.sin(t * 0.20f + off);
+			boolean mx = hash11(off * 9.1f) > 0.5f;
+			boolean my = hash11(off * 7.3f) > 0.65f;
+			float uu0 = u0, vv0 = v0, uu1 = u1, vv1 = v1;
+			if (mx) {
+				float tmp = uu0;
+				uu0 = uu1;
+				uu1 = tmp;
+			}
+			if (my) {
+				float tmp = vv0;
+				vv0 = vv1;
+				vv1 = tmp;
+			}
+			float pa = a0 * (0.22f + 0.16f * strength);
+			com.mojang.blaze3d.vertex.VertexConsumer vc = bufferSource.getBuffer(A.greyBase);
+			//drawRotatedTexturedQuad(vc, m, px, py, w, h, pr, uu0, vv0, uu1, vv1, 1.0f, 1.0f, 1.0f, pa);
+		}
+	}
+
+	private static void ensureEquationsLoaded(net.minecraft.client.Minecraft mc) {
+		Object rm = mc.getResourceManager();
+		if (EQ_LIST != null && EQ_RM == rm)
+			return;
+		EQ_RM = rm;
+		EQ_LIST = new java.util.ArrayList<>();
+		try {
+			var map = mc.getResourceManager().listResources("textures/equations", (loc) -> loc.getPath().endsWith(".png"));
+			java.util.ArrayList<net.minecraft.resources.ResourceLocation> locs = new java.util.ArrayList<>();
+			for (var loc : map.keySet()) {
+				if (MODID.equals(loc.getNamespace()))
+					locs.add(loc);
+			}
+			java.util.Collections.sort(locs, (a, b) -> a.getPath().compareTo(b.getPath()));
+			for (var src : locs) {
+				EqEntry e = loadEqEntry(mc, src);
+				if (e != null)
+					EQ_LIST.add(e);
+			}
+		} catch (Throwable t) {
+			// keep empty -> fallback below
+		}
+		// Fallback so it never hard-crashes if directory is empty/missing
+		if (EQ_LIST.isEmpty()) {
+			net.minecraft.resources.ResourceLocation fallback = rl("textures/equations/uv_eq_08.png");
+			net.minecraft.client.renderer.RenderType base = makeEqType("info_eq_fallback_base", fallback, ALPHA_BLEND);
+			net.minecraft.client.renderer.RenderType glow = makeEqType("info_eq_fallback_glow", fallback, ADDITIVE);
+			EQ_LIST.add(new EqEntry(fallback, fallback, 4.0f, base, glow));
+		}
+	}
+
+	private static EqEntry loadEqEntry(net.minecraft.client.Minecraft mc, net.minecraft.resources.ResourceLocation src) {
+		try {
+			var opt = mc.getResourceManager().getResource(src);
+			if (opt == null || !opt.isPresent())
+				return null;
+			NativeImage img;
+			try (var in = opt.get().open()) {
+				img = NativeImage.read(in);
+			}
+			if (img == null)
+				return null;
+			int w = img.getWidth();
+			int h = java.lang.Math.max(1, img.getHeight());
+			float aspect = (float) w / (float) h;
+			// Build a white alpha-mask version so black strokes become tintable.
+			NativeImage mask = buildEquationMask(img);
+			img.close();
+			int id = EQ_DYN_ID++;
+			net.minecraft.resources.ResourceLocation dynId = new net.minecraft.resources.ResourceLocation(MODID, "io_eq_dyn/eq_" + id);
+			net.minecraft.client.renderer.texture.DynamicTexture dynTex = new net.minecraft.client.renderer.texture.DynamicTexture(mask);
+			mc.getTextureManager().register(dynId, dynTex);
+			net.minecraft.client.renderer.RenderType base = makeEqType("info_eq_" + id + "_base", dynId, ALPHA_BLEND);
+			net.minecraft.client.renderer.RenderType glow = makeEqType("info_eq_" + id + "_glow", dynId, ADDITIVE);
+			return new EqEntry(src, dynId, aspect, base, glow);
+		} catch (Throwable t) {
+			return null;
+		}
+	}
+
+	private static NativeImage buildEquationMask(NativeImage img) {
+		int w = img.getWidth();
+		int h = img.getHeight();
+		NativeImage out = new NativeImage(w, h, true);
+		int alphaKeep = 14;
+		int brightDrop = 245;
+		for (int y = 0; y < h; y++) {
+			for (int x = 0; x < w; x++) {
+				int rgba = img.getPixelRGBA(x, y);
+				int a = (rgba >>> 24) & 255;
+				int r = (rgba) & 255;
+				int g = (rgba >>> 8) & 255;
+				int b = (rgba >>> 16) & 255;
+				if (a <= alphaKeep) {
+					out.setPixelRGBA(x, y, 0x00000000);
+					continue;
+				}
+				int lum = (r + g + b) / 3;
+				if (lum >= brightDrop) {
+					out.setPixelRGBA(x, y, 0x00000000);
+					continue;
+				}
+				int outA = a;
+				int outRGBA = (outA << 24) | 0x00FFFFFF;
+				out.setPixelRGBA(x, y, outRGBA);
+			}
+		}
+		return out;
+	}
+
+	// ----------------------------
+	// Gaussian snippet system
+	// ----------------------------
+	private static java.util.List<net.minecraft.resources.ResourceLocation> GAUSS_FILES = null;
+	private static Object GAUSS_RM = null;
+	private static int GAUSS_KEY = 0x7fffffff;
+	private static float GAUSS_AX = -0.40f;
+	private static float GAUSS_AY = 0.05f;
+	private static String[] GAUSS_SNIP = new String[]{" Entering Gaussian System, Link 0=", " #P B3LYP/6-31G(d) Opt Freq", " ...", " Normal termination of Gaussian 16"};
+
+	private static void ensureGaussianLoaded(net.minecraft.client.Minecraft mc) {
+		Object rm = mc.getResourceManager();
+		if (GAUSS_FILES != null && GAUSS_RM == rm)
+			return;
+		GAUSS_RM = rm;
+		GAUSS_FILES = new java.util.ArrayList<>();
+		try {
+			var map = mc.getResourceManager().listResources("gaussian", (loc) -> {
+				String p = loc.getPath();
+				return p.endsWith(".txt") || p.endsWith(".log") || p.endsWith(".out");
+			});
+			for (var loc : map.keySet()) {
+				if (MODID.equals(loc.getNamespace()))
+					GAUSS_FILES.add(loc);
+			}
+			java.util.Collections.sort(GAUSS_FILES, (a, b) -> a.getPath().compareTo(b.getPath()));
+		} catch (Throwable t) {
+			// ignore -> we fall back to built-in GAUSS_SNIP
+		}
+		GAUSS_KEY = 0x7fffffff;
+	}
+
+	private static void refreshGaussianSnippet(net.minecraft.client.Minecraft mc, int key) {
+		ensureGaussianLoaded(mc);
+		if (key == GAUSS_KEY)
+			return;
+		GAUSS_KEY = key;
+		float hx = hash11(key * 1.37f);
+		float hy = hash11(key * 9.11f);
+		GAUSS_AX = lerp(-0.35f, 0.22f, hx);
+		GAUSS_AY = lerp(-0.08f, 0.28f, hy);
+		if (GAUSS_FILES == null || GAUSS_FILES.isEmpty())
+			return;
+		int fileIndex = (int) (hash11(key * 3.71f) * GAUSS_FILES.size());
+		if (fileIndex < 0)
+			fileIndex = 0;
+		if (fileIndex >= GAUSS_FILES.size())
+			fileIndex = GAUSS_FILES.size() - 1;
+		net.minecraft.resources.ResourceLocation file = GAUSS_FILES.get(fileIndex);
+		try {
+			var opt = mc.getResourceManager().getResource(file);
+			if (opt == null || !opt.isPresent())
+				return;
+			String content;
+			try (var in = opt.get().open()) {
+				content = new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+			}
+			String[] lines = content.split("\\R");
+			if (lines.length < 4)
+				return;
+			int want = 14;
+			int maxStart = Math.max(0, lines.length - want - 1);
+			int start = (maxStart <= 0) ? 0 : (int) (hash11(key * 13.7f) * maxStart);
+			java.util.ArrayList<String> out = new java.util.ArrayList<>();
+			for (int i = 0; i < want && (start + i) < lines.length; i++) {
+				String s = tidyGaussianLine(lines[start + i]);
+				if (s.length() == 0)
+					continue;
+				out.add(s);
+			}
+			if (!out.isEmpty())
+				GAUSS_SNIP = out.toArray(new String[0]);
+		} catch (Throwable t) {
+			// keep old snippet
+		}
+	}
+
+	private static String tidyGaussianLine(String s) {
+		s = s.replace('\t', ' ').trim();
+		while (s.contains("  "))
+			s = s.replace("  ", " ");
+		int max = 92;
+		if (s.length() > max)
+			s = s.substring(0, max - 3) + "...";
+		return s;
+	}
+
+	// ----------------------------
+	// Event hook
+	// ----------------------------
+	@net.minecraftforge.api.distmarker.OnlyIn(net.minecraftforge.api.distmarker.Dist.CLIENT)
+	@net.minecraftforge.eventbus.api.SubscribeEvent
+	public static void onRenderHand(net.minecraftforge.client.event.RenderHandEvent event) {
+		net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
+		if (mc == null || mc.player == null || mc.level == null)
+			return;
+		if (mc.screen != null)
+			return;
+		if (!mc.options.getCameraType().isFirstPerson())
+			return;
+		net.minecraft.world.entity.player.Player player = mc.player;
+		if (!player.hasEffect(net.mcreator.jjkstrongest.init.JjkStrongestModMobEffects.INFORMATION_OVERLOAD.get()))
+			return;
+		if (event.getHand() != net.minecraft.world.InteractionHand.MAIN_HAND)
+			return;
+		com.mojang.blaze3d.vertex.PoseStack poseStack = event.getPoseStack();
+		net.minecraft.client.renderer.MultiBufferSource.BufferSource bufferSource = mc.renderBuffers().bufferSource();
+		ensureWhiteTex(mc);
+		renderOverlay(player, poseStack, bufferSource, event.getPartialTick(), mc);
+		bufferSource.endBatch();
+	}
+
+	// ----------------------------
+	// Main render
+	// ----------------------------
+	private static void renderOverlay(net.minecraft.world.entity.player.Player player, com.mojang.blaze3d.vertex.PoseStack poseStack, net.minecraft.client.renderer.MultiBufferSource.BufferSource bufferSource, float partialTick,
+			net.minecraft.client.Minecraft mc) {
+		float t = (player.tickCount + partialTick) / 20.0f; // seconds
+		float strength = getStrength(player);
+		// One “scene” lasts ~7s
+		float sceneSeconds = 7.0f;
+		float scene = t / sceneSeconds;
+		int sceneId = (int) java.lang.Math.floor(scene);
+		float u = fract(scene);
+		// Emergence & collapse
+		float emerge = smoothstep(0.00f, 0.26f, u);
+		float collapse = smoothstep(0.74f, 1.00f, u);
+		float life = emerge * (1.0f - collapse);
+		float pull = collapse;
+		float baseScale = 0.92f;
+		float scale = baseScale * (0.10f + 0.90f * emerge) * (1.0f - 0.96f * pull);
+		float spin = t * (0.10f + 0.22f * strength) + sceneId * 0.37f;
+		Geo g0 = geoFor(sceneId);
+		Geo g1 = geoFor(sceneId + 1);
+		float seed = smoothstep(0.86f, 1.00f, u);
+		float eqPhase = smoothstep(0.01f, 0.08f, u) * (1.0f - smoothstep(0.92f, 1.00f, u));
+		float gaussPhase = smoothstep(0.08f, 0.20f, u) * (1.0f - smoothstep(0.94f, 1.00f, u));
+		float codePhase = smoothstep(0.20f, 0.32f, u) * (1.0f - smoothstep(0.92f, 1.00f, u));
+		poseStack.pushPose();
+		poseStack.translate(0.0, 0.0, -0.55);
+		poseStack.scale(1.02f, 1.02f, 1.02f);
+		org.joml.Matrix4f m = poseStack.last().pose();
+		// BACKGROUND screenshots (must be before geometry/fractals so it stays behind)
+		renderWorldBackground(bufferSource, m, mc, t, strength, life, pull, sceneId);
+		float cr = lerp(0.06f, 0.18f, strength);
+		float cg = lerp(0.72f, 0.28f, strength);
+		float cb = lerp(1.00f, 0.98f, strength);
+		com.mojang.blaze3d.vertex.VertexConsumer vc = bufferSource.getBuffer(OVERLAY_LINES);
+		float alpha = (0.18f + 0.55f * strength) * life;
+		float thickness = 0.0026f - 0.0012f * strength;
+		if (thickness < 0.0011f)
+			thickness = 0.0011f;
+		drawSacredGeometry(vc, m, g0, scale * 1.00f, spin * 0.85f, thickness * 1.00f, cr, cg, cb, alpha * (1.0f - 0.35f * eqPhase));
+		drawSacredGeometry(vc, m, g0, scale * 0.78f, -spin * 0.62f, thickness * 0.90f, cr, cg, cb, alpha * 0.70f * (1.0f - 0.55f * eqPhase));
+		drawSacredGeometry(vc, m, g0, scale * 0.56f, spin * 0.45f, thickness * 0.85f, cr, cg, cb, alpha * 0.55f * (1.0f - 0.65f * eqPhase));
+		renderEdgeFractals(bufferSource, m, mc, t, strength, life, pull);
+		// (optional) peripheral neurons if you want to call it:
+		// renderPeripheralNeurons(vc, m, t, strength, life, pull, cr, cg, cb);
+		if (seed > 0.001f) {
+			drawSacredGeometry(vc, m, g1, (0.04f + 0.20f * seed) * baseScale, spin * 0.90f, thickness * 0.85f, cr, cg, cb, seed * (0.22f + 0.22f * strength));
+		}
+		if (eqPhase > 0.001f) {
+			ensureEquationsLoaded(mc);
+			renderEquationCards(bufferSource, m, t, strength, eqPhase, pull);
+		}
+		renderGaussianWallText(poseStack, bufferSource, mc, strength, gaussPhase, t, sceneId, u, sceneSeconds);
+		renderCodeWallText(poseStack, bufferSource, mc, strength, codePhase, t, sceneId, u, sceneSeconds);
+		poseStack.popPose();
+	}
+
+	// ----------------------------
+	// Peripheral neurons (FIXED: no missing symbols)
+	// ----------------------------
+	private static void renderPeripheralNeurons(com.mojang.blaze3d.vertex.VertexConsumer vc, org.joml.Matrix4f m, float t, float strength, float life, float pull, float r, float g, float b) {
+		float baseA = (0.10f + 0.22f * strength) * life * (1.0f - 0.25f * pull);
+		if (baseA < 0.002f)
+			return;
+		float w = 0.00135f - 0.00055f * strength;
+		if (w < 0.00085f)
+			w = 0.00085f;
+		// Recompute scene info locally (so this method compiles standalone)
+		float sceneSeconds = 7.0f;
+		float scene = t / sceneSeconds;
+		int sceneId = (int) java.lang.Math.floor(scene);
+		float u = fract(scene);
+		float localTime = u * sceneSeconds; // not strictly needed, but kept for easy tuning later
+		int key = sceneId;
+		int count = 14 + (int) (12 * strength);
+		for (int i = 0; i < count; i++) {
+			float seed = i * 31.7f + key * 101.3f;
+			float side = hash11(seed * 1.11f);
+			float along = hash11(seed * 2.73f);
+			float depth = hash11(seed * 4.91f);
+			float edge = 0.78f + 0.14f * depth;
+			float sx, sy;
+			if (side < 0.25f) {
+				sx = -edge;
+				sy = lerp(-0.62f, 0.62f, along);
+			} else if (side < 0.50f) {
+				sx = edge;
+				sy = lerp(-0.62f, 0.62f, along);
+			} else if (side < 0.75f) {
+				sx = lerp(-0.80f, 0.80f, along);
+				sy = -edge;
+			} else {
+				sx = lerp(-0.80f, 0.80f, along);
+				sy = edge;
+			}
+			sx += 0.014f * (float) java.lang.Math.sin(t * 0.70f + seed);
+			sy += 0.014f * (float) java.lang.Math.cos(t * 0.64f + seed * 0.7f);
+			float pulse = 0.55f + 0.45f * (float) java.lang.Math.sin(t * (1.8f + 1.2f * strength) + seed);
+			float a = baseA * pulse;
+			float somaR = 0.010f + 0.010f * strength;
+			drawCircle(vc, m, sx, sy, somaR, t * 0.10f, r, g, b, a * 0.70f, w * 1.25f);
+			float vx = -sx;
+			float vy = -sy;
+			float len = (float) java.lang.Math.sqrt(vx * vx + vy * vy);
+			if (len < 1e-6f)
+				continue;
+			float nx = vx / len;
+			float ny = vy / len;
+			int branches = 2 + (int) (hash11(seed * 7.77f) * 2.0f);
+			for (int j = 0; j < branches; j++) {
+				float bend = (hash11(seed * 12.1f + j * 9.3f) - 0.5f) * (0.30f + 0.25f * strength);
+				float px = -ny * bend;
+				float py = nx * bend;
+				float d1 = 0.18f + 0.12f * strength;
+				float d2 = 0.22f + 0.18f * strength;
+				float x1 = sx + nx * d1 + px;
+				float y1 = sy + ny * d1 + py;
+				float x2 = x1 + nx * d2 + px * 0.70f;
+				float y2 = y1 + ny * d2 + py * 0.70f;
+				addLineQuad(vc, m, sx, sy, x1, y1, w, r, g, b, a);
+				addLineQuad(vc, m, x1, y1, x2, y2, w, r, g, b, a * 0.85f);
+				drawCircle(vc, m, x2, y2, somaR * 0.55f, -t * 0.08f, r, g, b, a * 0.50f, w * 1.10f);
+				float spk = hash11(t * 2.2f + seed * 3.3f + j * 11.0f);
+				if (spk > 0.975f) {
+					addLineQuad(vc, m, x1, y1, x2, y2, w * 2.2f, r, g, b, a * 0.35f);
+				}
+			}
+		}
+	}
+
+	// ----------------------------
+	// Equation cards
+	// ----------------------------
+	private static void renderEquationCards(net.minecraft.client.renderer.MultiBufferSource.BufferSource bufferSource, org.joml.Matrix4f m, float t, float strength, float eqPhase, float pull) {
+		if (EQ_LIST == null || EQ_LIST.isEmpty())
+			return;
+		int cards = 2 + (int) (3 * strength);
+		float baseA = (0.30f + 0.65f * strength) * eqPhase;
+		for (int i = 0; i < cards; i++) {
+			float off = i * 13.37f;
+			float rate = 0.14f + 0.04f * strength;
+			float tt = t * rate + off;
+			float age = fract(tt);
+			int idx = fastMod((int) java.lang.Math.floor(tt), EQ_LIST.size());
+			EqEntry e = EQ_LIST.get(idx);
+			float fadeIn = smoothstep(0.00f, 0.20f, age);
+			float fadeOut = 1.0f - smoothstep(0.74f, 1.00f, age);
+			float a = baseA * fadeIn * fadeOut;
+			float conv = pull;
+			float convMul = 1.0f - 0.92f * conv;
+			a *= (1.0f - 0.25f * conv);
+			if (a < 0.002f)
+				continue;
+			float hx = hash11((float) idx * 5.11f + off * 0.17f);
+			float hy = hash11((float) idx * 9.73f + off * 0.11f);
+			float x0 = lerp(-0.40f, 0.40f, hx);
+			float y0 = lerp(-0.20f, 0.20f, hy);
+			float orbitX = 0.030f * (float) java.lang.Math.sin(t * (0.22f + 0.05f * i) + off);
+			float orbitY = 0.020f * (float) java.lang.Math.cos(t * (0.20f + 0.06f * i) + off * 0.7f);
+			float x = (x0 + orbitX) * convMul;
+			float y = (y0 + orbitY) * convMul;
+			float aspect = e.aspect;
+			float targetW = 1.02f;
+			float w = targetW;
+			float h = w / aspect;
+			float maxH = 0.32f;
+			if (h > maxH) {
+				h = maxH;
+				w = h * aspect;
+			}
+			float maxW = 1.06f;
+			if (w > maxW) {
+				w = maxW;
+				h = w / aspect;
+			}
+			float rot = 0.045f * (float) java.lang.Math.sin(t * 0.18f + off) + 0.10f * (age - 0.5f);
+			float warp = (0.003f + 0.006f * strength) * (0.35f + 0.65f * (1.0f - conv));
+			float huePick = hash11(idx * 7.13f);
+			float rr = lerp(0.25f, 1.00f, smoothstep(0.00f, 0.60f, huePick));
+			float gg = lerp(0.35f, 1.00f, smoothstep(0.20f, 0.85f, 1.0f - huePick));
+			float bb = 1.00f;
+			com.mojang.blaze3d.vertex.VertexConsumer glow = bufferSource.getBuffer(e.glow);
+			drawEquationQuad(glow, m, x, y, w * 1.18f, h * 1.18f, rot, warp, rr, gg, bb, a * 0.10f);
+			drawEquationQuad(glow, m, x, y, w * 1.08f, h * 1.08f, rot, warp, rr, gg, bb, a * 0.22f);
+			com.mojang.blaze3d.vertex.VertexConsumer base = bufferSource.getBuffer(e.base);
+			drawEquationQuad(base, m, x, y, w, h, rot, warp, rr, gg, bb, a);
+		}
+	}
+
+	private static void drawEquationQuad(com.mojang.blaze3d.vertex.VertexConsumer vc, org.joml.Matrix4f m, float cx, float cy, float w, float h, float rot, float warp, float r, float g, float b, float a) {
+		float hw = w * 0.5f;
+		float hh = h * 0.5f;
+		float x0 = -hw, y0 = -hh;
+		float x1 = hw, y1 = -hh;
+		float x2 = hw, y2 = hh;
+		float x3 = -hw, y3 = hh;
+		float wx0 = (hash11(cx * 19.7f + cy * 23.1f) - 0.5f) * warp;
+		float wy0 = (hash11(cx * 11.3f + cy * 17.9f) - 0.5f) * warp;
+		float wx1 = (hash11(cx * 29.7f + cy * 13.1f) - 0.5f) * warp;
+		float wy1 = (hash11(cx * 21.3f + cy * 27.9f) - 0.5f) * warp;
+		float wx2 = (hash11(cx * 31.7f + cy * 33.1f) - 0.5f) * warp;
+		float wy2 = (hash11(cx * 41.3f + cy * 37.9f) - 0.5f) * warp;
+		float wx3 = (hash11(cx * 17.7f + cy * 39.1f) - 0.5f) * warp;
+		float wy3 = (hash11(cx * 43.3f + cy * 19.9f) - 0.5f) * warp;
+		float c = (float) java.lang.Math.cos(rot);
+		float s = (float) java.lang.Math.sin(rot);
+		float ax = cx + (x0 + wx0) * c - (y0 + wy0) * s;
+		float ay = cy + (x0 + wx0) * s + (y0 + wy0) * c;
+		float bx = cx + (x1 + wx1) * c - (y1 + wy1) * s;
+		float by = cy + (x1 + wx1) * s + (y1 + wy1) * c;
+		float cx2 = cx + (x2 + wx2) * c - (y2 + wy2) * s;
+		float cy2 = cy + (x2 + wx2) * s + (y2 + wy2) * c;
+		float dx = cx + (x3 + wx3) * c - (y3 + wy3) * s;
+		float dy = cy + (x3 + wx3) * s + (y3 + wy3) * c;
+		vc.vertex(m, ax, ay, 0).uv(0, 1).color(r, g, b, a).endVertex();
+		vc.vertex(m, bx, by, 0).uv(1, 1).color(r, g, b, a).endVertex();
+		vc.vertex(m, cx2, cy2, 0).uv(1, 0).color(r, g, b, a).endVertex();
+		vc.vertex(m, dx, dy, 0).uv(0, 0).color(r, g, b, a).endVertex();
+	}
+
+	// ----------------------------
+	// Gaussian “meaning wall” (FIXED: localTime exists)
+	// ----------------------------
+	private static void renderGaussianWallText(com.mojang.blaze3d.vertex.PoseStack poseStack, net.minecraft.client.renderer.MultiBufferSource bufferSource, net.minecraft.client.Minecraft mc, float strength, float gaussPhase, float t, int sceneId,
+			float u, float sceneSeconds) {
+		float a = gaussPhase * (0.34f + 0.55f * strength);
+		if (a < 0.01f)
+			return;
+		int key = sceneId;
+		refreshGaussianSnippet(mc, key);
+		int glitchKey = (int) java.lang.Math.floor(t * (6.0f + 4.0f * strength));
+		poseStack.pushPose();
+		poseStack.translate(0.0, 0.0, -0.56);
+		float driftX = 0.010f * (float) java.lang.Math.sin(t * 0.35f + sceneId);
+		float driftY = 0.012f * (float) java.lang.Math.cos(t * 0.33f + sceneId * 0.3f);
+		poseStack.translate(driftX, driftY, 0);
+		float s = 0.00405f;
+		poseStack.scale(s, -s, s);
+		float anchorX = (GAUSS_AX + 0.06f) + 0.02f * (float) java.lang.Math.sin(t * 0.22f);
+		float anchorY = (GAUSS_AY + 0.18f) + 0.02f * (float) java.lang.Math.cos(t * 0.20f);
+		float x = anchorX / s;
+		float y = anchorY / s;
+		int alpha = (int) (clamp(a, 0, 1) * 255.0f);
+		int base = 0xF0FBFF;
+		float localTime = u * sceneSeconds; // <-- THIS WAS MISSING IN YOUR VERSION
+		float typeStart = 0.65f;
+		float typeTime = clamp(localTime - typeStart, 0.0f, 3.2f);
+		int charsPerSec = (int) (220 + 180 * strength);
+		int budget = (int) (typeTime * charsPerSec);
+		int maxLines = 12;
+		int lineY = 0;
+		for (int i = 0; i < GAUSS_SNIP.length && i < maxLines; i++) {
+			String line = GAUSS_SNIP[i];
+			if (line == null)
+				line = "";
+			line = glitchOneChar(line, glitchKey, i + sceneId * 7);
+			line = glitchSprinkle(line, glitchKey, i + sceneId * 11);
+			if (budget <= 0)
+				break;
+			int take = java.lang.Math.min(line.length(), budget);
+			String shown = line.substring(0, take);
+			budget -= take;
+			float lf = 1.0f - (i / (float) java.lang.Math.max(1, maxLines)) * 0.25f;
+			int alpha2 = (int) (alpha * lf);
+			int color = (alpha2 << 24) | base;
+			mc.font.drawInBatch(shown, x, y + lineY, color, false, poseStack.last().pose(), bufferSource, net.minecraft.client.gui.Font.DisplayMode.NORMAL, 0, 0x00F000F0);
+			lineY += 9;
+		}
+		poseStack.popPose();
+	}
+
+	// ----------------------------
+	// Game code snippet system (uv_codes)
+	// ----------------------------
+	private static java.util.List<net.minecraft.resources.ResourceLocation> CODE_FILES = null;
+	private static Object CODE_RM = null;
+	private static int CODE_KEY = 0x7fffffff;
+	private static float CODE_AX = 0.18f;
+	private static float CODE_AY = -0.02f;
+	private static String[] CODE_SNIP = new String[]{"// uv_codes fallback", "if (player == null) return;", "// TODO: spooky behavior", "return;"};
+
+	private static void ensureCodeLoaded(net.minecraft.client.Minecraft mc) {
+		Object rm = mc.getResourceManager();
+		if (CODE_FILES != null && CODE_RM == rm)
+			return;
+		CODE_RM = rm;
+		CODE_FILES = new java.util.ArrayList<>();
+		try {
+			var map = mc.getResourceManager().listResources("uv_codes", (loc) -> {
+				String p = loc.getPath().toLowerCase(java.util.Locale.ROOT);
+				return p.endsWith(".txt") || p.endsWith(".java") || p.endsWith(".gml") || p.endsWith(".cs") || p.endsWith(".py") || p.endsWith(".json") || p.endsWith(".glsl") || p.endsWith(".cfg") || p.endsWith(".ini") || p.endsWith(".log");
+			});
+			for (var loc : map.keySet()) {
+				if (MODID.equals(loc.getNamespace()))
+					CODE_FILES.add(loc);
+			}
+			java.util.Collections.sort(CODE_FILES, (a, b) -> a.getPath().compareTo(b.getPath()));
+		} catch (Throwable t) {
+			// ignore -> fallback
+		}
+		CODE_KEY = 0x7fffffff;
+	}
+
+	private static void refreshCodeSnippet(net.minecraft.client.Minecraft mc, int key) {
+		ensureCodeLoaded(mc);
+		if (key == CODE_KEY)
+			return;
+		CODE_KEY = key;
+		float hx = hash11(key * 4.13f);
+		float hy = hash11(key * 8.91f);
+		// anchor is in overlay-space BEFORE the poseStack scale flip, same idea as GAUSS_AX/AY
+		CODE_AX = lerp(-0.22f, 0.36f, hx);
+		CODE_AY = lerp(-0.18f, 0.26f, hy);
+		if (CODE_FILES == null || CODE_FILES.isEmpty())
+			return;
+		int fileIndex = (int) (hash11(key * 2.71f) * CODE_FILES.size());
+		if (fileIndex < 0)
+			fileIndex = 0;
+		if (fileIndex >= CODE_FILES.size())
+			fileIndex = CODE_FILES.size() - 1;
+		net.minecraft.resources.ResourceLocation file = CODE_FILES.get(fileIndex);
+		try {
+			var opt = mc.getResourceManager().getResource(file);
+			if (opt == null || !opt.isPresent())
+				return;
+			String content;
+			try (var in = opt.get().open()) {
+				content = new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+			}
+			String[] lines = content.split("\\R");
+			if (lines.length < 6)
+				return;
+			int want = 16; // lines displayed
+			int maxStart = Math.max(0, lines.length - want - 1);
+			int start = (maxStart <= 0) ? 0 : (int) (hash11(key * 19.7f) * maxStart);
+			java.util.ArrayList<String> out = new java.util.ArrayList<>();
+			for (int i = 0; i < want && (start + i) < lines.length; i++) {
+				String s = tidyCodeLine(lines[start + i]);
+				if (s.length() == 0)
+					continue;
+				out.add(s);
+			}
+			if (!out.isEmpty())
+				CODE_SNIP = out.toArray(new String[0]);
+		} catch (Throwable t) {
+			// keep old snippet
+		}
+	}
+
+	// ----------------------------
+	// Code “meaning wall” (uv_codes)
+	// ----------------------------
+	private static void renderCodeWallText(com.mojang.blaze3d.vertex.PoseStack poseStack, net.minecraft.client.renderer.MultiBufferSource bufferSource, net.minecraft.client.Minecraft mc, float strength, float codePhase, float t, int sceneId, float u,
+			float sceneSeconds) {
+		float a = codePhase * (0.34f + 0.55f * strength);
+		if (a < 0.01f)
+			return;
+		int key = sceneId * 131 + 17; // different key than gaussian so it doesn't mirror
+		refreshCodeSnippet(mc, key);
+		int glitchKey = (int) java.lang.Math.floor(t * (7.5f + 5.0f * strength));
+		poseStack.pushPose();
+		poseStack.translate(0.0, 0.0, -0.56);
+		// Slight different drift so it feels like a separate layer
+		float driftX = 0.012f * (float) java.lang.Math.sin(t * 0.31f + sceneId * 0.7f);
+		float driftY = 0.010f * (float) java.lang.Math.cos(t * 0.29f + sceneId * 0.9f);
+		poseStack.translate(driftX, driftY, 0);
+		float s = 0.00405f;
+		poseStack.scale(s, -s, s);
+		float marginX = 0.05f;
+		float marginY = 0.06f;
+		float anchorX = -1.0f + marginX + driftX;
+		float anchorY = -0.8f + marginY + driftY;
+		float x = anchorX / s;
+		float y = anchorY / s;
+		int alpha = (int) (clamp(a, 0, 1) * 255.0f);
+		// “code monitor” tint (soft green/cyan)
+		int baseRGB = 0xD6FFF2;
+		float localTime = u * sceneSeconds;
+		float typeStart = 1.70f; // start later than gaussian
+		float typeTime = clamp(localTime - typeStart, 0.0f, 3.6f);
+		int charsPerSec = (int) (240 + 220 * strength);
+		int budget = (int) (typeTime * charsPerSec);
+		int maxLines = 14;
+		int lineY = 0;
+		for (int i = 0; i < CODE_SNIP.length && i < maxLines; i++) {
+			String line = CODE_SNIP[i];
+			if (line == null)
+				line = "";
+			// Slightly “less math”, more “code” glitches
+			line = glitchOneChar(line, glitchKey, i + key);
+			line = glitchSprinkle(line, glitchKey, i + key * 3);
+			if (budget <= 0)
+				break;
+			int take = java.lang.Math.min(line.length(), budget);
+			String shown = line.substring(0, take);
+			budget -= take;
+			float lf = 1.0f - (i / (float) java.lang.Math.max(1, maxLines)) * 0.30f;
+			int alpha2 = (int) (alpha * lf);
+			int color = (alpha2 << 24) | baseRGB;
+			mc.font.drawInBatch(shown, x, y + lineY, color, false, poseStack.last().pose(), bufferSource, net.minecraft.client.gui.Font.DisplayMode.NORMAL, 0, 0x00F000F0);
+			lineY += 9;
+		}
+		poseStack.popPose();
+	}
+
+	private static String tidyCodeLine(String s) {
+		s = s.replace('\t', ' ').trim();
+		while (s.contains("  "))
+			s = s.replace("  ", " ");
+		int max = 110;
+		if (s.length() > max)
+			s = s.substring(0, max - 3) + "...";
+		return s;
+	}
+
+	private static String glitchSprinkle(String s, int glitchKey, int salt) {
+		if (s == null)
+			return "";
+		if (s.length() < 8)
+			return s;
+		float p = hash11(glitchKey * 1.0f + salt * 17.0f);
+		if (p < 0.94f)
+			return s;
+		int idx = 1 + (int) (hash11(glitchKey * 2.0f + salt * 23.0f) * (s.length() - 2));
+		char[] c = s.toCharArray();
+		float q = hash11(glitchKey * 3.0f + salt * 3.3f);
+		char sym;
+		if (q < 0.25f)
+			sym = '∑';
+		else if (q < 0.50f)
+			sym = 'λ';
+		else if (q < 0.75f)
+			sym = 'Ω';
+		else
+			sym = '⟂';
+		c[idx] = sym;
+		return new String(c);
+	}
+
+	private static String glitchOneChar(String s, int glitchKey, int salt) {
+		if (s == null)
+			return "";
+		if (s.length() < 6)
+			return s;
+		float g = hash11(glitchKey * 1.0f + salt * 9.1f);
+		if (g < 0.92f)
+			return s;
+		int idx = 2 + (int) (hash11(glitchKey * 2.0f + salt * 7.3f) * (s.length() - 4));
+		char[] c = s.toCharArray();
+		c[idx] = '□';
+		return new String(c);
+	}
+
+	// ----------------------------
+	// Sacred geometry (your existing stuff)
+	// ----------------------------
+	private static void drawSacredGeometry(com.mojang.blaze3d.vertex.VertexConsumer vc, org.joml.Matrix4f m, Geo g, float scale, float rot, float thickness, float r, float gg, float b, float a) {
+		float a0 = a;
+		float a1 = a * 0.30f;
+		float a2 = a * 0.12f;
+		float w0 = thickness;
+		float w1 = thickness * 2.4f;
+		float w2 = thickness * 4.6f;
+		switch (g.type) {
+			default :
+			case 0 :
+				drawRose(vc, m, scale, rot, g.petals, 0.62f, 0.18f, r, gg, b, a2, w2);
+				drawRose(vc, m, scale, rot, g.petals, 0.62f, 0.18f, r, gg, b, a1, w1);
+				drawRose(vc, m, scale, rot, g.petals, 0.62f, 0.18f, r, gg, b, a0, w0);
+				drawCircle(vc, m, 0, 0, scale * 0.62f, rot * 0.20f, r, gg, b, a0 * 0.55f, w0 * 0.85f);
+				break;
+			case 1 :
+				drawFlowerOfLife(vc, m, scale, rot, r, gg, b, a2, w2);
+				drawFlowerOfLife(vc, m, scale, rot, r, gg, b, a1, w1);
+				drawFlowerOfLife(vc, m, scale, rot, r, gg, b, a0, w0);
+				break;
+			case 2 :
+				drawMetatron(vc, m, scale, rot, r, gg, b, a2, w2);
+				drawMetatron(vc, m, scale, rot, r, gg, b, a1, w1);
+				drawMetatron(vc, m, scale, rot, r, gg, b, a0, w0);
+				break;
+			case 3 :
+				drawPolygon(vc, m, 0, 0, scale * 0.70f, g.n, rot, r, gg, b, a2, w2);
+				drawStar(vc, m, 0, 0, scale * 0.70f, g.n, g.step, rot, r, gg, b, a2, w2);
+				drawPolygon(vc, m, 0, 0, scale * 0.70f, g.n, rot, r, gg, b, a1, w1);
+				drawStar(vc, m, 0, 0, scale * 0.70f, g.n, g.step, rot, r, gg, b, a1, w1);
+				drawPolygon(vc, m, 0, 0, scale * 0.70f, g.n, rot, r, gg, b, a0, w0);
+				drawStar(vc, m, 0, 0, scale * 0.70f, g.n, g.step, rot, r, gg, b, a0, w0);
+				drawCircle(vc, m, 0, 0, scale * 0.25f, -rot * 0.30f, r, gg, b, a0 * 0.55f, w0 * 0.85f);
+				break;
+			case 4 :
+				drawCircle(vc, m, 0, 0, scale * 0.72f, rot * 0.10f, r, gg, b, a2, w2);
+				drawCircle(vc, m, 0, 0, scale * 0.52f, rot * 0.15f, r, gg, b, a1, w1);
+				drawCircle(vc, m, 0, 0, scale * 0.33f, rot * 0.22f, r, gg, b, a0, w0);
+				drawSpokes(vc, m, scale * 0.72f, g.n + 2, rot, r, gg, b, a0 * 0.70f, w0 * 0.85f);
+				drawPolygon(vc, m, 0, 0, scale * 0.48f, g.n, rot, r, gg, b, a0 * 0.55f, w0 * 0.80f);
+				break;
+		}
+	}
+
+	private static void drawFlowerOfLife(com.mojang.blaze3d.vertex.VertexConsumer vc, org.joml.Matrix4f m, float scale, float rot, float r, float g, float b, float a, float w) {
+		float rad = scale * 0.28f;
+		drawCircle(vc, m, 0, 0, rad, rot * 0.20f, r, g, b, a, w);
+		for (int i = 0; i < 6; i++) {
+			float ang = (float) (i / 6.0 * (Math.PI * 2.0)) + rot * 0.12f;
+			float cx = (float) Math.cos(ang) * rad;
+			float cy = (float) Math.sin(ang) * rad;
+			drawCircle(vc, m, cx, cy, rad, -rot * 0.14f, r, g, b, a, w);
+		}
+	}
+
+	private static void drawMetatron(com.mojang.blaze3d.vertex.VertexConsumer vc, org.joml.Matrix4f m, float scale, float rot, float r, float g, float b, float a, float w) {
+		float rad = scale * 0.22f;
+		float ring = scale * 0.44f;
+		float[][] pts = new float[7][2];
+		pts[0][0] = 0;
+		pts[0][1] = 0;
+		for (int i = 0; i < 6; i++) {
+			float ang = (float) (i / 6.0 * (Math.PI * 2.0)) + rot * 0.10f;
+			pts[i + 1][0] = (float) Math.cos(ang) * ring;
+			pts[i + 1][1] = (float) Math.sin(ang) * ring;
+		}
+		for (int i = 0; i < 7; i++) {
+			drawCircle(vc, m, pts[i][0], pts[i][1], rad, rot * 0.15f, r, g, b, a, w);
+		}
+		for (int i = 1; i <= 6; i++) {
+			addLineQuad(vc, m, pts[0][0], pts[0][1], pts[i][0], pts[i][1], w, r, g, b, a * 0.60f);
+			for (int j = i + 1; j <= 6; j++) {
+				addLineQuad(vc, m, pts[i][0], pts[i][1], pts[j][0], pts[j][1], w, r, g, b, a * 0.28f);
+			}
+		}
+		drawCircle(vc, m, 0, 0, ring, -rot * 0.10f, r, g, b, a * 0.70f, w);
+	}
+
+	private static void drawRose(com.mojang.blaze3d.vertex.VertexConsumer vc, org.joml.Matrix4f m, float scale, float rot, int petals, float base, float amp, float r, float g, float b, float a, float w) {
+		int steps = 200;
+		float lastX = 0, lastY = 0;
+		boolean hasLast = false;
+		for (int i = 0; i <= steps; i++) {
+			float th = (float) (i / (float) steps * (Math.PI * 2.0));
+			float rr = (base + amp * (float) Math.cos(th * petals)) * scale;
+			float x = rr * (float) Math.cos(th);
+			float y = rr * (float) Math.sin(th);
+			float sx = (float) (x * Math.cos(rot) - y * Math.sin(rot));
+			float sy = (float) (x * Math.sin(rot) + y * Math.cos(rot));
+			if (hasLast)
+				addLineQuad(vc, m, lastX, lastY, sx, sy, w, r, g, b, a);
+			lastX = sx;
+			lastY = sy;
+			hasLast = true;
+		}
+	}
+
+	private static void drawCircle(com.mojang.blaze3d.vertex.VertexConsumer vc, org.joml.Matrix4f m, float cx, float cy, float rad, float rot, float r, float g, float b, float a, float w) {
+		int seg = 120;
+		float lastX = 0, lastY = 0;
+		boolean hasLast = false;
+		for (int i = 0; i <= seg; i++) {
+			float th = (float) (i / (float) seg * (Math.PI * 2.0)) + rot;
+			float x = cx + rad * (float) Math.cos(th);
+			float y = cy + rad * (float) Math.sin(th);
+			if (hasLast)
+				addLineQuad(vc, m, lastX, lastY, x, y, w, r, g, b, a);
+			lastX = x;
+			lastY = y;
+			hasLast = true;
+		}
+	}
+
+	private static void drawPolygon(com.mojang.blaze3d.vertex.VertexConsumer vc, org.joml.Matrix4f m, float cx, float cy, float rad, int n, float rot, float r, float g, float b, float a, float w) {
+		float[] xs = new float[n];
+		float[] ys = new float[n];
+		for (int i = 0; i < n; i++) {
+			float th = (float) (i / (float) n * (Math.PI * 2.0)) + rot;
+			xs[i] = cx + rad * (float) Math.cos(th);
+			ys[i] = cy + rad * (float) Math.sin(th);
+		}
+		for (int i = 0; i < n; i++) {
+			int j = (i + 1) % n;
+			addLineQuad(vc, m, xs[i], ys[i], xs[j], ys[j], w, r, g, b, a);
+		}
+	}
+
+	private static void drawStar(com.mojang.blaze3d.vertex.VertexConsumer vc, org.joml.Matrix4f m, float cx, float cy, float rad, int n, int step, float rot, float r, float g, float b, float a, float w) {
+		float[] xs = new float[n];
+		float[] ys = new float[n];
+		for (int i = 0; i < n; i++) {
+			float th = (float) (i / (float) n * (Math.PI * 2.0)) + rot;
+			xs[i] = cx + rad * (float) Math.cos(th);
+			ys[i] = cy + rad * (float) Math.sin(th);
+		}
+		int cur = 0;
+		for (int k = 0; k < n; k++) {
+			int nxt = (cur + step) % n;
+			addLineQuad(vc, m, xs[cur], ys[cur], xs[nxt], ys[nxt], w, r, g, b, a);
+			cur = nxt;
+		}
+	}
+
+	private static void drawSpokes(com.mojang.blaze3d.vertex.VertexConsumer vc, org.joml.Matrix4f m, float rad, int n, float rot, float r, float g, float b, float a, float w) {
+		for (int i = 0; i < n; i++) {
+			float th = (float) (i / (float) n * (Math.PI * 2.0)) + rot;
+			float x = rad * (float) Math.cos(th);
+			float y = rad * (float) Math.sin(th);
+			addLineQuad(vc, m, 0, 0, x, y, w, r, g, b, a);
+		}
+	}
+
+	private static void addLineQuad(com.mojang.blaze3d.vertex.VertexConsumer vc, org.joml.Matrix4f m, float x1, float y1, float x2, float y2, float w, float r, float g, float b, float a) {
+		float dx = x2 - x1;
+		float dy = y2 - y1;
+		float len = (float) Math.sqrt(dx * dx + dy * dy);
+		if (len < 1e-6f)
+			return;
+		float nx = -dy / len;
+		float ny = dx / len;
+		float ox = nx * w;
+		float oy = ny * w;
+		vc.vertex(m, x1 - ox, y1 - oy, 0).uv(0, 0).color(r, g, b, a).endVertex();
+		vc.vertex(m, x1 + ox, y1 + oy, 0).uv(0, 1).color(r, g, b, a).endVertex();
+		vc.vertex(m, x2 + ox, y2 + oy, 0).uv(1, 1).color(r, g, b, a).endVertex();
+		vc.vertex(m, x2 - ox, y2 - oy, 0).uv(1, 0).color(r, g, b, a).endVertex();
+	}
+
+	// Geo selection
+	private static Geo geoFor(float id) {
+		float h = hash11(id * 3.17f);
+		int type = (int) Math.floor(h * 5.0f);
+		int petals = 5 + (int) Math.floor(hash11(id * 7.11f) * 8.0f);
+		int n = 5 + (int) Math.floor(hash11(id * 9.41f) * 7.0f);
+		int step = 2 + (int) Math.floor(hash11(id * 13.77f) * 3.0f);
+		if (step >= n)
+			step = 2;
+		if (n % 2 == 0 && step == n / 2)
+			step = 2;
+		return new Geo(type, petals, n, step);
+	}
+
+	private static class Geo {
+		public final int type, petals, n, step;
+
+		public Geo(int type, int petals, int n, int step) {
+			this.type = type;
+			this.petals = petals;
+			this.n = n;
+			this.step = step;
+		}
+	}
+
+	// ----------------------------
+	// Edge fractals
+	// ----------------------------
+	private static void ensureEdgeFractal(net.minecraft.client.Minecraft mc) {
+		if (EDGE_TEX != null)
+			return;
+		EDGE_RL = new net.minecraft.resources.ResourceLocation(MODID, "io_edge_fractal");
+		NativeImage img = new NativeImage(EDGE_W, EDGE_H, true);
+		EDGE_TEX = new net.minecraft.client.renderer.texture.DynamicTexture(img);
+		mc.getTextureManager().register(EDGE_RL, EDGE_TEX);
+		EDGE_BASE = net.minecraft.client.renderer.RenderType.create("io_edge_base", com.mojang.blaze3d.vertex.DefaultVertexFormat.POSITION_TEX_COLOR, com.mojang.blaze3d.vertex.VertexFormat.Mode.QUADS, 256, false, true,
+				net.minecraft.client.renderer.RenderType.CompositeState.builder().setShaderState(new net.minecraft.client.renderer.RenderStateShard.ShaderStateShard(net.minecraft.client.renderer.GameRenderer::getPositionTexColorShader))
+						.setTextureState(new net.minecraft.client.renderer.RenderStateShard.TextureStateShard(EDGE_RL, false, false)).setTransparencyState(ALPHA_BLEND)
+						.setCullState(new net.minecraft.client.renderer.RenderStateShard.CullStateShard(false)).setDepthTestState(new net.minecraft.client.renderer.RenderStateShard.DepthTestStateShard("always", org.lwjgl.opengl.GL11.GL_ALWAYS))
+						.setWriteMaskState(new net.minecraft.client.renderer.RenderStateShard.WriteMaskStateShard(true, false)).createCompositeState(false));
+		EDGE_GLOW = net.minecraft.client.renderer.RenderType.create("io_edge_glow", com.mojang.blaze3d.vertex.DefaultVertexFormat.POSITION_TEX_COLOR, com.mojang.blaze3d.vertex.VertexFormat.Mode.QUADS, 256, false, true,
+				net.minecraft.client.renderer.RenderType.CompositeState.builder().setShaderState(new net.minecraft.client.renderer.RenderStateShard.ShaderStateShard(net.minecraft.client.renderer.GameRenderer::getPositionTexColorShader))
+						.setTextureState(new net.minecraft.client.renderer.RenderStateShard.TextureStateShard(EDGE_RL, false, false)).setTransparencyState(ADDITIVE)
+						.setCullState(new net.minecraft.client.renderer.RenderStateShard.CullStateShard(false)).setDepthTestState(new net.minecraft.client.renderer.RenderStateShard.DepthTestStateShard("always", org.lwjgl.opengl.GL11.GL_ALWAYS))
+						.setWriteMaskState(new net.minecraft.client.renderer.RenderStateShard.WriteMaskStateShard(true, false)).createCompositeState(false));
+	}
+
+	private static void updateEdgeFractal(net.minecraft.client.Minecraft mc, int key, float t, float strength) {
+		ensureEdgeFractal(mc);
+		if (key == EDGE_KEY)
+			return;
+		EDGE_KEY = key;
+		NativeImage img = EDGE_TEX.getPixels();
+		if (img == null)
+			return;
+		float cX = -0.72f + 0.18f * (float) java.lang.Math.sin(t * 0.12f);
+		float cY = 0.20f + 0.18f * (float) java.lang.Math.cos(t * 0.10f);
+		int maxIter = 26 + (int) (34 * strength);
+		float zoom = 1.55f - 0.55f * strength;
+		float invW = 1.0f / (float) EDGE_W;
+		float invH = 1.0f / (float) EDGE_H;
+		for (int y = 0; y < EDGE_H; y++) {
+			float ny = (y + 0.5f) * invH * 2.0f - 1.0f;
+			for (int x = 0; x < EDGE_W; x++) {
+				float nx = (x + 0.5f) * invW * 2.0f - 1.0f;
+				float zx = nx * zoom;
+				float zy = ny * zoom;
+				int it = 0;
+				for (; it < maxIter; it++) {
+					float xx = zx * zx - zy * zy + cX;
+					float yy = 2.0f * zx * zy + cY;
+					zx = xx;
+					zy = yy;
+					if (zx * zx + zy * zy > 4.0f)
+						break;
+				}
+				float v = it / (float) maxIter;
+				v = smoothstep(0.0f, 1.0f, v);
+				// Elliptical vignette: center transparent, edges visible.
+				// dist ~= 1.0 around an ellipse; <1 inside (center), >1 near corners.
+				float ex2 = nx / 0.58f; // ellipse radius X (smaller = bigger center hole)
+				float ey2 = ny / 0.36f; // ellipse radius Y
+				float dist = (float) java.lang.Math.sqrt(ex2 * ex2 + ey2 * ey2);
+				// inner/outer control the softness of the fade
+				float mask = smoothstep(0.62f, 1.05f, dist); // 0 in center -> 1 near edges
+				float kcol = 1.0f - v; // brighter when it escapes faster
+				kcol = kcol * kcol; // push it toward darker mids
+				// cool/cyan palette (kills the yellow wash)
+				float rr = 0.10f + 0.22f * kcol;
+				float gg = 0.18f + 0.55f * kcol;
+				float bb = 0.45f + 0.65f * kcol;
+				float aa = mask * (0.06f + 0.55f * kcol);
+				aa *= (0.65f + 0.35f * strength);
+				aa *= (0.65f + 0.35f * strength);
+				int A = (int) (clamp(aa, 0, 1) * 255.0f);
+				int R = (int) (clamp(rr, 0, 1) * 255.0f);
+				int G = (int) (clamp(gg, 0, 1) * 255.0f);
+				int B = (int) (clamp(bb, 0, 1) * 255.0f);
+				int rgba = (A << 24) | (B << 16) | (G << 8) | (R);
+				img.setPixelRGBA(x, y, rgba);
+			}
+		}
+		EDGE_TEX.upload();
+	}
+
+	private static void drawTexturedQuad(com.mojang.blaze3d.vertex.VertexConsumer vc, org.joml.Matrix4f m, float x0, float y0, float x1, float y1, float u0, float v0, float u1, float v1, float r, float g, float b, float a) {
+		vc.vertex(m, x0, y1, 0).uv(u0, v1).color(r, g, b, a).endVertex();
+		vc.vertex(m, x1, y1, 0).uv(u1, v1).color(r, g, b, a).endVertex();
+		vc.vertex(m, x1, y0, 0).uv(u1, v0).color(r, g, b, a).endVertex();
+		vc.vertex(m, x0, y0, 0).uv(u0, v0).color(r, g, b, a).endVertex();
+	}
+
+	private static void renderEdgeFractals(net.minecraft.client.renderer.MultiBufferSource.BufferSource bufferSource, org.joml.Matrix4f m, net.minecraft.client.Minecraft mc, float t, float strength, float life, float pull) {
+		int k = (int) java.lang.Math.floor(t * 5.0f);
+		updateEdgeFractal(mc, k, t, strength);
+		float a = (0.22f + 0.55f * strength) * life * (1.0f - 0.40f * pull);
+		if (a < 0.01f)
+			return;
+		float stripW = 0.22f + 0.06f * strength;
+		float stripH = 0.18f + 0.05f * strength;
+		float scrollU = fract(t * 0.010f);
+		float scrollV = fract(t * 0.012f);
+		com.mojang.blaze3d.vertex.VertexConsumer base = bufferSource.getBuffer(EDGE_BASE);
+		com.mojang.blaze3d.vertex.VertexConsumer glow = bufferSource.getBuffer(EDGE_GLOW);
+		// Fullscreen quad (the vignette mask is baked into the texture alpha)
+		// Fullscreen quad (keep vignette centered: DO NOT scroll UVs when alpha contains vignette)
+		drawTexturedQuad(base, m, -1.0f, -1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1, 1, 1, a);
+		// Soft additive glow pass (same UVs, otherwise you move the hole again)
+		float ga = a * (0.18f + 0.16f * strength);
+		drawTexturedQuad(glow, m, -1.0f, -1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1, 1, 1, ga);
+	}
+
+	// ----------------------------
+	// Strength + helpers
+	// ----------------------------
+	private static float getStrength(net.minecraft.world.entity.player.Player player) {
+		var inst = player.getEffect(net.mcreator.jjkstrongest.init.JjkStrongestModMobEffects.INFORMATION_OVERLOAD.get());
+		if (inst == null)
+			return 0.0f;
+		int amp = inst.getAmplifier();
+		float base = 0.85f + amp * 0.15f;
+		if (base > 1.0f)
+			base = 1.0f;
+		float pulse = 0.88f + 0.12f * (float) Math.sin(player.tickCount * 0.45f);
+		return clamp(base * pulse, 0.0f, 1.0f);
+	}
+
+	private static int fastMod(int x, int m) {
+		int r = x % m;
+		return r < 0 ? r + m : r;
+	}
+
+	private static float clamp(float v, float a, float b) {
+		return v < a ? a : (v > b ? b : v);
+	}
+
+	private static float lerp(float a, float b, float t) {
+		return a + (b - a) * t;
+	}
+
+	private static float fract(float x) {
+		return x - (float) Math.floor(x);
+	}
+
+	private static float smoothstep(float a, float b, float x) {
+		float t = clamp((x - a) / (b - a), 0.0f, 1.0f);
+		return t * t * (3.0f - 2.0f * t);
+	}
+
+	private static float hash11(float p) {
+		p = fract(p * 0.1031f);
+		p = p * (p + 33.33f);
+		p = p * (p + p);
+		return fract(p);
+	}
+}

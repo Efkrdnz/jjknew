@@ -1,0 +1,17 @@
+{
+  "required": true,
+  "package": "net.efkrdnz.jjkstrongest.mixins",
+  "compatibilityLevel": "JAVA_21",
+  "minVersion": "0.8",
+  "mixins": [
+    "FallingBlockEntityMixin"
+  ],
+  "client": [
+    "FirstPersonRendererMixin",
+    "DisableSwingMixin",
+    "DisableHotbarKeymappingMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

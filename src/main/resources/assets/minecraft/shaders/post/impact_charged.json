@@ -1,0 +1,18 @@
+{
+  "targets": ["swap"],
+  "passes": [
+    {
+      "name": "impact_charged",
+      "intarget": "minecraft:main",
+      "outtarget": "swap",
+      "program": "impact_charged",
+      "uniforms": [
+        { "name": "DesaturateAmount", "values": [1.0] },
+        { "name": "Contrast", "values": [8.0] },
+        { "name": "RedTint", "values": [2.2] },
+        { "name": "GammaBoost", "values": [1.4] }
+      ]
+    },
+    { "name": "blit", "intarget": "swap", "outtarget": "minecraft:main" }
+  ]
+}

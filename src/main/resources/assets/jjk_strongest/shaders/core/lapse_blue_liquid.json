@@ -1,0 +1,12 @@
+{
+  "vertex": "lapse_blue_liquid",
+  "fragment": "lapse_blue_liquid",
+  "samplers": [],
+  "uniforms": [
+    { "name": "ModelViewMat", "type": "matrix4x4", "count": 16, "values": [1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1] },
+    { "name": "ProjMat",      "type": "matrix4x4", "count": 16, "values": [1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1] },
+
+    { "name": "Time",       "type": "float", "count": 1, "values": [0.0] },
+    { "name": "Intensity",  "type": "float", "count": 1, "values": [1.0] }
+  ]
+}

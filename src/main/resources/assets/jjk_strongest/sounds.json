@@ -1,0 +1,65 @@
+{
+  "hollowpurple": {
+    "subtitle": "subtitles.hollowpurple",
+    "sounds": [
+      {
+        "name": "jjk_strongest:hollow-purple",
+        "stream": false
+      }
+    ]
+  },
+  "kai": {
+    "subtitle": "subtitles.kai",
+    "sounds": [
+      {
+        "name": "jjk_strongest:slash",
+        "stream": false
+      }
+    ]
+  },
+  "blackflash": {
+    "subtitle": "subtitles.blackflash",
+    "sounds": [
+      {
+        "name": "jjk_strongest:kokusen",
+        "stream": false
+      }
+    ]
+  },
+  "sukuna_domain_ost": {
+    "subtitle": "subtitles.sukuna_domain_ost",
+    "sounds": [
+      {
+        "name": "jjk_strongest:sukuna_domain_ost",
+        "stream": false
+      }
+    ]
+  },
+  "sukuna_domain_act": {
+    "subtitle": "subtitles.sukuna_domain_act",
+    "sounds": [
+      {
+        "name": "jjk_strongest:sukuna_shrine_activation",
+        "stream": false
+      }
+    ]
+  },
+  "imaginary_purple_shoot": {
+    "subtitle": "subtitles.imaginary_purple_shoot",
+    "sounds": [
+      {
+        "name": "jjk_strongest:murasaki_np",
+        "stream": false
+      }
+    ]
+  },
+  "wheelspin": {
+    "subtitle": "subtitles.wheelspin",
+    "sounds": [
+      {
+        "name": "jjk_strongest:wheel_spin",
+        "stream": false
+      }
+    ]
+  }
+}

@@ -1,0 +1,110 @@
+{
+  "targets": [
+    "swap"
+  ],
+  "passes": [
+    {
+      "name": "cleave_distortion",
+      "intarget": "minecraft:main",
+      "outtarget": "swap",
+      "program": "cleave_distortion",
+      "uniforms": [
+        {
+          "name": "DistortionIntensity",
+          "values": [
+            1.0
+          ]
+        },
+        {
+          "name": "SlashCount",
+          "values": [
+            0.0
+          ]
+        },
+        {
+          "name": "Progress",
+          "values": [
+            0.0
+          ]
+        },
+        {
+          "name": "Slash1",
+          "values": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "name": "Slash2",
+          "values": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "name": "Slash3",
+          "values": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "name": "Slash4",
+          "values": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "name": "Slash5",
+          "values": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "name": "Slash6",
+          "values": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "name": "Slash7",
+          "values": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "name": "Slash8",
+          "values": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        }
+      ]
+    },
+    {
+      "name": "blit",
+      "intarget": "swap",
+      "outtarget": "minecraft:main"
+    }
+  ]
+}

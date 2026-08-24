@@ -1,0 +1,25 @@
+{
+  "blend": {
+    "func": "add",
+    "srcrgb": "srcalpha",
+    "dstrgb": "one"
+  },
+  "vertex": "purple_charge",
+  "fragment": "purple_charge",
+  "attributes": [
+    "Position",
+    "UV0"
+  ],
+  "samplers": [
+    { "name": "SceneSampler" }
+  ],
+  "uniforms": [
+    { "name": "ProjMat", "type": "matrix4x4", "count": 16, "values": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },
+    { "name": "Time", "type": "float", "count": 1, "values": [ 0.0 ] },
+    { "name": "ChargeProgress", "type": "float", "count": 1, "values": [ 0.0 ] },
+    { "name": "RedPosX", "type": "float", "count": 1, "values": [ 0.3 ] },
+    { "name": "RedPosY", "type": "float", "count": 1, "values": [ 0.5 ] },
+    { "name": "BluePosX", "type": "float", "count": 1, "values": [ 0.7 ] },
+    { "name": "BluePosY", "type": "float", "count": 1, "values": [ 0.5 ] }
+  ]
+}

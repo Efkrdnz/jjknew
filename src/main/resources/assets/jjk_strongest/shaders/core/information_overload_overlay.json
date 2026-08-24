@@ -1,0 +1,19 @@
+{
+  "blend": {
+    "func": "add",
+    "srcrgb": "srcalpha",
+    "dstrgb": "1-srcalpha"
+  },
+  "vertex": "information_overload_overlay",
+  "fragment": "information_overload_overlay",
+  "attributes": [
+    "Position",
+    "UV0"
+  ],
+  "samplers": [],
+  "uniforms": [
+    { "name": "ProjMat", "type": "matrix4x4", "count": 16, "values": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },
+    { "name": "Time", "type": "float", "count": 1, "values": [ 0.0 ] },
+    { "name": "Strength", "type": "float", "count": 1, "values": [ 1.0 ] }
+  ]
+}
