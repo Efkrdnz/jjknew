@@ -7,6 +7,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 
 import net.efkrdnz.jjkstrongest.init.JjkStrongestModMobEffects;
+import net.efkrdnz.jjkstrongest.procedures.DismantleBarrageProjectileOnTickProcedure;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
@@ -31,6 +32,7 @@ public class VoiceChantHoldProcedure {
 		if (player == null || player.level().isClientSide())
 			return;
 		CompoundTag data = player.getPersistentData();
+		runBarrage(player, data);
 
 		int remaining = data.getInt(JjkVoiceApi.HOLD_TICKS);
 		if (remaining <= 0)
@@ -56,6 +58,27 @@ public class VoiceChantHoldProcedure {
 		data.putString("chanting", "");
 		data.putString(JjkVoiceApi.HOLD_STATE, "");
 		player.displayClientMessage(Component.translatable("message.jjk_strongest.chant_lapsed"), true);
+	}
+
+	/**
+	 * Keeps a spoken Dismantle barrage going for the time the chant bought it.
+	 *
+	 * <p>Holding the barrage key works because the key is still down; a spoken one
+	 * has no such signal, so the duration is the charge. The projectile form is
+	 * driven directly rather than through the {@code dismantle_barrage} flag, both
+	 * because that flag belongs to the keybind and because going through it would
+	 * consult the {@code precision} toggle -- and a spoken Dismantle is always
+	 * thrown, there being nothing aimed at the moment the word lands.
+	 *
+	 * <p>The slashes come out at base output whatever was chanted, because
+	 * BarrageProjectileSpam reads only the player's own output multiplier.
+	 */
+	private static void runBarrage(Player player, CompoundTag data) {
+		int remaining = data.getInt(JjkVoiceApi.BARRAGE_TICKS);
+		if (remaining <= 0)
+			return;
+		data.putInt(JjkVoiceApi.BARRAGE_TICKS, remaining - 1);
+		DismantleBarrageProjectileOnTickProcedure.execute(player.level(), player);
 	}
 
 	/**

@@ -108,7 +108,8 @@ line, it charges a tier, and getting to the end of the incantation carries the
 technique to full output.
 
 ```
-"Phase, Paramita"     ->  selects Red, charges one tier
+"Phase"               ->  selects Red, charges one tier
+"Paramita"            ->  two
 "Pillars of Light"    ->  full charge  (incantation complete)
 "Reversal Red"        ->  fires it, at full
 ```
@@ -136,25 +137,54 @@ being slightly off is never simply wasted. Nothing else charges: an ability's
 name throws it, which is why an incantation is the only way to get a technique
 out above base output by voice.
 
-| Ability | Tiers | Default incantation |
-| --- | --- | --- |
-| Blue | 3 | *Cursed Technique Lapse* → *Maximum Output: Blue* |
-| Red | 3 | *Phase, Paramita* → *Pillars of Light* |
-| Purple | 4 | *Imaginary Technique* → *Imaginary Purple* |
-| Dismantle | 3 | *Cursed Technique: Dismantle* |
-| World Slash | 3 | *World Dismantling Slash* |
+| Ability | Incantation |
+| --- | --- |
+| Blue | *Phase* → *Twilight* → *Eyes of Wisdom* |
+| Red | *Phase* → *Paramita* → *Pillars of Light* |
+| Purple | *Nine Ropes* → *Polarized Light* → *Crow and Declaration* → *Between Front and Back* |
+| Dismantle | *Dragon Scales* → *Repulsion* → *Twin Meteor* |
 
-Those five are the only ones that can be charged, and the list is not arbitrary.
+Each has exactly as many lines as the ability has output tiers, so reciting one
+through lands on maximum and no line is spare.
+
+Blue and Red both open on *"Phase"*. That line is enrolled once — the two sound
+identical and no amount of bookkeeping would separate them — and is read as
+belonging to whichever ability you have **selected**, so select before you recite
+when the opening is shared.
+
+Those four are the only ones that can be charged, and the list is not arbitrary.
 An ability can be chanted only if the mod actually climbs a charge counter for
 it: Limitless and Fuga have no such counter, and Cleave's "hold" state *performs*
-the technique rather than powering it up, so chanting Cleave would cast it.
+the technique rather than powering it up, so chanting Cleave would cast it. World
+Slash has no voice or chant handling at all, deliberately.
 
-The incantations above are a starting point, not scripture. Put whatever you
-actually say in `chants`, split however you actually pause — matching is acoustic
-and has no dictionary, so it does not care whether your wording is canon. Two
-rules only: the lines are **in order**, and every line must be unique across the
-whole config, because a voiceprint is stored per phrase. Two abilities cannot
-both open with *"cursed technique"*.
+Put whatever you actually say in `chants`, split however you actually pause —
+matching is acoustic and has no dictionary, so it does not care whether your
+wording is canon. The lines are **in order**, and a line must not collide with a
+command phrase, where there would be no way to resolve it.
+
+## Dismantle
+
+Dismantle is the one technique where the chant does not decide what comes out,
+only how much of it. Wind it up, then say which shape you want, and the same
+charge is spent differently by each.
+
+| Say | What comes out |
+| --- | --- |
+| *"Dismantle"* (or *"Kaisen"*) | One slash, at the charged power |
+| *"Dismantle Net"* | A net — 3×3, 4×4 or 5×5 by tier chanted |
+| *"Dismantle Barrage"* | A stream of slashes, lasting longer the more you chanted |
+
+The barrage's slashes are all **base, unchanted** Dismantles however far you
+recited — the chant buys duration, not power. That is not a rule imposed here:
+the barrage never reads the charge multiplier in the first place.
+
+All three are **projectiles**. Dismantle's own release picks the precision
+raycast when that toggle is on, but a spoken one is always thrown, because there
+is nothing being aimed at the moment the word lands.
+
+Saying any of the three selects Dismantle first if it is not already, so a chant
+can start with *"Dragon Scales"* from anywhere.
 
 `/jjkvoice enroll <ability>` records the ability's name and its incantation lines
 together, since a line with no voiceprint can never match.

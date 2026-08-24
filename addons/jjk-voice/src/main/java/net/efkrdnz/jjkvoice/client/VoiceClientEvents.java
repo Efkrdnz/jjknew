@@ -117,8 +117,9 @@ public final class VoiceClientEvents {
 		// sorcerer's phrases in the search lets them win, so a Gojo player saying
 		// "purple" could lose to an enrolled "fuga" they can never use.
 		Set<String> allowed = JjkBridge.allowedKeys(minecraft.player);
-		PhraseRecognizer.Vocabulary vocabulary = new PhraseRecognizer.Vocabulary(
-				allowed, VoiceConfig.get().incantationsFor(allowed), JjkBridge.chantableMovesets());
+		PhraseRecognizer.Vocabulary vocabulary = new PhraseRecognizer.Vocabulary(allowed,
+				VoiceConfig.get().incantationsFor(allowed, JjkBridge.currentMoveset(minecraft.player)),
+				JjkBridge.chantableMovesets());
 
 		Util.backgroundExecutor().execute(() -> {
 			PhraseRecognizer.Result result = PhraseRecognizer.recognise(audio, vocabulary);

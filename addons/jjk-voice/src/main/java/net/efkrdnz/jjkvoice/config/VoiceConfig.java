@@ -108,7 +108,7 @@ public final class VoiceConfig {
 	public int configVersion;
 
 	/** Bumped when an upgrade needs more than new keys being filled in. */
-	private static final int CURRENT_VERSION = 3;
+	private static final int CURRENT_VERSION = 4;
 
 	/**
 	 * The incantations that charge an ability, keyed by the ability they charge.
@@ -124,9 +124,12 @@ public final class VoiceConfig {
 	 * breath runs past {@link #maxSpeechSeconds}, and the recogniser matches a fixed
 	 * utterance rather than listening continuously.
 	 *
-	 * <p>Every line must be unique across the whole config, incantations and
-	 * commands alike, because a voiceprint is stored per phrase. Two abilities
-	 * cannot both open with "cursed technique".
+	 * <p>Two incantations may share a line -- Blue and Red both open on "phase" --
+	 * and it is enrolled once, since the two sound identical and no amount of
+	 * bookkeeping would tell them apart. A shared line is read as belonging to the
+	 * ability you have selected, so select before you recite when the opening is
+	 * one of these. A line must still not collide with a {@link #commands} phrase,
+	 * where it would be ambiguous with no way to resolve it.
 	 *
 	 * <p>The entries below are a starting point, not scripture. Put whatever you
 	 * actually say here, split however you actually pause; the recogniser has no
@@ -136,11 +139,11 @@ public final class VoiceConfig {
 
 	private static Map<String, List<String>> defaultChants() {
 		Map<String, List<String>> chants = new LinkedHashMap<>();
-		chants.put("gojo_blue", new ArrayList<>(List.of("cursed technique lapse", "maximum output blue")));
-		chants.put("gojo_red", new ArrayList<>(List.of("phase paramita", "pillars of light")));
-		chants.put("gojo_purple", new ArrayList<>(List.of("imaginary technique", "imaginary purple")));
-		chants.put("sukuna_dismantle", new ArrayList<>(List.of("cursed technique dismantle")));
-		chants.put("sukuna_wcs", new ArrayList<>(List.of("world dismantling slash")));
+		chants.put("gojo_blue", new ArrayList<>(List.of("phase", "twilight", "eyes of wisdom")));
+		chants.put("gojo_red", new ArrayList<>(List.of("phase", "paramita", "pillars of light")));
+		chants.put("gojo_purple", new ArrayList<>(List.of("nine ropes", "polarized light",
+				"crow and declaration", "between front and back")));
+		chants.put("sukuna_dismantle", new ArrayList<>(List.of("dragon scales", "repulsion", "twin meteor")));
 		return chants;
 	}
 
@@ -178,7 +181,11 @@ public final class VoiceConfig {
 		// Immediate techniques. Cursed Speech takes effect the moment it is spoken
 		// and Sukuna's slash is meant to be spammable, so these stay single words.
 		defaults.put("domain_expansion", new ArrayList<>(List.of("domain expansion", "ryouiki tenkai")));
-		defaults.put("dismantle", new ArrayList<>(List.of("kaisen", "slash")));
+		// Dismantle is thrown in whichever shape you name, spending the same chant
+		// as power, area or duration. All three are projectiles.
+		defaults.put("dismantle", new ArrayList<>(List.of("dismantle", "kaisen")));
+		defaults.put("dismantle_barrage", new ArrayList<>(List.of("dismantle barrage")));
+		defaults.put("dismantle_net", new ArrayList<>(List.of("dismantle net")));
 		defaults.put("fuga", new ArrayList<>(List.of("fuga", "open the furnace", "divine flames")));
 		defaults.put("release", new ArrayList<>(List.of("release")));
 
@@ -205,9 +212,7 @@ public final class VoiceConfig {
 		defaults.put("gojo_blue", new ArrayList<>(List.of("lapse blue")));
 		defaults.put("gojo_red", new ArrayList<>(List.of("reversal red")));
 		defaults.put("gojo_purple", new ArrayList<>(List.of("hollow purple")));
-		defaults.put("sukuna_dismantle", new ArrayList<>(List.of("dismantle")));
 		defaults.put("sukuna_cleave", new ArrayList<>(List.of("cleave")));
-		defaults.put("sukuna_wcs", new ArrayList<>(List.of("world slash")));
 
 		return defaults;
 	}
@@ -331,17 +336,14 @@ public final class VoiceConfig {
 		if (chants == null)
 			chants = new LinkedHashMap<>();
 
-		if (configVersion < 3) {
-			// Incantations were single alternative phrases and are now ordered lines.
-			// Only replace one that was never touched; anything written by hand is
-			// already in whatever shape its owner wanted.
-			for (Map.Entry<String, List<String>> entry : SUPERSEDED_CHANTS.entrySet()) {
-				List<String> stored = chants.get(entry.getKey());
-				if (stored != null && normalisedEquals(stored, entry.getValue()))
-					chants.remove(entry.getKey());
-			}
-			// "imaginary purple" became a line of Purple's incantation, and a phrase
-			// cannot be bound in two places.
+		if (configVersion < 4) {
+			// Incantations and the Dismantle phrases have both been reshaped. Only
+			// drop an entry that still matches something this addon shipped, so
+			// anything written by hand is left in whatever shape its owner wanted;
+			// the defaults are filled back in below.
+			dropUntouched(chants, SUPERSEDED_CHANTS);
+			dropUntouched(commands, SUPERSEDED_COMMANDS);
+			// "imaginary purple" was briefly a line of Purple's incantation.
 			List<String> purple = commands.get("gojo_purple");
 			if (purple != null)
 				purple.removeIf(phrase -> "imaginary purple".equals(normalisePhrase(phrase)));
@@ -370,10 +372,39 @@ public final class VoiceConfig {
 	}
 
 	/** What {@link #defaultChants} used to hold, so an untouched copy can be replaced. */
-	private static final Map<String, List<String>> SUPERSEDED_CHANTS = Map.of(
-			"gojo_blue", List.of("cursed technique lapse blue"),
-			"gojo_red", List.of("phase paramita pillars of light", "cursed technique reversal red"),
-			"gojo_purple", List.of("imaginary technique hollow purple"));
+	private static final Map<String, List<List<String>>> SUPERSEDED_CHANTS = Map.of(
+			"gojo_blue", List.of(
+					List.of("cursed technique lapse blue"),
+					List.of("cursed technique lapse", "maximum output blue")),
+			"gojo_red", List.of(
+					List.of("phase paramita pillars of light", "cursed technique reversal red"),
+					List.of("phase paramita", "pillars of light")),
+			"gojo_purple", List.of(
+					List.of("imaginary technique hollow purple"),
+					List.of("imaginary technique", "imaginary purple")),
+			"sukuna_dismantle", List.of(
+					List.of("cursed technique dismantle")),
+			"sukuna_wcs", List.of(
+					List.of("world dismantling slash")));
+
+	/** Command phrases that moved elsewhere, same rule: replace only if untouched. */
+	private static final Map<String, List<List<String>>> SUPERSEDED_COMMANDS = Map.of(
+			"dismantle", List.of(List.of("kaisen", "slash")),
+			"sukuna_dismantle", List.of(List.of("dismantle")),
+			"sukuna_wcs", List.of(List.of("world slash")));
+
+	private void dropUntouched(Map<String, List<String>> current, Map<String, List<List<String>>> shipped) {
+		for (Map.Entry<String, List<List<String>>> entry : shipped.entrySet()) {
+			List<String> stored = current.get(entry.getKey());
+			if (stored == null)
+				continue;
+			for (List<String> previous : entry.getValue())
+				if (normalisedEquals(stored, previous)) {
+					current.remove(entry.getKey());
+					break;
+				}
+		}
+	}
 
 	private boolean normalisedEquals(List<String> stored, List<String> reference) {
 		if (stored.size() != reference.size())
@@ -429,6 +460,26 @@ public final class VoiceConfig {
 
 		if (chants == null)
 			chants = new LinkedHashMap<>();
+		// An incantation for something that cannot be charged is dead weight the
+		// recogniser would still compare against, so it goes the same way an unknown
+		// command key does. World Slash used to be here.
+		Map<String, List<String>> cleanedChants = new LinkedHashMap<>();
+		chants.forEach((rawKey, rawLines) -> {
+			String key = normaliseCommand(rawKey);
+			if (key.isEmpty() || !JjkBridge.isChantable(key) || rawLines == null)
+				return;
+			List<String> lines = new ArrayList<>();
+			for (String rawLine : rawLines) {
+				String line = normalisePhrase(rawLine);
+				// Repeating a line inside one incantation would make its position
+				// ambiguous, and position is what the recital counts.
+				if (!line.isEmpty() && !lines.contains(line))
+					lines.add(line);
+			}
+			if (!lines.isEmpty())
+				cleanedChants.put(key, lines);
+		});
+		chants = cleanedChants;
 		chantNearMultiplier = clamp(chantNearMultiplier, 1.0D, 4.0D);
 	}
 
@@ -456,15 +507,25 @@ public final class VoiceConfig {
 	 * recogniser. Abilities they cannot use are left out entirely rather than
 	 * searched and then refused.
 	 */
-	public Map<String, List<String>> incantationsFor(Set<String> allowed) {
+	public Map<String, List<String>> incantationsFor(Set<String> allowed, String preferred) {
 		Map<String, List<String>> narrowed = new LinkedHashMap<>();
-		for (Map.Entry<String, List<String>> entry : chants.entrySet()) {
-			if (allowed != null && !allowed.contains(entry.getKey()))
-				continue;
-			if (entry.getValue() != null && !entry.getValue().isEmpty())
-				narrowed.put(entry.getKey(), List.copyOf(entry.getValue()));
-		}
+		// Selected ability first. Two incantations may share a line, and a shared
+		// line gives the same distance under either -- the recogniser keeps the
+		// first it saw, so order is the whole tie-break.
+		put(narrowed, allowed, normaliseCommand(preferred));
+		for (String moveset : chants.keySet())
+			put(narrowed, allowed, moveset);
 		return narrowed;
+	}
+
+	private void put(Map<String, List<String>> into, Set<String> allowed, String moveset) {
+		if (moveset.isEmpty() || into.containsKey(moveset))
+			return;
+		if (allowed != null && !allowed.contains(moveset))
+			return;
+		List<String> lines = chants.get(moveset);
+		if (lines != null && !lines.isEmpty())
+			into.put(moveset, List.copyOf(lines));
 	}
 
 	public static String normalisePhrase(String phrase) {

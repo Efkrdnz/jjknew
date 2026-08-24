@@ -12,6 +12,9 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 
 import net.efkrdnz.jjkstrongest.network.JjkStrongestModVariables;
+import net.efkrdnz.jjkstrongest.procedures.ReturnOutputDismantleProcedure;
+import net.efkrdnz.jjkstrongest.procedures.ShootDismantleNetProcedure;
+import net.efkrdnz.jjkstrongest.procedures.ShootDismantleTravelProcedure;
 import net.efkrdnz.jjkstrongest.procedures.Technique1OnKeyPressProcedure;
 import net.efkrdnz.jjkstrongest.procedures.Technique1OnKeyPressedProcedure;
 import net.efkrdnz.jjkstrongest.procedures.Technique3OnKeyPressedProcedure;
@@ -179,9 +182,38 @@ public final class JjkVoiceApi {
 		chantable.put("gojo_red", new Chantable("red", TechniqueKey.THREE, new int[] {10, 20, 40}));
 		chantable.put("gojo_purple", new Chantable("purple", TechniqueKey.THREE, new int[] {70, 90, 110, 130}));
 		chantable.put("sukuna_dismantle", new Chantable("dismantle", TechniqueKey.ONE, new int[] {10, 20, 30}));
-		chantable.put("sukuna_wcs", new Chantable("wcs1", TechniqueKey.ONE, new int[] {20, 40, 60}));
 		return Map.copyOf(chantable);
 	}
+
+	/**
+	 * The shapes a charged Dismantle can be thrown in.
+	 *
+	 * <p>Dismantle is the one technique where the chant does not decide what comes
+	 * out, only how much of it. You wind it up and then say which form you want,
+	 * and the charge is spent differently by each: a single slash takes it as
+	 * power, the net as area, the barrage as duration.
+	 *
+	 * <p>All three are projectiles. Dismantle's own release picks the precision
+	 * raycast when the {@code precision} toggle is set, but a spoken Dismantle is
+	 * always thrown, because there is nothing being aimed at the moment the word
+	 * lands.
+	 */
+	private enum DismantleForm {
+		SINGLE,
+		NET,
+		BARRAGE
+	}
+
+	private static final Map<String, DismantleForm> DISMANTLE_FORMS = Map.of(
+			"dismantle", DismantleForm.SINGLE,
+			"dismantle_net", DismantleForm.NET,
+			"dismantle_barrage", DismantleForm.BARRAGE);
+
+	/** How long a barrage runs: this, plus the same again for every tier chanted. */
+	private static final int BARRAGE_BASE_TICKS = 20;
+
+	/** Ticks of barrage still owed, counted down by VoiceChantHoldProcedure. */
+	public static final String BARRAGE_TICKS = "jjkvoice_barrage";
 
 	/** Spoken command that releases a chant, as letting the technique key up does. */
 	public static final String RELEASE = "release";
@@ -206,7 +238,9 @@ public final class JjkVoiceApi {
 
 	/** Commands that fire a technique immediately. */
 	public static Set<String> actionKeys() {
-		return ACTIONS.keySet();
+		Set<String> all = new LinkedHashSet<>(ACTIONS.keySet());
+		all.addAll(DISMANTLE_FORMS.keySet());
+		return Set.copyOf(all);
 	}
 
 	/** Abilities that can be selected, i.e. made the active moveset. */
@@ -222,6 +256,7 @@ public final class JjkVoiceApi {
 	/** Everything {@link #speak} accepts, for building an allow-list against. */
 	public static Set<String> commandKeys() {
 		Set<String> all = new LinkedHashSet<>(ACTIONS.keySet());
+		all.addAll(DISMANTLE_FORMS.keySet());
 		all.addAll(MOVESETS.keySet());
 		all.add(RELEASE);
 		return Set.copyOf(all);
@@ -229,7 +264,8 @@ public final class JjkVoiceApi {
 
 	public static boolean isCommandKey(String key) {
 		String normalised = normalise(key);
-		return RELEASE.equals(normalised) || ACTIONS.containsKey(normalised) || MOVESETS.containsKey(normalised);
+		return RELEASE.equals(normalised) || ACTIONS.containsKey(normalised)
+				|| DISMANTLE_FORMS.containsKey(normalised) || MOVESETS.containsKey(normalised);
 	}
 
 	/**
@@ -260,6 +296,8 @@ public final class JjkVoiceApi {
 		for (Map.Entry<String, Set<String>> action : ACTIONS.entrySet())
 			if (action.getValue().contains(normalise(sorcerer)))
 				allowed.add(action.getKey());
+		if ("sukuna".equals(normalise(sorcerer)))
+			allowed.addAll(DISMANTLE_FORMS.keySet());
 		for (String moveset : MOVESETS.keySet())
 			if (owns(sorcerer, moveset))
 				allowed.add(moveset);
@@ -337,6 +375,18 @@ public final class JjkVoiceApi {
 			return use(player, command) ? Spoken.RELEASED : Spoken.UNRECOGNISED;
 		}
 
+		DismantleForm form = DISMANTLE_FORMS.get(command);
+		if (form != null) {
+			if (!"sukuna".equals(sorcerer))
+				return Spoken.UNRECOGNISED;
+			// The form names the technique, so it selects it the way an incantation
+			// does -- there is nothing ambiguous about saying "dismantle net".
+			if (!"sukuna_dismantle".equals(normalise(variables.current_moveset))
+					&& !selectMoveset(player, "sukuna_dismantle"))
+				return Spoken.UNRECOGNISED;
+			return throwDismantle(player, form) ? Spoken.RELEASED : Spoken.UNRECOGNISED;
+		}
+
 		if (ACTIONS.containsKey(command)) {
 			if (!ownsAction(sorcerer, command))
 				return Spoken.UNRECOGNISED;
@@ -344,6 +394,52 @@ public final class JjkVoiceApi {
 			return Spoken.CAST;
 		}
 		return Spoken.UNRECOGNISED;
+	}
+
+	/**
+	 * Throws a charged Dismantle in the shape asked for.
+	 *
+	 * <p>Each form spends the chant differently. The single slash takes it as power
+	 * and needs nothing done to it. The net reads ChantCounter directly for its
+	 * area, on a scale of its own -- twenty per step -- so the tier is restated in
+	 * those terms rather than the counter being reinterpreted at the far end. The
+	 * barrage takes it as time, and its slashes are base output whatever was
+	 * chanted, because BarrageProjectileSpam never reads TechniquePower.
+	 */
+	private static boolean throwDismantle(ServerPlayer player, DismantleForm form) {
+		int tier = tierReached(player, CHANTABLE.get("sukuna_dismantle").tiers());
+		double power = player.getPersistentData().getDouble("TechniquePower");
+		if (power <= 0.0D)
+			power = 1.0D;
+		double output = ReturnOutputDismantleProcedure.execute(player.level(), player);
+
+		switch (form) {
+			case SINGLE -> ShootDismantleTravelProcedure.execute(player.level(), player, output, power, true);
+			case NET -> {
+				player.getPersistentData().putDouble("ChantCounter", tier * 20.0D);
+				ShootDismantleNetProcedure.execute(player.level(), player, output, power, true);
+			}
+			case BARRAGE -> player.getPersistentData().putInt(BARRAGE_TICKS,
+					BARRAGE_BASE_TICKS * (1 + tier));
+		}
+
+		// Spent. Clearing the chant is enough to drop the charge; ChantOnTick zeroes
+		// the counter and the multiplier on the next tick by itself.
+		player.getPersistentData().putString("chanting", "");
+		player.getPersistentData().putInt(HOLD_TICKS, 0);
+		player.getPersistentData().putString(HOLD_STATE, "");
+		forgetRecital(player);
+		return true;
+	}
+
+	/** How many of an ability's tiers the chant has actually reached. */
+	private static int tierReached(ServerPlayer player, int[] tiers) {
+		double counter = player.getPersistentData().getDouble("ChantCounter");
+		int reached = 0;
+		for (int tier : tiers)
+			if (counter >= tier)
+				reached++;
+		return reached;
 	}
 
 	/**
