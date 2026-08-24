@@ -652,7 +652,11 @@ public class InformationOverloadDebugLinesClientRenderer {
 		// (optional) peripheral neurons if you want to call it:
 		// renderPeripheralNeurons(vc, m, t, strength, life, pull, cr, cg, cb);
 		if (seed > 0.001f) {
-			drawSacredGeometry(vc, m, g1, (0.04f + 0.20f * seed) * baseScale, spin * 0.90f, thickness * 0.85f, cr, cg, cb, seed * (0.22f + 0.22f * strength));
+			// renderEdgeFractals above asked BufferSource for other render types,
+			// which ended this one's batch and left the `vc` above dead. Re-fetch
+			// rather than reordering, so this still layers over the fractals.
+			drawSacredGeometry(bufferSource.getBuffer(OVERLAY_LINES), m, g1, (0.04f + 0.20f * seed) * baseScale, spin * 0.90f, thickness * 0.85f, cr, cg, cb,
+					seed * (0.22f + 0.22f * strength));
 		}
 		if (eqPhase > 0.001f) {
 			ensureEquationsLoaded(mc);
@@ -1352,14 +1356,19 @@ public class InformationOverloadDebugLinesClientRenderer {
 		float stripH = 0.18f + 0.05f * strength;
 		float scrollU = fract(t * 0.010f);
 		float scrollV = fract(t * 0.012f);
-		com.mojang.blaze3d.vertex.VertexConsumer base = bufferSource.getBuffer(EDGE_BASE);
-		com.mojang.blaze3d.vertex.VertexConsumer glow = bufferSource.getBuffer(EDGE_GLOW);
+		// Fetch each consumer immediately before drawing into it. BufferSource
+		// gives every render type its own BufferBuilder over one shared byte
+		// buffer, so asking for the next type ends the previous type's batch and
+		// leaves the earlier consumer dead ("Not building!"). Holding both at
+		// once was already wrong on 1.20.1 - there a single shared builder meant
+		// this quad was silently drawn into the glow batch - but there it did not
+		// crash.
 		// Fullscreen quad (the vignette mask is baked into the texture alpha)
 		// Fullscreen quad (keep vignette centered: DO NOT scroll UVs when alpha contains vignette)
-		drawTexturedQuad(base, m, -1.0f, -1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1, 1, 1, a);
+		drawTexturedQuad(bufferSource.getBuffer(EDGE_BASE), m, -1.0f, -1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1, 1, 1, a);
 		// Soft additive glow pass (same UVs, otherwise you move the hole again)
 		float ga = a * (0.18f + 0.16f * strength);
-		drawTexturedQuad(glow, m, -1.0f, -1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1, 1, 1, ga);
+		drawTexturedQuad(bufferSource.getBuffer(EDGE_GLOW), m, -1.0f, -1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1, 1, 1, ga);
 	}
 
 	// ----------------------------
