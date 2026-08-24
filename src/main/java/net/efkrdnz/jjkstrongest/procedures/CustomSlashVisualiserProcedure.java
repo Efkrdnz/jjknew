@@ -182,7 +182,16 @@ public class CustomSlashVisualiserProcedure {
 		ClientLevel level = minecraft.level;
 		Entity entity = minecraft.gameRenderer.getMainCamera().getEntity();
 		if (level != null && entity != null) {
-			poseStack = event.getPoseStack();
+			// Always our own stack, never the event's: AFTER_SKY hands out null on
+			// 1.21.1, and AFTER_PARTICLES hands out the level's shared stack, which
+			// must not be mutated here. LevelRenderer builds that one as a plain
+			// identity PoseStack anyway, so this is equivalent.
+			//
+			// Drawn through VertexBuffer#drawWithShader, which takes this pose as
+			// the model-view, so the camera transform has to be folded in: on
+			// 1.20.1 it came in the PoseStack, on 1.21 it is the frustum matrix.
+			poseStack = new PoseStack();
+			poseStack.mulPose(event.getModelViewMatrix());
 			projectionMatrix = event.getProjectionMatrix();
 			Vec3 pos = entity.getPosition(event.getPartialTick().getGameTimeDeltaPartialTick(false));
 			RenderSystem.enableBlend();

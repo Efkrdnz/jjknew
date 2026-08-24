@@ -54,7 +54,11 @@ public class DomainUVLinesClientRenderer {
 		Minecraft mc = Minecraft.getInstance();
 		if (mc.level == null || mc.player == null)
 			return;
+		// NeoForge 1.21.1 passes a null PoseStack for AFTER_TRANSLUCENT_BLOCKS; the stages
+		// that do supply one supply a plain identity stack, so build that
 		PoseStack poseStack = event.getPoseStack();
+		if (poseStack == null)
+			poseStack = new PoseStack();
 		MultiBufferSource.BufferSource bufferSource = mc.renderBuffers().bufferSource();
 		Vec3 cameraPos = event.getCamera().getPosition();
 		double renderDistance = 35.0;

@@ -61,7 +61,11 @@ public class WCSClientSideLineRendererProcedure {
 		double y3 = eyePos.y;
 		double z3 = eyePos.z;
 		PoseStack poseStack = event.getPoseStack();
-		Matrix4f matrix = poseStack.last().pose();
+		// This draws through BufferUploader, whose ModelViewMat comes from
+		// RenderSystem and is identity during world rendering. On 1.20.1 the
+		// camera lived in the event's PoseStack; on 1.21 it is the frustum
+		// matrix, so fold it in here or the lines ignore where you are looking.
+		Matrix4f matrix = new Matrix4f(event.getModelViewMatrix());
 		Matrix4f projectionMatrix = event.getProjectionMatrix();
 		// get camera position for world-space rendering
 		Vec3 camPos = Minecraft.getInstance().gameRenderer.getMainCamera().getPosition();
