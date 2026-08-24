@@ -2,11 +2,8 @@ package net.efkrdnz.jjkstrongest.api;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 
-import net.efkrdnz.jjkstrongest.init.JjkStrongestModMobEffects;
 import net.efkrdnz.jjkstrongest.procedures.DismantleBarrageProjectileOnTickProcedure;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -46,8 +43,6 @@ public class VoiceChantHoldProcedure {
 			return;
 		}
 
-		keepPurpleAlive(player, owned);
-
 		remaining--;
 		data.putInt(JjkVoiceApi.HOLD_TICKS, remaining);
 		if (remaining > 0)
@@ -81,25 +76,4 @@ public class VoiceChantHoldProcedure {
 		DismantleBarrageProjectileOnTickProcedure.execute(player.level(), player);
 	}
 
-	/**
-	 * Holds Hollow Purple's charging effect open for as long as it is being
-	 * chanted.
-	 *
-	 * <p>Technique3's press grants PURPLE_CHARGING for fifty ticks and its release
-	 * refuses to fire without it, but Purple's first output tier is at seventy --
-	 * so the effect is already gone by the time there is anything to show for the
-	 * charge, and nothing anywhere refreshes it. Chanting takes longer still, being
-	 * paced by speech rather than a held key, so without this the technique could
-	 * be charged to full and then decline to come out.
-	 *
-	 * <p>Scoped to chants this started. It does not change what holding the key
-	 * does, which is left exactly as it was.
-	 */
-	private static void keepPurpleAlive(Player player, String chant) {
-		if (!"purple".equals(chant) || !(player instanceof LivingEntity living))
-			return;
-		if (living.hasEffect(JjkStrongestModMobEffects.PURPLE_CHARGING))
-			return;
-		living.addEffect(new MobEffectInstance(JjkStrongestModMobEffects.PURPLE_CHARGING, 50, 1, false, false));
-	}
 }

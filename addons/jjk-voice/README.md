@@ -198,7 +198,10 @@ Three ways, all equivalent:
 - tap its technique key
 
 A chant you never release lapses after ten seconds, the same as letting the key
-go without firing. Switching to another ability drops it, and any part-recited
+go without firing. Hollow Purple has a wind-up of its own on top of that: it will
+not come out for the first two and a half seconds, and calling it inside that
+window dismisses it instead. Reciting its four lines takes longer than that
+anyway, so it only bites if you try to rush it. Switching to another ability drops it, and any part-recited
 incantation with it — you cannot hold Red's charge while reaching for Blue.
 
 ### Coming from the old phrase file
