@@ -1,6 +1,7 @@
 
 package net.efkrdnz.jjkstrongest.entity;
 
+import net.neoforged.neoforge.event.entity.RegisterSpawnPlacementsEvent;
 import net.minecraft.core.registries.BuiltInRegistries;
 
 import net.minecraft.world.level.Level;
@@ -115,7 +116,7 @@ public class MalevolentShrineEntity extends PathfinderMob {
 	}
 
 	@Override
-	public boolean ignoreExplosion() {
+	public boolean ignoreExplosion(net.minecraft.world.level.Explosion explosion) {
 		return true;
 	}
 
@@ -137,7 +138,7 @@ public class MalevolentShrineEntity extends PathfinderMob {
 	protected void pushEntities() {
 	}
 
-	public static void init() {
+	public static void init(RegisterSpawnPlacementsEvent event) {
 	}
 
 	public static AttributeSupplier.Builder createAttributes() {

@@ -10,6 +10,7 @@ import software.bernie.geckolib.animation.AnimatableManager;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animatable.GeoEntity;
 
+import net.neoforged.neoforge.event.entity.RegisterSpawnPlacementsEvent;
 import net.minecraft.core.registries.BuiltInRegistries;
 
 import net.minecraft.world.level.Level;
@@ -97,12 +98,7 @@ public class MahoragaEntity extends Monster implements GeoEntity {
 		this.targetSelector.addGoal(1, new NearestAttackableTargetGoal(this, Player.class, false, false));
 		this.targetSelector.addGoal(2, new NearestAttackableTargetGoal(this, Villager.class, false, false));
 		this.targetSelector.addGoal(3, new NearestAttackableTargetGoal(this, Pillager.class, false, false));
-		this.goalSelector.addGoal(4, new MeleeAttackGoal(this, 1.2, false) {
-			@Override
-			protected double getAttackReachSqr(LivingEntity entity) {
-				return this.mob.getBbWidth() * this.mob.getBbWidth() + entity.getBbWidth();
-			}
-		});
+		this.goalSelector.addGoal(4, new MeleeAttackGoal(this, 1.2, false));
 		this.goalSelector.addGoal(5, new RandomStrollGoal(this, 1));
 		this.targetSelector.addGoal(6, new HurtByTargetGoal(this));
 		this.goalSelector.addGoal(7, new RandomLookAroundGoal(this));
@@ -172,12 +168,12 @@ public class MahoragaEntity extends Monster implements GeoEntity {
 	}
 
 	@Override
-	public EntityDimensions getDimensions(Pose p_33597_) {
+	protected EntityDimensions getDefaultDimensions(Pose p_33597_) {
 		return super.getDimensions(p_33597_).scale((float) 1.5);
 	}
 
 	@Override
-	public boolean canChangeDimensions() {
+	public boolean canChangeDimensions(net.minecraft.world.level.Level oldLevel, net.minecraft.world.level.Level newLevel) {
 		return false;
 	}
 
@@ -199,7 +195,7 @@ public class MahoragaEntity extends Monster implements GeoEntity {
 		this.bossInfo.setProgress(this.getHealth() / this.getMaxHealth());
 	}
 
-	public static void init() {
+	public static void init(RegisterSpawnPlacementsEvent event) {
 	}
 
 	public static AttributeSupplier.Builder createAttributes() {
@@ -252,7 +248,7 @@ public class MahoragaEntity extends Monster implements GeoEntity {
 		++this.deathTime;
 		if (this.deathTime == 20) {
 			this.remove(MahoragaEntity.RemovalReason.KILLED);
-			this.dropExperience();
+			this.dropExperience(null);
 		}
 	}
 

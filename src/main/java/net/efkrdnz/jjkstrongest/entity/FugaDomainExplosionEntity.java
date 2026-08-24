@@ -1,6 +1,7 @@
 
 package net.efkrdnz.jjkstrongest.entity;
 
+import net.neoforged.neoforge.event.entity.RegisterSpawnPlacementsEvent;
 import net.minecraft.core.registries.BuiltInRegistries;
 
 import net.minecraft.world.level.block.state.BlockState;
@@ -101,7 +102,7 @@ public class FugaDomainExplosionEntity extends Monster {
 	}
 
 	@Override
-	public boolean ignoreExplosion() {
+	public boolean ignoreExplosion(net.minecraft.world.level.Explosion explosion) {
 		return true;
 	}
 
@@ -124,7 +125,7 @@ public class FugaDomainExplosionEntity extends Monster {
 		this.setNoGravity(true);
 	}
 
-	public static void init() {
+	public static void init(RegisterSpawnPlacementsEvent event) {
 	}
 
 	public static AttributeSupplier.Builder createAttributes() {

@@ -43,7 +43,7 @@ public class Technique3OnKeyPressedProcedure {
 						}
 					}
 					if (world instanceof ServerLevel _serverLevel) {
-						Entity entityinstance = JjkStrongestModEntities.LAPSE_BLUE.get().create(_serverLevel, null, null,
+						Entity entityinstance = JjkStrongestModEntities.LAPSE_BLUE.get().create(_serverLevel, null,
 								BlockPos.containing(entity.getX() + (6 + 3 * entity.getPersistentData().getDouble("TechniquePower")) * entity.getLookAngle().x,
 										entity.getY() + 1.6 + (5 + 3 * entity.getPersistentData().getDouble("TechniquePower")) * entity.getLookAngle().y,
 										entity.getZ() + (6 + 3 * entity.getPersistentData().getDouble("TechniquePower")) * entity.getLookAngle().z),
@@ -140,7 +140,7 @@ public class Technique3OnKeyPressedProcedure {
 					}
 					ReleaseArmAnimationProcedure.execute(entity);
 					if (world instanceof ServerLevel _serverLevel) {
-						Entity entityinstance = JjkStrongestModEntities.REVERSAL_RED.get().create(_serverLevel, null, null,
+						Entity entityinstance = JjkStrongestModEntities.REVERSAL_RED.get().create(_serverLevel, null,
 								BlockPos.containing(entity.getX() + entity.getLookAngle().x * 1, entity.getY() + 1.6 + entity.getLookAngle().y * 1, entity.getZ() + entity.getLookAngle().z * 1), MobSpawnType.MOB_SUMMONED, false, false);
 						if (entityinstance != null) {
 							entityinstance.setYRot(world.getRandom().nextFloat() * 360.0F);
@@ -201,7 +201,7 @@ public class Technique3OnKeyPressedProcedure {
 					} else {
 						ReleaseArmAnimationProcedure.execute(entity);
 						if (world instanceof ServerLevel _serverLevel) {
-							Entity entityinstance = JjkStrongestModEntities.HOLLOW_PURPLE_BIG.get().create(_serverLevel, null, null,
+							Entity entityinstance = JjkStrongestModEntities.HOLLOW_PURPLE_BIG.get().create(_serverLevel, null,
 									BlockPos.containing(entity.getX() + entity.getLookAngle().x * 3, entity.getY() + 1.6 + entity.getLookAngle().y * 3, entity.getZ() + entity.getLookAngle().z * 3), MobSpawnType.MOB_SUMMONED, false, false);
 							if (entityinstance != null) {
 								entityinstance.setYRot(world.getRandom().nextFloat() * 360.0F);

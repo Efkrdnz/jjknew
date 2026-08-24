@@ -4,6 +4,7 @@ package net.efkrdnz.jjkstrongest.entity;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.api.distmarker.Dist;
 
+import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.level.block.state.BlockState;
@@ -53,12 +54,12 @@ public class DismantleTravelEntity extends AbstractArrow implements ItemSupplier
 	}
 
 	public DismantleTravelEntity(EntityType<? extends DismantleTravelEntity> type, double x, double y, double z, Level world) {
-		super(type, x, y, z, world);
+		super(type, x, y, z, world, new ItemStack(Items.ARROW), null);
 		setupDefaults();
 	}
 
 	public DismantleTravelEntity(EntityType<? extends DismantleTravelEntity> type, LivingEntity entity, Level world) {
-		super(type, entity, world);
+		super(type, entity, world, new ItemStack(Items.ARROW), null);
 		setupDefaults();
 	}
 
@@ -521,5 +522,11 @@ public class DismantleTravelEntity extends AbstractArrow implements ItemSupplier
 			this.entityData.set(COLOR_G, tag.getFloat("color_g"));
 		if (tag.contains("color_b"))
 			this.entityData.set(COLOR_B, tag.getFloat("color_b"));
+	}
+
+	@Override
+	protected ItemStack getDefaultPickupItem() {
+		// never actually picked up: this projectile sets Pickup.DISALLOWED
+		return new ItemStack(Items.ARROW);
 	}
 }

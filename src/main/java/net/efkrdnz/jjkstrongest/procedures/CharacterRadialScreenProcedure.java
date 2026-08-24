@@ -190,6 +190,15 @@ public class CharacterRadialScreenProcedure {
 			return false;
 		}
 
+		/**
+		 * 1.21 made Screen#renderBackground run a gaussian blur over the world
+		 * behind the screen. This radial menu is an in-world overlay that must
+		 * leave the scene crisp, so the background pass is a no-op.
+		 */
+		@Override
+		public void renderBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+		}
+
 		@Override
 		public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
 			int centerX = this.width / 2;

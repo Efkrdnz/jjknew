@@ -14,13 +14,7 @@ public class DomainAmplificationMobEffect extends MobEffect {
 	}
 
 	@Override
-	public List<ItemStack> getCurativeItems() {
-		ArrayList<ItemStack> cures = new ArrayList<ItemStack>();
-		return cures;
-	}
-
-	@Override
-	public boolean isDurationEffectTick(int duration, int amplifier) {
+	public boolean shouldApplyEffectTickThisTick(int duration, int amplifier) {
 		return true;
 	}
 }

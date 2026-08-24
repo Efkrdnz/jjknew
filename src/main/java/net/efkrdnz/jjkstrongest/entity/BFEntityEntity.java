@@ -1,6 +1,7 @@
 
 package net.efkrdnz.jjkstrongest.entity;
 
+import net.neoforged.neoforge.event.entity.RegisterSpawnPlacementsEvent;
 import net.minecraft.core.registries.BuiltInRegistries;
 
 import net.minecraft.world.level.block.state.BlockState;
@@ -52,12 +53,7 @@ public class BFEntityEntity extends PathfinderMob {
 	@Override
 	protected void registerGoals() {
 		super.registerGoals();
-		this.goalSelector.addGoal(1, new MeleeAttackGoal(this, 1.2, false) {
-			@Override
-			protected double getAttackReachSqr(LivingEntity entity) {
-				return this.mob.getBbWidth() * this.mob.getBbWidth() + entity.getBbWidth();
-			}
-		});
+		this.goalSelector.addGoal(1, new MeleeAttackGoal(this, 1.2, false));
 		this.goalSelector.addGoal(2, new RandomStrollGoal(this, 1));
 		this.targetSelector.addGoal(3, new HurtByTargetGoal(this));
 		this.goalSelector.addGoal(4, new RandomLookAroundGoal(this));
@@ -117,7 +113,7 @@ public class BFEntityEntity extends PathfinderMob {
 	}
 
 	@Override
-	public boolean ignoreExplosion() {
+	public boolean ignoreExplosion(net.minecraft.world.level.Explosion explosion) {
 		return true;
 	}
 
@@ -205,7 +201,7 @@ public class BFEntityEntity extends PathfinderMob {
 		}
 	}
 
-	public static void init() {
+	public static void init(RegisterSpawnPlacementsEvent event) {
 	}
 
 	public static AttributeSupplier.Builder createAttributes() {

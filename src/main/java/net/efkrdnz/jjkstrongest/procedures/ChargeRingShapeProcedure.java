@@ -26,9 +26,9 @@ public class ChargeRingShapeProcedure {
 		if (bufferBuilder == null)
 			return;
 		if (format == DefaultVertexFormat.POSITION_COLOR) {
-			bufferBuilder.addVertex(x, y, z).setColor(color);
+			bufferBuilder.addVertex((float) x, (float) y, (float) z).setColor(color);
 		} else if (format == DefaultVertexFormat.POSITION_TEX_COLOR) {
-			bufferBuilder.addVertex(x, y, z).setUv(u, v).setColor(color);
+			bufferBuilder.addVertex((float) x, (float) y, (float) z).setUv(u, v).setColor(color);
 		}
 	}
 

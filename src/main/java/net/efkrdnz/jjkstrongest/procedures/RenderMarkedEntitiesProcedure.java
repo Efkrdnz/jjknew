@@ -1,7 +1,6 @@
 package net.efkrdnz.jjkstrongest.procedures;
 
 import org.joml.Matrix4f;
-import org.joml.Matrix3f;
 
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -142,7 +141,7 @@ public class RenderMarkedEntitiesProcedure {
 	}
 
 	// add vertex to buffer
-	private static void addVertex(VertexConsumer consumer, Matrix4f pose, Matrix3f normal, float x, float y, float z, float u, float v, int alpha) {
+	private static void addVertex(VertexConsumer consumer, Matrix4f pose, PoseStack.Pose normal, float x, float y, float z, float u, float v, int alpha) {
 		consumer.addVertex(pose, x, y, z).setColor(255, 255, 255, alpha).setUv(u, v).setUv1(0, 10).setUv2(240, 240).setNormal(normal, 0, 1, 0);
 	}
 }

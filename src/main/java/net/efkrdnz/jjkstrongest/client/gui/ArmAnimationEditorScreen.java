@@ -36,7 +36,8 @@ public class ArmAnimationEditorScreen extends AbstractContainerScreen<ArmAnimati
 
 	@Override
 	public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
-		this.renderBackground(guiGraphics);
+		// super.render draws the background itself on 1.21; AbstractContainerScreen
+		// overrides it to the plain transparent fill, so no blur pass runs here
 		super.render(guiGraphics, mouseX, mouseY, partialTicks);
 		this.renderTooltip(guiGraphics, mouseX, mouseY);
 	}

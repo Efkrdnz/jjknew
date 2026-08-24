@@ -160,7 +160,7 @@ public class DomainUVEntityTickProcedure {
 			blockData.put("state", NbtUtils.writeBlockState(currentState));
 			BlockEntity be = level.getBlockEntity(pos);
 			if (be != null)
-				blockData.put("blockEntity", be.saveWithoutMetadata());
+				blockData.put("blockEntity", be.saveWithoutMetadata(level.registryAccess()));
 			storedBlocks.put(posKey, blockData);
 		}
 		if (level.getBlockEntity(pos) != null)
@@ -179,7 +179,7 @@ public class DomainUVEntityTickProcedure {
 		blockData.put("state", NbtUtils.writeBlockState(currentState));
 		BlockEntity be = level.getBlockEntity(pos);
 		if (be != null)
-			blockData.put("blockEntity", be.saveWithoutMetadata());
+			blockData.put("blockEntity", be.saveWithoutMetadata(level.registryAccess()));
 		storedBlocks.put(posKey, blockData);
 		level.setBlock(pos, JjkStrongestModBlocks.DOMAIN_BARRIER.get().defaultBlockState(), 3);
 	}
@@ -209,7 +209,7 @@ public class DomainUVEntityTickProcedure {
 			if (blockData.contains("blockEntity")) {
 				BlockEntity be = level.getBlockEntity(pos);
 				if (be != null)
-					be.load(blockData.getCompound("blockEntity"));
+					be.loadWithComponents(blockData.getCompound("blockEntity"), level.registryAccess());
 			}
 		}
 		domainEntity.discard();

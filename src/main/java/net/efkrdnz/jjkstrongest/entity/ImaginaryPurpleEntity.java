@@ -1,6 +1,7 @@
 
 package net.efkrdnz.jjkstrongest.entity;
 
+import net.neoforged.neoforge.event.entity.RegisterSpawnPlacementsEvent;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 
@@ -113,7 +114,7 @@ public class ImaginaryPurpleEntity extends TamableAnimal {
 	}
 
 	@Override
-	public boolean ignoreExplosion() {
+	public boolean ignoreExplosion(net.minecraft.world.level.Explosion explosion) {
 		return true;
 	}
 
@@ -174,23 +175,13 @@ public class ImaginaryPurpleEntity extends TamableAnimal {
 	@Override
 	public AgeableMob getBreedOffspring(ServerLevel serverWorld, AgeableMob ageable) {
 		ImaginaryPurpleEntity retval = JjkStrongestModEntities.IMAGINARY_PURPLE.get().create(serverWorld);
-		retval.finalizeSpawn(serverWorld, serverWorld.getCurrentDifficultyAt(retval.blockPosition()), MobSpawnType.BREEDING, null, null);
+		retval.finalizeSpawn(serverWorld, serverWorld.getCurrentDifficultyAt(retval.blockPosition()), MobSpawnType.BREEDING, null);
 		return retval;
 	}
 
 	@Override
 	public boolean isFood(ItemStack stack) {
 		return Ingredient.of().test(stack);
-	}
-
-	@Override
-	public boolean canBreatheUnderwater() {
-		double x = this.getX();
-		double y = this.getY();
-		double z = this.getZ();
-		Level world = this.level();
-		Entity entity = this;
-		return true;
 	}
 
 	@Override
@@ -230,7 +221,7 @@ public class ImaginaryPurpleEntity extends TamableAnimal {
 		this.setNoGravity(true);
 	}
 
-	public static void init() {
+	public static void init(RegisterSpawnPlacementsEvent event) {
 	}
 
 	public static AttributeSupplier.Builder createAttributes() {

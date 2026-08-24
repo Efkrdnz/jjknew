@@ -31,8 +31,7 @@ public class HollowPurpleProjectileRenderer extends GeoEntityRenderer<HollowPurp
 	}
 
 	@Override
-	public void preRender(PoseStack poseStack, HollowPurpleProjectileEntity entity, BakedGeoModel model, MultiBufferSource bufferSource, VertexConsumer buffer, boolean isReRender, float partialTick, int packedLight, int packedOverlay, float red,
-			float green, float blue, float alpha) {
+	public void preRender(PoseStack poseStack, HollowPurpleProjectileEntity entity, BakedGeoModel model, MultiBufferSource bufferSource, VertexConsumer buffer, boolean isReRender, float partialTick, int packedLight, int packedOverlay, int colour) {
 		Level world = entity.level();
 		double x = entity.getX();
 		double y = entity.getY();
@@ -40,6 +39,6 @@ public class HollowPurpleProjectileRenderer extends GeoEntityRenderer<HollowPurp
 		float scale = (float) ReturnPurpleSizeProcedure.execute(entity);
 		this.scaleHeight = scale;
 		this.scaleWidth = scale;
-		super.preRender(poseStack, entity, model, bufferSource, buffer, isReRender, partialTick, packedLight, packedOverlay, red, green, blue, alpha);
+		super.preRender(poseStack, entity, model, bufferSource, buffer, isReRender, partialTick, packedLight, packedOverlay, colour);
 	}
 }

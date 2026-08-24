@@ -49,7 +49,7 @@ public class FugaDomainExplosionExecuteProcedure {
 		double radius = 100.0;
 		double radiusSq = radius * radius;
 		// shader fx entity (re-using flame_arrow_explosion)
-		Entity fx = JjkStrongestModEntities.FLAME_ARROW_EXPLOSION.get().create(world, null, null, BlockPos.containing(center.x, center.y, center.z), MobSpawnType.MOB_SUMMONED, false, false);
+		Entity fx = JjkStrongestModEntities.FLAME_ARROW_EXPLOSION.get().create(world, null, BlockPos.containing(center.x, center.y, center.z), MobSpawnType.MOB_SUMMONED, false, false);
 		if (fx != null) {
 			if (fx instanceof TamableAnimal _toTame && caster instanceof Player _owner)
 				_toTame.tame(_owner);

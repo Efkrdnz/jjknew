@@ -229,15 +229,15 @@ public class ChantOverlayRenderProcedure {
 		poseStack.mulPose(com.mojang.math.Axis.XP.rotationDegrees(pitch));
 		poseStack.mulPose(com.mojang.math.Axis.ZN.rotationDegrees(roll));
 		poseStack.scale(xScale, yScale, zScale);
-		PoseStack modelViewStack = RenderSystem.getModelViewStack();
-		modelViewStack.pushPose();
-		modelViewStack.mulPose(poseStack.last().pose());
+		org.joml.Matrix4fStack modelViewStack = RenderSystem.getModelViewStack();
+		modelViewStack.pushMatrix();
+		modelViewStack.mul(poseStack.last().pose());
 		RenderSystem.setShaderColor((color >> 16 & 255) / 255.0F, (color >> 8 & 255) / 255.0F, (color & 255) / 255.0F, (color >>> 24) / 255.0F);
 		vertexBuffer.bind();
-		vertexBuffer.drawWithShader(modelViewStack.last().pose(), RenderSystem.getProjectionMatrix(), vertexBuffer.getFormat().hasUV(0) ? GameRenderer.getPositionTexColorShader() : GameRenderer.getPositionColorShader());
+		vertexBuffer.drawWithShader(new org.joml.Matrix4f(modelViewStack), RenderSystem.getProjectionMatrix(), vertexBuffer.getFormat().hasUV(0) ? GameRenderer.getPositionTexColorShader() : GameRenderer.getPositionColorShader());
 		VertexBuffer.unbind();
 		RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-		modelViewStack.popPose();
+		modelViewStack.popMatrix();
 		poseStack.popPose();
 	}
 
@@ -353,7 +353,7 @@ public class ChantOverlayRenderProcedure {
 	public static void renderGUI(RenderGuiEvent.Pre event) {
 		currentStage = 2;
 		guiGraphics = event.getGuiGraphics();
-		partialTick = event.getPartialTick();
+		partialTick = event.getPartialTick().getGameTimeDeltaPartialTick(false);
 		renderOverlays(event);
 		currentStage = 0;
 	}

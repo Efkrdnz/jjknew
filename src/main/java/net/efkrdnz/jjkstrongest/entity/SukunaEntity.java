@@ -1,5 +1,6 @@
 package net.efkrdnz.jjkstrongest.entity;
 
+import net.neoforged.neoforge.event.entity.RegisterSpawnPlacementsEvent;
 import net.minecraft.core.registries.BuiltInRegistries;
 
 import net.minecraft.world.level.levelgen.Heightmap;
@@ -14,6 +15,7 @@ import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.SpawnPlacements;
+import net.minecraft.world.entity.SpawnPlacementTypes;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.damagesource.DamageTypes;
@@ -51,11 +53,6 @@ public class SukunaEntity extends Monster {
 		this.goalSelector.addGoal(6, new FloatGoal(this));
 	}
 
-
-	@Override
-	public double getMyRidingOffset() {
-		return -0.35D;
-	}
 
 	@Override
 	public SoundEvent getHurtSound(DamageSource ds) {
@@ -101,7 +98,7 @@ public class SukunaEntity extends Monster {
 	}
 
 	@Override
-	public boolean canChangeDimensions() {
+	public boolean canChangeDimensions(net.minecraft.world.level.Level oldLevel, net.minecraft.world.level.Level newLevel) {
 		return false;
 	}
 
@@ -125,9 +122,10 @@ public class SukunaEntity extends Monster {
 		SukunaNPCTickProcedure.execute((Level) this.level(), this);
 	}
 
-	public static void init() {
-		SpawnPlacements.register(JjkStrongestModEntities.SUKUNA.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
-				(entityType, world, reason, pos, random) -> (world.getDifficulty() != Difficulty.PEACEFUL && Monster.isDarkEnoughToSpawn(world, pos, random) && Mob.checkMobSpawnRules(entityType, world, reason, pos, random)));
+	public static void init(RegisterSpawnPlacementsEvent event) {
+		event.register(JjkStrongestModEntities.SUKUNA.get(), SpawnPlacementTypes.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+				(entityType, world, reason, pos, random) -> (world.getDifficulty() != Difficulty.PEACEFUL && Monster.isDarkEnoughToSpawn(world, pos, random) && Mob.checkMobSpawnRules(entityType, world, reason, pos, random)),
+				RegisterSpawnPlacementsEvent.Operation.REPLACE);
 	}
 
 	public static AttributeSupplier.Builder createAttributes() {

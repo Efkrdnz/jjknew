@@ -1,6 +1,7 @@
 
 package net.efkrdnz.jjkstrongest.entity;
 
+import net.neoforged.neoforge.event.entity.RegisterSpawnPlacementsEvent;
 import net.minecraft.core.registries.BuiltInRegistries;
 
 import net.minecraft.world.level.block.state.BlockState;
@@ -97,7 +98,7 @@ public class DomainUVEntity extends PathfinderMob {
 	}
 
 	@Override
-	public boolean ignoreExplosion() {
+	public boolean ignoreExplosion(net.minecraft.world.level.Explosion explosion) {
 		return true;
 	}
 
@@ -139,7 +140,7 @@ public class DomainUVEntity extends PathfinderMob {
 		this.setNoGravity(true);
 	}
 
-	public static void init() {
+	public static void init(RegisterSpawnPlacementsEvent event) {
 	}
 
 	public static AttributeSupplier.Builder createAttributes() {

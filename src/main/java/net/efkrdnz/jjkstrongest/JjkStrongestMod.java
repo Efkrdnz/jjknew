@@ -17,7 +17,6 @@ import net.neoforged.bus.api.IEventBus;
 
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.client.gui.screens.Screen;
@@ -87,9 +86,11 @@ public class JjkStrongestMod {
 		public static final CustomPacketPayload.Type<TextboxSetMessage> TYPE = new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(MODID, "textbox_set"));
 
 		public static final StreamCodec<RegistryFriendlyByteBuf, TextboxSetMessage> STREAM_CODEC = StreamCodec.of((buffer, message) -> {
-			buffer.writeComponent(Component.literal(message.textboxid()));
-			buffer.writeComponent(Component.literal(message.data()));
-		}, buffer -> new TextboxSetMessage(buffer.readComponent().getString(), buffer.readComponent().getString()));
+			// these were round-tripped through Component on 1.20.1 for no reason;
+			// they are plain strings, and 1.21 component codecs need registry access
+			buffer.writeUtf(message.textboxid());
+			buffer.writeUtf(message.data());
+		}, buffer -> new TextboxSetMessage(buffer.readUtf(), buffer.readUtf()));
 
 		@Override
 		public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {

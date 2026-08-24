@@ -4,6 +4,7 @@ package net.efkrdnz.jjkstrongest.entity;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.api.distmarker.Dist;
 
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.item.ItemStack;
@@ -42,12 +43,12 @@ public class DismantleProjectileEntity extends AbstractArrow implements ItemSupp
 	}
 
 	public DismantleProjectileEntity(EntityType<? extends DismantleProjectileEntity> type, double x, double y, double z, Level world) {
-		super(type, x, y, z, world);
+		super(type, x, y, z, world, new ItemStack(Items.ARROW), null);
 		setupDefaults();
 	}
 
 	public DismantleProjectileEntity(EntityType<? extends DismantleProjectileEntity> type, LivingEntity entity, Level world) {
-		super(type, entity, world);
+		super(type, entity, world, new ItemStack(Items.ARROW), null);
 		setupDefaults();
 	}
 
@@ -210,5 +211,11 @@ public class DismantleProjectileEntity extends AbstractArrow implements ItemSupp
 			//System.out.println("[Dismantle Entity] Despawning after 12 ticks");
 			this.discard();
 		}
+	}
+
+	@Override
+	protected ItemStack getDefaultPickupItem() {
+		// never actually picked up: this projectile sets Pickup.DISALLOWED
+		return new ItemStack(Items.ARROW);
 	}
 }

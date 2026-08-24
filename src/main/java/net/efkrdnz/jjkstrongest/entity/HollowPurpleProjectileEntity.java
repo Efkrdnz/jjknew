@@ -10,6 +10,7 @@ import software.bernie.geckolib.animation.AnimatableManager;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animatable.GeoEntity;
 
+import net.neoforged.neoforge.event.entity.RegisterSpawnPlacementsEvent;
 import net.minecraft.core.registries.BuiltInRegistries;
 
 import net.minecraft.world.level.block.state.BlockState;
@@ -169,7 +170,7 @@ public class HollowPurpleProjectileEntity extends PathfinderMob implements GeoEn
 	}
 
 	@Override
-	public EntityDimensions getDimensions(Pose p_33597_) {
+	protected EntityDimensions getDefaultDimensions(Pose p_33597_) {
 		return super.getDimensions(p_33597_).scale((float) 1);
 	}
 
@@ -189,7 +190,7 @@ public class HollowPurpleProjectileEntity extends PathfinderMob implements GeoEn
 		this.setNoGravity(true);
 	}
 
-	public static void init() {
+	public static void init(RegisterSpawnPlacementsEvent event) {
 	}
 
 	public static AttributeSupplier.Builder createAttributes() {
@@ -234,7 +235,7 @@ public class HollowPurpleProjectileEntity extends PathfinderMob implements GeoEn
 		++this.deathTime;
 		if (this.deathTime == 20) {
 			this.remove(HollowPurpleProjectileEntity.RemovalReason.KILLED);
-			this.dropExperience();
+			this.dropExperience(null);
 		}
 	}
 

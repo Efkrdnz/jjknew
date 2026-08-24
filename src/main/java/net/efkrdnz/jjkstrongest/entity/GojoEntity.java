@@ -1,5 +1,6 @@
 package net.efkrdnz.jjkstrongest.entity;
 
+import net.neoforged.neoforge.event.entity.RegisterSpawnPlacementsEvent;
 import net.minecraft.core.registries.BuiltInRegistries;
 
 import net.minecraft.world.level.Level;
@@ -89,7 +90,7 @@ public class GojoEntity extends Monster {
 	}
 
 	@Override
-	public boolean canChangeDimensions() {
+	public boolean canChangeDimensions(net.minecraft.world.level.Level oldLevel, net.minecraft.world.level.Level newLevel) {
 		return false;
 	}
 
@@ -112,7 +113,7 @@ public class GojoEntity extends Monster {
 		GojoNPCTickProcedure.execute(this.level(), this);
 	}
 
-	public static void init() {
+	public static void init(RegisterSpawnPlacementsEvent event) {
 	}
 
 	public static AttributeSupplier.Builder createAttributes() {

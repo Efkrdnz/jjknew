@@ -44,7 +44,7 @@ public class SetupDimensionProcedure {
 		}
 
 		@Override
-		public boolean renderClouds(ClientLevel level, int ticks, float partialTick, PoseStack poseStack, double camX, double camY, double camZ, Matrix4f projectionMatrix) {
+		public boolean renderClouds(ClientLevel level, int ticks, float partialTick, PoseStack poseStack, double camX, double camY, double camZ, Matrix4f modelViewMatrix, Matrix4f projectionMatrix) {
 			if (CUSTOM_CLOUDS != null && !CUSTOM_CLOUDS.isEmpty()) {
 				boolean flag = false;
 				Object[] objects = new Object[]{level, ticks, partialTick, poseStack, camX, camY, camZ, projectionMatrix};
@@ -67,8 +67,12 @@ public class SetupDimensionProcedure {
 		}
 
 		@Override
-		public boolean renderSky(ClientLevel level, int ticks, float partialTick, PoseStack poseStack, Camera camera, Matrix4f projectionMatrix, boolean isFoggy, Runnable setupFog) {
+		public boolean renderSky(ClientLevel level, int ticks, float partialTick, Matrix4f modelViewMatrix, Camera camera, Matrix4f projectionMatrix, boolean isFoggy, Runnable setupFog) {
 			if (CUSTOM_SKY != null && !CUSTOM_SKY.isEmpty()) {
+				// 1.21 hands the model-view in as a bare Matrix4f; the registered sky
+				// predicates still expect a PoseStack at index 3, so rebuild one
+				PoseStack poseStack = new PoseStack();
+				poseStack.mulPose(modelViewMatrix);
 				boolean flag = false;
 				Object[] objects = new Object[]{level, ticks, partialTick, poseStack, camera, projectionMatrix, isFoggy, setupFog};
 				for (Predicate<Object[]> predicate : CUSTOM_SKY) {

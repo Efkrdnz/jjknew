@@ -11,6 +11,7 @@ import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animatable.GeoEntity;
 
 
+import net.neoforged.neoforge.event.entity.RegisterSpawnPlacementsEvent;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.Level;
@@ -206,14 +207,14 @@ public class HollowPurpleChargeEntity extends TamableAnimal implements GeoEntity
 	}
 
 	@Override
-	public EntityDimensions getDimensions(Pose p_33597_) {
+	protected EntityDimensions getDefaultDimensions(Pose p_33597_) {
 		return super.getDimensions(p_33597_).scale((float) 1);
 	}
 
 	@Override
 	public AgeableMob getBreedOffspring(ServerLevel serverWorld, AgeableMob ageable) {
 		HollowPurpleChargeEntity retval = JjkStrongestModEntities.HOLLOW_PURPLE_CHARGE.get().create(serverWorld);
-		retval.finalizeSpawn(serverWorld, serverWorld.getCurrentDifficultyAt(retval.blockPosition()), MobSpawnType.BREEDING, null, null);
+		retval.finalizeSpawn(serverWorld, serverWorld.getCurrentDifficultyAt(retval.blockPosition()), MobSpawnType.BREEDING, null);
 		return retval;
 	}
 
@@ -251,7 +252,7 @@ public class HollowPurpleChargeEntity extends TamableAnimal implements GeoEntity
 		this.setNoGravity(true);
 	}
 
-	public static void init() {
+	public static void init(RegisterSpawnPlacementsEvent event) {
 	}
 
 	public static AttributeSupplier.Builder createAttributes() {
@@ -296,7 +297,7 @@ public class HollowPurpleChargeEntity extends TamableAnimal implements GeoEntity
 		++this.deathTime;
 		if (this.deathTime == 20) {
 			this.remove(HollowPurpleChargeEntity.RemovalReason.KILLED);
-			this.dropExperience();
+			this.dropExperience(null);
 		}
 	}
 

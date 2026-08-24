@@ -20,7 +20,7 @@ public class FlameArrowProjectileHitsLivingEntityProcedure {
 			immediatesourceentity.discard();
 		// spawn explosion
 		if (world instanceof ServerLevel _serverLevel) {
-			Entity entityinstance = JjkStrongestModEntities.FLAME_ARROW_EXPLOSION.get().create(_serverLevel, null, null, BlockPos.containing(x, y, z), MobSpawnType.MOB_SUMMONED, false, false);
+			Entity entityinstance = JjkStrongestModEntities.FLAME_ARROW_EXPLOSION.get().create(_serverLevel, null, BlockPos.containing(x, y, z), MobSpawnType.MOB_SUMMONED, false, false);
 			if (entityinstance != null) {
 				entityinstance.setYRot(world.getRandom().nextFloat() * 360.0F);
 				// CRITICAL FIX: get the shooter from the projectile

@@ -17,7 +17,7 @@ public class FlameArrowProjectileHitsBlockProcedure {
 		if (!immediatesourceentity.level().isClientSide())
 			immediatesourceentity.discard();
 		if (world instanceof ServerLevel _serverLevel) {
-			Entity entityinstance = JjkStrongestModEntities.FLAME_ARROW_EXPLOSION.get().create(_serverLevel, null, null, BlockPos.containing(x, y, z), MobSpawnType.MOB_SUMMONED, false, false);
+			Entity entityinstance = JjkStrongestModEntities.FLAME_ARROW_EXPLOSION.get().create(_serverLevel, null, BlockPos.containing(x, y, z), MobSpawnType.MOB_SUMMONED, false, false);
 			if (entityinstance != null) {
 				entityinstance.setYRot(world.getRandom().nextFloat() * 360.0F);
 				if (entityinstance instanceof TamableAnimal _toTame && entity instanceof Player _owner)

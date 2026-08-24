@@ -1,6 +1,7 @@
 
 package net.efkrdnz.jjkstrongest.entity;
 
+import net.minecraft.world.item.Items;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.api.distmarker.Dist;
@@ -33,11 +34,11 @@ public class FlameArrowEntity extends AbstractArrow implements ItemSupplier {
 	}
 
 	public FlameArrowEntity(EntityType<? extends FlameArrowEntity> type, double x, double y, double z, Level world) {
-		super(type, x, y, z, world);
+		super(type, x, y, z, world, new ItemStack(Items.ARROW), null);
 	}
 
 	public FlameArrowEntity(EntityType<? extends FlameArrowEntity> type, LivingEntity entity, Level world) {
-		super(type, entity, world);
+		super(type, entity, world, new ItemStack(Items.ARROW), null);
 	}
 
 
@@ -92,7 +93,7 @@ public class FlameArrowEntity extends AbstractArrow implements ItemSupplier {
 		entityarrow.setSilent(true);
 		entityarrow.setCritArrow(false);
 		entityarrow.setBaseDamage(damage);
-		entityarrow.		world.addFreshEntity(entityarrow);
+		world.addFreshEntity(entityarrow);
 		world.playSound(null, entity.getX(), entity.getY(), entity.getZ(), BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("entity.arrow.shoot")), SoundSource.PLAYERS, 1, 1f / (random.nextFloat() * 0.5f + 1) + (power / 2));
 		return entityarrow;
 	}
@@ -105,9 +106,15 @@ public class FlameArrowEntity extends AbstractArrow implements ItemSupplier {
 		entityarrow.shoot(dx, dy - entityarrow.getY() + Math.hypot(dx, dz) * 0.2F, dz, 0f * 2, 12.0F);
 		entityarrow.setSilent(true);
 		entityarrow.setBaseDamage(0);
-		entityarrow.		entityarrow.setCritArrow(false);
+		entityarrow.setCritArrow(false);
 		entity.level().addFreshEntity(entityarrow);
 		entity.level().playSound(null, entity.getX(), entity.getY(), entity.getZ(), BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("entity.arrow.shoot")), SoundSource.PLAYERS, 1, 1f / (RandomSource.create().nextFloat() * 0.5f + 1));
 		return entityarrow;
+	}
+
+	@Override
+	protected ItemStack getDefaultPickupItem() {
+		// never actually picked up: this projectile sets Pickup.DISALLOWED
+		return new ItemStack(Items.ARROW);
 	}
 }

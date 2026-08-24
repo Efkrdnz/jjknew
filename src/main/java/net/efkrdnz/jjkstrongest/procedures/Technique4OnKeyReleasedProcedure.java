@@ -293,7 +293,7 @@ public class Technique4OnKeyReleasedProcedure {
 					}
 				}
 				if (world instanceof ServerLevel _serverLevel) {
-					Entity entityinstance = JjkStrongestModEntities.IMAGINARY_PURPLE.get().create(_serverLevel, null, null, BlockPos.containing(entity.getX(), entity.getY() + 1.8, entity.getZ()), MobSpawnType.MOB_SUMMONED, false, false);
+					Entity entityinstance = JjkStrongestModEntities.IMAGINARY_PURPLE.get().create(_serverLevel, null, BlockPos.containing(entity.getX(), entity.getY() + 1.8, entity.getZ()), MobSpawnType.MOB_SUMMONED, false, false);
 					if (entityinstance != null) {
 						entityinstance.setYRot(world.getRandom().nextFloat() * 360.0F);
 						entityinstance.getPersistentData().putString("caster", (entity.getDisplayName().getString()));

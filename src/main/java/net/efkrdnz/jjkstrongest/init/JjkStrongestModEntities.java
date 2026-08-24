@@ -7,7 +7,7 @@ package net.efkrdnz.jjkstrongest.init;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.neoforged.neoforge.registries.DeferredRegister;
-import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.neoforged.neoforge.event.entity.RegisterSpawnPlacementsEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
@@ -90,24 +90,22 @@ public class JjkStrongestModEntities {
 	}
 
 	@SubscribeEvent
-	public static void init(FMLCommonSetupEvent event) {
-		event.enqueueWork(() -> {
-			LapseBlueEntity.init();
-			ReversalRedEntity.init();
-			HollowPurpleChargeEntity.init();
-			HollowPurpleProjectileEntity.init();
-			BFEntityEntity.init();
-			MalevolentShrineEntity.init();
-			DomainUVEntity.init();
-			FlameArrowExplosionEntity.init();
-			HollowPurpleBigEntity.init();
-			ImaginaryPurpleEntity.init();
-			MahoragaEntity.init();
-			FugaDomainExplosionEntity.init();
-			HollowNukeEntity.init();
-			SukunaEntity.init();
-			GojoEntity.init();
-		});
+	public static void registerSpawnPlacements(RegisterSpawnPlacementsEvent event) {
+		LapseBlueEntity.init(event);
+		ReversalRedEntity.init(event);
+		HollowPurpleChargeEntity.init(event);
+		HollowPurpleProjectileEntity.init(event);
+		BFEntityEntity.init(event);
+		MalevolentShrineEntity.init(event);
+		DomainUVEntity.init(event);
+		FlameArrowExplosionEntity.init(event);
+		HollowPurpleBigEntity.init(event);
+		ImaginaryPurpleEntity.init(event);
+		MahoragaEntity.init(event);
+		FugaDomainExplosionEntity.init(event);
+		HollowNukeEntity.init(event);
+		SukunaEntity.init(event);
+		GojoEntity.init(event);
 	}
 
 	@SubscribeEvent

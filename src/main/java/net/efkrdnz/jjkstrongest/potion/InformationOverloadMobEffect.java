@@ -26,30 +26,18 @@ public class InformationOverloadMobEffect extends MobEffect {
 	}
 
 	@Override
-	public List<ItemStack> getCurativeItems() {
-		ArrayList<ItemStack> cures = new ArrayList<ItemStack>();
-		cures.add(new ItemStack(Items.TOTEM_OF_UNDYING));
-		return cures;
-	}
-
-	@Override
-	public void addAttributeModifiers(LivingEntity entity, AttributeMap attributeMap, int amplifier) {
+	public void onEffectStarted(LivingEntity entity, int amplifier) {
 		InformationOverloadEffectStartedappliedProcedure.execute(entity);
 	}
 
 	@Override
-	public void applyEffectTick(LivingEntity entity, int amplifier) {
+	public boolean applyEffectTick(LivingEntity entity, int amplifier) {
 		InformationOverloadOnEffectActiveTickProcedure.execute(entity.getX(), entity.getY(), entity.getZ(), entity);
+		return true;
 	}
 
 	@Override
-	public void removeAttributeModifiers(LivingEntity entity, AttributeMap attributeMap, int amplifier) {
-		super.removeAttributeModifiers(entity, attributeMap, amplifier);
-		InformationOverloadEffectExpiresProcedure.execute(entity);
-	}
-
-	@Override
-	public boolean isDurationEffectTick(int duration, int amplifier) {
+	public boolean shouldApplyEffectTickThisTick(int duration, int amplifier) {
 		return true;
 	}
 
