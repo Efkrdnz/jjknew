@@ -2,9 +2,9 @@
 
 Workspace used for this audit:
 
-`C:\Users\tahsi\Documents\minecraft mods\jujutsu kaisen`
+`E:\minecraft mods\jujutsu kaisen 1.21.1`
 
-This document explains how the mod renders custom entity effects, world-space quads, first-person shader overlays, and full-screen post-processing shaders. It is written as a handoff reference for reusing the same architecture in another Forge 1.20.1 project.
+This document explains how the mod renders custom entity effects, world-space quads, first-person shader overlays, and full-screen post-processing shaders. It is written as a handoff reference for reusing the same architecture in another NeoForge 1.21.1 project.
 
 ## High-Level Architecture
 
@@ -35,24 +35,25 @@ There are two different shader systems in play:
 
 | Role | File |
 |---|---|
-| Custom shader registration and uniform helpers | `C:\Users\tahsi\Documents\minecraft mods\jujutsu kaisen\src\main\java\net\mcreator\jjkstrongest\JjkShaderManager.java` |
-| Entity renderer registration | `C:\Users\tahsi\Documents\minecraft mods\jujutsu kaisen\src\main\java\net\mcreator\jjkstrongest\init\JjkStrongestModEntityRenderers.java` |
-| First-person render hook | `C:\Users\tahsi\Documents\minecraft mods\jujutsu kaisen\src\main\java\net\mcreator\jjkstrongest\RedFirstPersonRenderHook.java` |
-| Dismantle slash renderer | `C:\Users\tahsi\Documents\minecraft mods\jujutsu kaisen\src\main\java\net\mcreator\jjkstrongest\client\renderer\DismantleProjectileRenderer.java` |
-| Dismantle travel renderer | `C:\Users\tahsi\Documents\minecraft mods\jujutsu kaisen\src\main\java\net\mcreator\jjkstrongest\client\renderer\DismantleTravelRenderer.java` |
-| Hollow Purple renderer | `C:\Users\tahsi\Documents\minecraft mods\jujutsu kaisen\src\main\java\net\mcreator\jjkstrongest\client\renderer\HollowPurpleBigRenderer.java` |
-| Hollow Nuke renderer | `C:\Users\tahsi\Documents\minecraft mods\jujutsu kaisen\src\main\java\net\mcreator\jjkstrongest\client\renderer\HollowNukeRenderer.java` |
-| Unlimited Void entity renderer | `C:\Users\tahsi\Documents\minecraft mods\jujutsu kaisen\src\main\java\net\mcreator\jjkstrongest\client\renderer\DomainUVRenderer.java` |
-| Flame Arrow explosion renderer | `C:\Users\tahsi\Documents\minecraft mods\jujutsu kaisen\src\main\java\net\mcreator\jjkstrongest\client\renderer\FlameArrowExplosionRenderer.java` |
-| Fuga domain explosion renderer | `C:\Users\tahsi\Documents\minecraft mods\jujutsu kaisen\src\main\java\net\mcreator\jjkstrongest\client\renderer\FugaDomainExplosionRenderer.java` |
-| Black Flash lightning world renderer | `C:\Users\tahsi\Documents\minecraft mods\jujutsu kaisen\src\main\java\net\mcreator\jjkstrongest\BlackFlashLightningClientRenderer.java` |
-| Unlimited Void line world renderer | `C:\Users\tahsi\Documents\minecraft mods\jujutsu kaisen\src\main\java\net\mcreator\jjkstrongest\DomainUVLinesClientRenderer.java` |
-| Information Overload overlay renderer | `C:\Users\tahsi\Documents\minecraft mods\jujutsu kaisen\src\main\java\net\mcreator\jjkstrongest\InformationOverloadDebugLinesClientRenderer.java` |
-| Cleave post shader loader | `C:\Users\tahsi\Documents\minecraft mods\jujutsu kaisen\src\main\java\net\mcreator\jjkstrongest\procedures\CleaveDistortionShaderProcedure.java` |
-| Impact frame post shader loader | `C:\Users\tahsi\Documents\minecraft mods\jujutsu kaisen\src\main\java\net\mcreator\jjkstrongest\procedures\ImpactFrameShaderProcedure.java` |
-| Black Flash post shader loader | `C:\Users\tahsi\Documents\minecraft mods\jujutsu kaisen\src\main\java\net\mcreator\jjkstrongest\procedures\BlackFlashShaderProcedure.java` |
+| Custom shader registration and uniform helpers | `E:\minecraft mods\jujutsu kaisen 1.21.1\src\main\java\net\efkrdnz\jjkstrongest\client\JjkShaderManager.java` |
+| Entity renderer registration | `E:\minecraft mods\jujutsu kaisen 1.21.1\src\main\java\net\efkrdnz\jjkstrongest\init\JjkStrongestModEntityRenderers.java` |
+| First-person render hook | `E:\minecraft mods\jujutsu kaisen 1.21.1\src\main\java\net\efkrdnz\jjkstrongest\clientenderer\RedFirstPersonRenderHook.java` |
+| Dismantle slash renderer | `E:\minecraft mods\jujutsu kaisen 1.21.1\src\main\java\net\efkrdnz\jjkstrongest\client\renderer\DismantleProjectileRenderer.java` |
+| Dismantle travel renderer | `E:\minecraft mods\jujutsu kaisen 1.21.1\src\main\java\net\efkrdnz\jjkstrongest\client\renderer\DismantleTravelRenderer.java` |
+| Hollow Purple renderer | `E:\minecraft mods\jujutsu kaisen 1.21.1\src\main\java\net\efkrdnz\jjkstrongest\client\renderer\HollowPurpleBigRenderer.java` |
+| Hollow Nuke renderer | `E:\minecraft mods\jujutsu kaisen 1.21.1\src\main\java\net\efkrdnz\jjkstrongest\client\renderer\HollowNukeRenderer.java` |
+| Unlimited Void entity renderer | `E:\minecraft mods\jujutsu kaisen 1.21.1\src\main\java\net\efkrdnz\jjkstrongest\client\renderer\DomainUVRenderer.java` |
+| Flame Arrow explosion renderer | `E:\minecraft mods\jujutsu kaisen 1.21.1\src\main\java\net\efkrdnz\jjkstrongest\client\renderer\FlameArrowExplosionRenderer.java` |
+| Fuga domain explosion renderer | `E:\minecraft mods\jujutsu kaisen 1.21.1\src\main\java\net\efkrdnz\jjkstrongest\client\renderer\FugaDomainExplosionRenderer.java` |
+| Black Flash lightning world renderer | `E:\minecraft mods\jujutsu kaisen 1.21.1\src\main\java\net\efkrdnz\jjkstrongest\clientenderer\BlackFlashLightningClientRenderer.java` |
+| Unlimited Void line world renderer | `E:\minecraft mods\jujutsu kaisen 1.21.1\src\main\java\net\efkrdnz\jjkstrongest\clientenderer\DomainUVLinesClientRenderer.java` |
+| Information Overload overlay renderer | `E:\minecraft mods\jujutsu kaisen 1.21.1\src\main\java\net\efkrdnz\jjkstrongest\InformationOverloadDebugLinesClientRenderer.java` |
+| Cleave post shader loader | `E:\minecraft mods\jujutsu kaisen 1.21.1\src\main\java\net\efkrdnz\jjkstrongest\procedures\CleaveDistortionShaderProcedure.java` |
+| Impact frame post shader loader | `E:\minecraft mods\jujutsu kaisen 1.21.1\src\main\java\net\efkrdnz\jjkstrongest\procedures\ImpactFrameShaderProcedure.java` |
+| Black Flash post shader loader | `E:\minecraft mods\jujutsu kaisen 1.21.1\src\main\java\net\efkrdnz\jjkstrongest\procedures\BlackFlashShaderProcedure.java` |
 
-Important quirk: `JjkShaderManager.java` is physically stored under `net/mcreator/jjkstrongest`, but its package is `net.mcreator.jjkstrongest.client`.
+Note: on 1.20.1 several of these files sat in the package root while declaring a
+subpackage. The port moved each one into the directory matching its declared package.
 
 ## Shader Manager Pattern
 
@@ -77,7 +78,7 @@ It listens to `RegisterShadersEvent`, loads a shader by `ResourceLocation`, then
 event.registerShader(
     new ShaderInstance(
         event.getResourceProvider(),
-        new ResourceLocation("jjk_strongest", "dismantle_slash"),
+        ResourceLocation.fromNamespaceAndPath("jjk_strongest", "dismantle_slash"),
         DefaultVertexFormat.POSITION_TEX
     ),
     shader -> {
@@ -89,7 +90,7 @@ event.registerShader(
 
 The `ResourceLocation("jjk_strongest", "dismantle_slash")` maps to this shader JSON:
 
-`C:\Users\tahsi\Documents\minecraft mods\jujutsu kaisen\src\main\resources\assets\jjk_strongest\shaders\core\dismantle_slash.json`
+`E:\minecraft mods\jujutsu kaisen 1.21.1\src\main\resources\assets\jjk_strongest\shaders\core\dismantle_slash.json`
 
 The JSON then names the actual vertex and fragment shaders:
 
@@ -234,7 +235,7 @@ That is the important difference between a plain glowing sprite and a distortion
 
 Representative file:
 
-`C:\Users\tahsi\Documents\minecraft mods\jujutsu kaisen\src\main\java\net\mcreator\jjkstrongest\client\renderer\DismantleProjectileRenderer.java`
+`E:\minecraft mods\jujutsu kaisen 1.21.1\src\main\java\net\efkrdnz\jjkstrongest\client\renderer\DismantleProjectileRenderer.java`
 
 The renderer:
 
@@ -283,10 +284,10 @@ poseStack.scale(entity.getSlashLength(), entity.getSlashWidth(), 1.0f);
 VertexConsumer vc = bufferSource.getBuffer(JjkShaderManager.DISMANTLE_RENDER_TYPE);
 Matrix4f m = poseStack.last().pose();
 
-vc.vertex(m, -0.5f, -0.5f, 0.0f).uv(0.0f, 1.0f).endVertex();
-vc.vertex(m,  0.5f, -0.5f, 0.0f).uv(1.0f, 1.0f).endVertex();
-vc.vertex(m,  0.5f,  0.5f, 0.0f).uv(1.0f, 0.0f).endVertex();
-vc.vertex(m, -0.5f,  0.5f, 0.0f).uv(0.0f, 0.0f).endVertex();
+vc.addVertex(m, -0.5f, -0.5f, 0.0f).setUv(0.0f, 1.0f);
+vc.addVertex(m,  0.5f, -0.5f, 0.0f).setUv(1.0f, 1.0f);
+vc.addVertex(m,  0.5f,  0.5f, 0.0f).setUv(1.0f, 0.0f);
+vc.addVertex(m, -0.5f,  0.5f, 0.0f).setUv(0.0f, 0.0f);
 
 poseStack.popPose();
 
@@ -297,7 +298,7 @@ if (bufferSource instanceof MultiBufferSource.BufferSource bs) {
 
 The travel slash renderer is the same pattern without the short-lived expand/fade animation:
 
-`C:\Users\tahsi\Documents\minecraft mods\jujutsu kaisen\src\main\java\net\mcreator\jjkstrongest\client\renderer\DismantleTravelRenderer.java`
+`E:\minecraft mods\jujutsu kaisen 1.21.1\src\main\java\net\efkrdnz\jjkstrongest\client\renderer\DismantleTravelRenderer.java`
 
 ## Circular Shader Quad Pattern
 
@@ -305,7 +306,7 @@ Hollow Purple, Imaginary Purple, and Hollow Nuke render a camera-facing circular
 
 Representative file:
 
-`C:\Users\tahsi\Documents\minecraft mods\jujutsu kaisen\src\main\java\net\mcreator\jjkstrongest\client\renderer\HollowPurpleBigRenderer.java`
+`E:\minecraft mods\jujutsu kaisen 1.21.1\src\main\java\net\efkrdnz\jjkstrongest\client\renderer\HollowPurpleBigRenderer.java`
 
 Key code:
 
@@ -329,10 +330,10 @@ for (int i = 0; i < segments; i++) {
     float x2 = (float) Math.cos(angle2) * 0.5f;
     float y2 = (float) Math.sin(angle2) * 0.5f;
 
-    vc.vertex(m, 0, 0, 0).uv(0.5f, 0.5f).endVertex();
-    vc.vertex(m, x1, y1, 0).uv(x1 + 0.5f, y1 + 0.5f).endVertex();
-    vc.vertex(m, x2, y2, 0).uv(x2 + 0.5f, y2 + 0.5f).endVertex();
-    vc.vertex(m, 0, 0, 0).uv(0.5f, 0.5f).endVertex();
+    vc.addVertex(m, 0, 0, 0).setUv(0.5f, 0.5f);
+    vc.addVertex(m, x1, y1, 0).setUv(x1 + 0.5f, y1 + 0.5f);
+    vc.addVertex(m, x2, y2, 0).setUv(x2 + 0.5f, y2 + 0.5f);
+    vc.addVertex(m, 0, 0, 0).setUv(0.5f, 0.5f);
 }
 ```
 
@@ -369,10 +370,10 @@ for (int lat = 0; lat < latSegments; lat++) {
         float phi2 = ((lon + 1) / (float) lonSegments) * 2.0f * (float) Math.PI;
 
         // Four sphere points -> one quad.
-        vc.vertex(matrix, x1, y1, z1).uv(u1, v1).endVertex();
-        vc.vertex(matrix, x4, y4, z4).uv(u1, v2).endVertex();
-        vc.vertex(matrix, x3, y3, z3).uv(u2, v2).endVertex();
-        vc.vertex(matrix, x2, y2, z2).uv(u2, v1).endVertex();
+        vc.addVertex(matrix, x1, y1, z1).setUv(u1, v1);
+        vc.addVertex(matrix, x4, y4, z4).setUv(u1, v2);
+        vc.addVertex(matrix, x3, y3, z3).setUv(u2, v2);
+        vc.addVertex(matrix, x2, y2, z2).setUv(u2, v1);
     }
 }
 ```
@@ -454,13 +455,13 @@ Vec3 v2 = start.add(perpendicular);
 Vec3 v3 = end.add(perpendicular);
 Vec3 v4 = end.subtract(perpendicular);
 
-buffer.vertex(matrix, (float) v1.x, (float) v1.y, (float) v1.z)
-    .color(r1, g1, b1, alpha)
-    .uv(0.0f, 0.0f)
+buffer.addVertex(matrix, (float) v1.x, (float) v1.y, (float) v1.z)
+    .setColor(r1, g1, b1, alpha)
+    .setUv(0.0f, 0.0f)
     .overlayCoords(OverlayTexture.NO_OVERLAY)
     .uv2(LightTexture.FULL_BRIGHT)
     .normal(normal, (float) normalVec.x, (float) normalVec.y, (float) normalVec.z)
-    .endVertex();
+    ;
 ```
 
 The important idea is that every line segment is actually a camera-facing rectangle. The width is controlled by the perpendicular vector.
@@ -469,7 +470,7 @@ The important idea is that every line segment is actually a camera-facing rectan
 
 First-person effects are handled by:
 
-`C:\Users\tahsi\Documents\minecraft mods\jujutsu kaisen\src\main\java\net\mcreator\jjkstrongest\RedFirstPersonRenderHook.java`
+`E:\minecraft mods\jujutsu kaisen 1.21.1\src\main\java\net\efkrdnz\jjkstrongest\clientenderer\RedFirstPersonRenderHook.java`
 
 It subscribes to `RenderHandEvent`:
 
@@ -509,10 +510,10 @@ if (JjkShaderManager.BLUE_ORB_RENDER_TYPE != null &&
 
     VertexConsumer vc = bufferSource.getBuffer(JjkShaderManager.BLUE_ORB_RENDER_TYPE);
     Matrix4f matrix = poseStack.last().pose();
-    vc.vertex(matrix, -1, -1, 0).uv(0, 1).endVertex();
-    vc.vertex(matrix,  1, -1, 0).uv(1, 1).endVertex();
-    vc.vertex(matrix,  1,  1, 0).uv(1, 0).endVertex();
-    vc.vertex(matrix, -1,  1, 0).uv(0, 0).endVertex();
+    vc.addVertex(matrix, -1, -1, 0).setUv(0, 1);
+    vc.addVertex(matrix,  1, -1, 0).setUv(1, 1);
+    vc.addVertex(matrix,  1,  1, 0).setUv(1, 0);
+    vc.addVertex(matrix, -1,  1, 0).setUv(0, 0);
 
     bufferSource.endBatch(JjkShaderManager.BLUE_ORB_RENDER_TYPE);
     poseStack.popPose();
@@ -538,10 +539,10 @@ public static void onRenderGuiOverlay(RenderGuiOverlayEvent.Pre event) {
     VertexConsumer vc = bufferSource.getBuffer(JjkShaderManager.PURPLE_CHARGE_RENDER_TYPE);
     Matrix4f matrix = poseStack.last().pose();
 
-    vc.vertex(matrix, 0, screenHeight, 0).uv(0, 1).endVertex();
-    vc.vertex(matrix, screenWidth, screenHeight, 0).uv(1, 1).endVertex();
-    vc.vertex(matrix, screenWidth, 0, 0).uv(1, 0).endVertex();
-    vc.vertex(matrix, 0, 0, 0).uv(0, 0).endVertex();
+    vc.addVertex(matrix, 0, screenHeight, 0).setUv(0, 1);
+    vc.addVertex(matrix, screenWidth, screenHeight, 0).setUv(1, 1);
+    vc.addVertex(matrix, screenWidth, 0, 0).setUv(1, 0);
+    vc.addVertex(matrix, 0, 0, 0).setUv(0, 0);
 }
 ```
 
@@ -551,11 +552,11 @@ Use this style when the effect is UI/screen-space, not attached to a world entit
 
 Post shaders live under:
 
-`C:\Users\tahsi\Documents\minecraft mods\jujutsu kaisen\src\main\resources\assets\minecraft\shaders\post`
+`E:\minecraft mods\jujutsu kaisen 1.21.1\src\main\resources\assets\minecraft\shaders\post`
 
 and:
 
-`C:\Users\tahsi\Documents\minecraft mods\jujutsu kaisen\src\main\resources\assets\minecraft\shaders\program`
+`E:\minecraft mods\jujutsu kaisen 1.21.1\src\main\resources\assets\minecraft\shaders\program`
 
 The mod has three main post shader loaders:
 
@@ -955,10 +956,10 @@ poseStack.scale(4.0f, 4.0f, 4.0f);
 VertexConsumer vc = bufferSource.getBuffer(JjkShaderManager.MY_EFFECT_RENDER_TYPE);
 Matrix4f m = poseStack.last().pose();
 
-vc.vertex(m, -1, -1, 0).uv(0, 1).endVertex();
-vc.vertex(m,  1, -1, 0).uv(1, 1).endVertex();
-vc.vertex(m,  1,  1, 0).uv(1, 0).endVertex();
-vc.vertex(m, -1,  1, 0).uv(0, 0).endVertex();
+vc.addVertex(m, -1, -1, 0).setUv(0, 1);
+vc.addVertex(m,  1, -1, 0).setUv(1, 1);
+vc.addVertex(m,  1,  1, 0).setUv(1, 0);
+vc.addVertex(m, -1,  1, 0).setUv(0, 0);
 
 poseStack.popPose();
 
@@ -1057,7 +1058,7 @@ That is why lightning looks bright independent of world lighting.
 
 ## Recommended Porting Order
 
-If using this in a new Forge 1.20.1 project, port in this order:
+If using this in a new NeoForge 1.21.1 project, port in this order:
 
 1. Copy the shader asset files for one effect, e.g. `dismantle_slash`.
 2. Copy the `JjkShaderManager` pattern, but rename it for your mod.
@@ -1084,3 +1085,22 @@ When a shader effect is invisible:
 9. If using scene copy, temporarily remove scene sampling and output a flat color.
 10. Check the client log for shader compile errors.
 
+## NeoForge 1.21.1 notes
+
+Three things changed with the port that this document's older revisions got wrong:
+
+- **Namespacing.** `ShaderInstance` resolves a core shader's `vertex`/`fragment`
+  entries through `ResourceLocation.parse`, so an unqualified name resolves in
+  the `minecraft` namespace. That is why the GLSL used to be duplicated under
+  `assets/minecraft`. Every program name is now qualified with
+  `jjk_strongest:` and all GLSL lives under `assets/jjk_strongest/shaders/`.
+
+- **Post chains.** `PostChain#parsePassNode` passes the *pass name* to
+  `EffectInstance` and never reads a `"program"` field, so the namespace has to
+  go on `"name"`. `PostChain#passes` is opened by the mod's access transformer
+  rather than reached by reflection.
+
+- **Vertex building.** `BufferBuilder#end()` became `build()` (nullable) and
+  `buildOrThrow()` (throws on an empty buffer). Renderers that may legitimately
+  emit nothing on a frame must use `build()` and null-check, or they crash the
+  client.
