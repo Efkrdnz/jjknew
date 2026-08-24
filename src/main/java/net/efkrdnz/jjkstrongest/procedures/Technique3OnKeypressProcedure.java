@@ -15,7 +15,11 @@ public class Technique3OnKeypressProcedure {
 		double z = 0;
 		double yaw = 0;
 		double wcs_pwer = 0;
-		entity.getPersistentData().putDouble("TechniquePower", 1);
+		// Keep a charge that is already building. Holding the key cannot reach here
+		// twice, so this only ever protects a chant raised another way -- a spoken
+		// one, whose whole point is that the charge survives until it is released.
+		if (entity.getPersistentData().getString("chanting").isEmpty())
+			entity.getPersistentData().putDouble("TechniquePower", 1);
 		if (((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).sorcerer).equals("gojo")) {
 			if (((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).current_moveset).equals("gojo_blue")) {
 				if ((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).charge_blue >= 1) {

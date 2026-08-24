@@ -33,10 +33,11 @@ The addon refuses to load without both, rather than half-working.
    phrases a few times — hold the **Voice Command** key (default `'`), speak,
    release.
 3. In play: hold the key, say *"Dismantle"*, release.
-4. Say it again to charge it — see [Chanting](#chanting).
+4. Recite its incantation to charge it — see [Chanting](#chanting).
 
-Twenty-three techniques are configured out of the box: the seven the old phrase
-file covered, plus all sixteen Cursed Speech words. You do not have to enroll all of them: partial enrollment is a supported
+Twenty-six commands and five incantations ship configured, but you only ever see
+your own technique's share of them — five or so for Gojo, seven for Sukuna,
+seventeen for Inumaki. You do not have to enroll all of them: partial enrollment is a supported
 state, and a command with nothing recorded is simply skipped during matching. So
 teach the two or three you actually use and leave the rest. `/jjkvoice status`
 shows where you are, and everything else the mod exposes is still reachable with
@@ -64,78 +65,88 @@ All client-side — a server never sees your voiceprints or settings.
 `<technique>` tab-completes from the host mod's own command list, so there is
 nothing to memorise.
 
-## Two kinds of command
+## What a name does
 
-The mod works in two steps, so voice does too.
+Saying a technique's name does one of four things, depending on where you already
+are. That is what lets you recite an incantation and then name the technique and
+have it mean *"charge this, now fire it"*.
 
-**Actions** fire immediately: `domain_expansion`, `dismantle`, `fuga`, and
-Inumaki's Cursed Speech words (`die`, `blast`, `crush`, `burst`, `sleep`, `flee`,
-`rot`, `twist`, `burn`, `fall`, `spit`, `pull`, `shrink`, `weep`, `kneel`,
-`dont_move`).
+| When you say an ability's name | What happens |
+| --- | --- |
+| It is not selected | It becomes your selection, as the radial menu does |
+| It is selected | It starts charging, as holding its technique key does |
+| It is already charging | It is released, as letting that key up does |
 
-**Selections** switch which ability is active, exactly as picking it in the
-radial menu does — the technique keybinds then act on it. These are the mod's own
-moveset names: `gojo_blue`, `gojo_red`, `gojo_purple`, `gojo_limitless`,
-`sukuna_cleave`, `sukuna_wcs`, `sukuna_shrine`, `inumaki_*`, `yuji_*`, and the
-rest.
+**Actions** skip all of that and happen at once: `domain_expansion`, `kaisen`,
+`fuga`, and Inumaki's Cursed Speech words (`die`, `blast`, `crush`, `burst`,
+`sleep`, `flee`, `rot`, `twist`, `burn`, `fall`, `spit`, `pull`, `shrink`,
+`weep`, `kneel`, `dont_move`). Cursed Speech takes effect the moment it is
+spoken and has no charge to build.
 
-`/jjkvoice status` labels each configured command `[action]` or `[select]`.
+The decision is made on the server, because it depends on things the client
+cannot see and should not be trusted about. `/jjkvoice status` labels each
+configured command `[action]` or `[select]`.
+
+## Only your own technique
+
+You can only say what your technique includes. Another sorcerer's abilities are
+not merely refused, they are never heard: the recogniser is handed only the
+phrases you are entitled to before it compares anything.
+
+That is a recognition decision as much as a permission one. Leaving other
+techniques in the search lets them win — a Gojo player saying *"purple"* could
+lose to an enrolled *"fuga"* they could never use. Removing them makes what is
+left the only thing competing, so matching gets **more** accurate the more
+specific your sorcerer is. The server checks the same thing again.
 
 ## Chanting
 
-Once an ability is selected, saying its name **again** charges it, exactly as
-holding its technique key does.
+Reciting an ability's incantation charges it. Heard cleanly, a full incantation
+takes it straight to maximum output — which is what reciting one is for.
 
-Nothing about the charge is reimplemented. Holding the key works by leaving a
-chant state on you while the mod advances a counter one per tick and trips that
-ability's own tiers; a spoken chant supplies the same held state. So the
-multipliers, the tier thresholds and the tier sounds are identical — it is the
-same code running, fed from your voice instead of a key.
+```
+"Phase, Paramita, Pillars of Light"   -> Red, fully charged
+"Reversal Red"                        -> fires it
+```
 
-The charge you get is **the time you actually spoke**, trimmed of silence. A
-longer incantation charges more, which is the same relationship the keybind
-already has. Chants accumulate, so you can say it three times, or hold the key
-and then finish out loud.
+Nothing about the charge is reimplemented, and neither is the setup. Starting a
+chant runs the mod's own press handler, so the charge cost, the sorcerer check,
+the base output, the charge animation and the charging effect all apply exactly
+as they do from the keyboard — and if that handler refuses you (no Blue charges,
+fewer than three Purple) its decision stands and nothing happens.
 
-| Ability | Chants |
-| --- | --- |
-| `gojo_blue` | Blue |
-| `gojo_red` | Red |
-| `gojo_purple` | Purple |
-| `gojo_limitless` | Teleport |
-| `sukuna_dismantle` | Dismantle |
-| `sukuna_cleave` | Cleave |
-| `sukuna_fuga` | Flame Arrow |
-| `sukuna_wcs` | World Slash |
+Saying the **ability's own name** instead of its incantation charges it one tier,
+so output rises per chant. A **near miss** is worth half a tier, so two of them
+add up to one and being slightly off is never simply wasted.
 
-**Near misses count.** Chanting uses a second, looser band: inside your
-calibrated threshold is an exact chant worth its full time, and out to
-`chantNearMultiplier` of it is a near chant worth `nearChantCredit` of the time.
-Being generous is safe here in a way it is not for firing — the worst a wrong
-near-match can do is charge an ability you already have selected, where a wrong
-action would spend a cooldown. The action bar tells you which you got.
+| Ability | Tiers | Default incantation |
+| --- | --- | --- |
+| Blue | 3 | *Cursed Technique Lapse: Blue* |
+| Red | 3 | *Phase, Paramita, Pillars of Light* |
+| Purple | 4 | *Imaginary Technique: Hollow Purple* |
+| Dismantle | 3 | *Cursed Technique: Dismantle* |
+| World Slash | 3 | *World Dismantling Slash* |
 
-A near chant always yields to a confident command, so switching abilities still
-works while one is charging: saying *"reversal red"* with Purple up selects Red
-rather than being read as a sloppy *"purple"*. Only an exact chant outranks a
-match, and if both are exact the closer one wins.
+Those five are the only ones that can be charged, and the list is not arbitrary.
+An ability can be chanted only if the mod actually climbs a charge counter for
+it: Limitless and Fuga have no such counter, and Cleave's "hold" state *performs*
+the technique rather than powering it up, so chanting Cleave would cast it.
 
-You do not enroll anything extra. Chanting reuses the phrases already bound to
-that ability, so selecting and charging are the same recording. `chants` in the
-config only exists for adding a *different* phrase to chant with — a real
-incantation, rather than the ability's name.
+The incantations above are a starting point, not scripture. Put whatever you
+actually say in `chants`; matching is acoustic and has no dictionary, so it does
+not care whether your wording is canon.
 
-Cursed Speech is not chantable, and that is not an omission: those words take
-effect the moment they are spoken and have no charge state to build.
+### Releasing
 
-The split is not a stylistic choice. Several abilities are charge-and-release —
-Hollow Purple will not fire until `charge_purple >= 3` and the charging effect is
-on you — so there is no honest way to express them as a single spoken action.
-Selecting is what a player does first anyway.
+Three ways, all equivalent:
 
-Which commands do anything depends on your sorcerer; the host mod decides that,
-not this addon. A Gojo player saying "dismantle" is simply ignored, exactly as it
-is from any other input.
+- say the ability's name
+- say *"release"*
+- tap its technique key
+
+A chant you never release lapses after ten seconds, the same as letting the key
+go without firing. Switching to another ability drops it too — you cannot hold
+Red's charge while reaching for Blue.
 
 ### Coming from the old phrase file
 
@@ -149,7 +160,11 @@ They were ability names, and they map straight across:
 | `lapse_blue` | `gojo_blue` (selection) |
 | `cleave` | `sukuna_cleave` (selection) |
 
-The spoken phrases are unchanged — you still say "hollow purple". Only the key
+One phrase did move: *"dismantle"* now selects and charges the Dismantle stance,
+and the immediate slash answers to *"kaisen"* or *"slash"* instead. They had to
+be separated because one phrase cannot mean both "do it now" and "wind it up".
+
+The rest are unchanged — you still say "hollow purple". Only the key
 the config files it under is different, and tab-complete shows the real names.
 
 Its long lists of near-spellings are gone on purpose. Entries like
@@ -186,11 +201,9 @@ deliberately or bind a longer phrase to it.
 | Key | Default | Meaning |
 | --- | --- | --- |
 | `mode` | `voiceprint` | `shout` fires `shoutCommand` on any loud vocalisation — useful to verify your mic works before enrolling |
-| `commands` | 23 techniques | Command key to the phrases that trigger it |
-| `chants` | empty | Extra phrases that chant an ability, on top of the ones that select it |
-| `chantNearMultiplier` | `1.75` | How far past the threshold still counts as a near chant |
-| `nearChantCredit` | `0.5` | Fraction of the spoken time a near chant is worth |
-| `maxChantTicks` | `60` | Ceiling on one chant's charge. Also enforced server-side |
+| `commands` | 26 commands | Command key to the phrases that trigger it |
+| `chants` | 5 abilities | Ability to the incantations that charge it to full |
+| `chantNearMultiplier` | `1.75` | How far past the threshold still counts as a near chant, worth half a tier. Ability names and incantations get this looser band; actions keep the tight one |
 | `shoutCommand` | `domain_expansion` | What `shout` mode triggers |
 | `thresholdMultiplier` | `1.35` | How far past your own natural variation still counts. Raise if it refuses you, lower if unrelated words trigger it |
 | `absoluteMaxDistance` | `60.0` | Safety ceiling so an inconsistent enrollment cannot accept everything |
@@ -239,6 +252,14 @@ addon jar — it ships as ~50 KB of its own classes and nothing else.
   the dangerous direction.
 - **One seam into the host mod.** `compat/JjkBridge` is the only class that
   touches JJK Strongest, and it only calls `net.efkrdnz.jjkstrongest.api.JjkVoiceApi`.
+- **The client never decides what a word means.** It sends the key it heard and
+  how well it heard it; select-versus-charge-versus-release is resolved server
+  side, because it depends on state the client cannot see and would let a
+  modified client ask for a release it had not earned.
+- **Charging is the host mod's own code.** A chant drives the real press and
+  release handlers and nudges the real counter onto the mod's own thresholds, so
+  the multipliers, tier sounds and gates are identical by construction rather
+  than by being kept in step.
 - **Cancel only while armed.** The Simple Voice Chat hook intercepts audio only
   while the key is held, so proximity chat is untouched and other voice addons
   following the same rule can share the microphone.

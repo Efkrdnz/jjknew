@@ -8,7 +8,11 @@ public class Technique1OnKeyPressProcedure {
 	public static void execute(Entity entity) {
 		if (entity == null)
 			return;
-		entity.getPersistentData().putDouble("TechniquePower", 1);
+		// Keep a charge that is already building. Holding the key cannot reach here
+		// twice, so this only ever protects a chant raised another way -- a spoken
+		// one, whose whole point is that the charge survives until it is released.
+		if (entity.getPersistentData().getString("chanting").isEmpty())
+			entity.getPersistentData().putDouble("TechniquePower", 1);
 		entity.getPersistentData().putDouble("ChantCounter", 0);
 		if (((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).current_moveset).equals("all_generic")) {
 			if ((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).CE_FLOW) {

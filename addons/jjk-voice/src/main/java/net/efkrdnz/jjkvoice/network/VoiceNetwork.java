@@ -5,7 +5,7 @@ import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 
 import net.efkrdnz.jjkvoice.server.VoiceServerHandler;
 
-/** Registers the two client-to-server requests this addon needs. */
+/** Registers the one client-to-server request this addon needs. */
 public final class VoiceNetwork {
 	private static final String PROTOCOL_VERSION = "1";
 
@@ -15,8 +15,6 @@ public final class VoiceNetwork {
 	public static void register(RegisterPayloadHandlersEvent event) {
 		PayloadRegistrar registrar = event.registrar(PROTOCOL_VERSION);
 		registrar.playToServer(VoiceCastPayload.TYPE, VoiceCastPayload.STREAM_CODEC,
-				VoiceServerHandler::handleCast);
-		registrar.playToServer(VoiceChantPayload.TYPE, VoiceChantPayload.STREAM_CODEC,
-				VoiceServerHandler::handleChant);
+				VoiceServerHandler::handleSpeak);
 	}
 }

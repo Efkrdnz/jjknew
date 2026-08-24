@@ -7,9 +7,8 @@
   "message.jjkvoice.no_audio": "No microphone input reached the mod.",
   "message.jjkvoice.voicechat_not_ready": "Simple Voice Chat has not connected yet. Join a server with voice chat enabled, then try again.",
 
+  "message.jjkvoice.incanted": "§d%s §7— %s (%s)",
   "message.jjkvoice.matched": "§d%s §7-> §f%s §7(%s)",
-  "message.jjkvoice.chant.exact": "§d%s §7chant +%ss",
-  "message.jjkvoice.chant.near": "%s chant (close) +%ss",
   "message.jjkvoice.no_match": "That was not recognised. (%s vs %s)",
   "message.jjkvoice.not_enrolled": "No incantations are enrolled yet. Run /jjkvoice enroll <technique> to teach one.",
   "message.jjkvoice.too_short": "That was too short to make out.",

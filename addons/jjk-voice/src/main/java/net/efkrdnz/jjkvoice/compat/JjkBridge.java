@@ -15,9 +15,10 @@ import net.efkrdnz.jjkstrongest.network.JjkStrongestModVariables;
  * so this is a straight delegation; if that API changes shape, this file is the
  * only thing that changes.
  *
- * <p>No validation happens here. The host mod already checks which sorcerer the
- * player is and each technique applies its own costs and cooldowns. Re-implementing
- * any of that would mean two sources of truth that could disagree.
+ * <p>No gameplay decision happens here. The host mod decides what a spoken name
+ * means, whether the speaker's technique includes it, and what each technique
+ * costs. Re-implementing any of that would mean two sources of truth that could
+ * disagree, and the copy here would be the one that went stale.
  */
 public final class JjkBridge {
 	private JjkBridge() {
@@ -29,13 +30,13 @@ public final class JjkBridge {
 	}
 
 	/**
-	 * Runs a command key, which the host mod resolves to either an immediate
-	 * technique or an ability selection.
+	 * Acts on a spoken name: select, charge, release or cast, as the host mod
+	 * decides from state only it can see.
 	 *
-	 * @return true when the host mod accepted the request
+	 * @return what actually happened, for telling the speaker
 	 */
-	public static boolean run(ServerPlayer player, String commandKey) {
-		return JjkVoiceApi.run(player, commandKey);
+	public static JjkVoiceApi.Spoken speak(ServerPlayer player, String commandKey, boolean exact, boolean incantation) {
+		return JjkVoiceApi.speak(player, commandKey, exact, incantation);
 	}
 
 	/** True when this key selects an ability rather than firing one. */
@@ -48,13 +49,23 @@ public final class JjkBridge {
 		return JjkVoiceApi.chantableMovesets().contains(JjkVoiceApi.normalise(movesetKey));
 	}
 
+	/** Every ability that can take an incantation, whoever the speaker is. */
+	public static Set<String> chantableMovesets() {
+		return JjkVoiceApi.chantableMovesets();
+	}
+
 	/**
-	 * The ability the player currently has active.
-	 *
-	 * <p>Readable on the client because the host mod syncs its player variables,
-	 * which is what lets the client tell "select this" from "chant it" without
-	 * asking the server first.
+	 * The player's technique, readable on the client because the host mod syncs
+	 * its player variables.
 	 */
+	public static String sorcerer(Player player) {
+		if (player == null)
+			return "";
+		String sorcerer = player.getData(JjkStrongestModVariables.PLAYER_VARIABLES).sorcerer;
+		return sorcerer == null ? "" : JjkVoiceApi.normalise(sorcerer);
+	}
+
+	/** The ability the player currently has active. */
 	public static String currentMoveset(Player player) {
 		if (player == null)
 			return "";
@@ -62,8 +73,20 @@ public final class JjkBridge {
 		return moveset == null ? "" : JjkVoiceApi.normalise(moveset);
 	}
 
-	/** Grants ticks of hold, as if the technique key had been held that long. */
-	public static void chant(ServerPlayer player, int holdTicks) {
-		JjkVoiceApi.chant(player, holdTicks);
+	/**
+	 * What this player is entitled to say.
+	 *
+	 * <p>Used to narrow what the recogniser will even compare against, so another
+	 * sorcerer's techniques are not merely refused but never heard. The server
+	 * checks the same thing again; this only keeps a Gojo player's "dismantle"
+	 * from being the closest match to something they did say.
+	 */
+	public static Set<String> allowedKeys(Player player) {
+		return JjkVoiceApi.commandKeysFor(sorcerer(player));
+	}
+
+	/** Whether this player's technique includes an ability. */
+	public static boolean owns(Player player, String movesetKey) {
+		return JjkVoiceApi.owns(sorcerer(player), movesetKey);
 	}
 }

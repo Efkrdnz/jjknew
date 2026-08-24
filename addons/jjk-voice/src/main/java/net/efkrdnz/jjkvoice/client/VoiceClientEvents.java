@@ -1,6 +1,6 @@
 package net.efkrdnz.jjkvoice.client;
 
-import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import net.minecraft.ChatFormatting;
@@ -19,7 +19,6 @@ import net.efkrdnz.jjkvoice.audio.VoicechatBridge;
 import net.efkrdnz.jjkvoice.config.VoiceConfig;
 import net.efkrdnz.jjkvoice.compat.JjkBridge;
 import net.efkrdnz.jjkvoice.network.VoiceCastPayload;
-import net.efkrdnz.jjkvoice.network.VoiceChantPayload;
 import net.efkrdnz.jjkvoice.recognize.PhraseRecognizer;
 
 /**
@@ -113,80 +112,24 @@ public final class VoiceClientEvents {
 			return;
 		}
 
-		// Chanting is measured only against the ability already selected. That is
-		// what lets one phrase do both jobs: say an ability's name to draw it, say
-		// it again to charge it. Without the "already active" test the two would be
-		// indistinguishable.
-		String moveset = JjkBridge.currentMoveset(minecraft.player);
-		List<String> chantPhrases = JjkBridge.isChantable(moveset)
-				? VoiceConfig.get().chantPhrasesFor(moveset)
-				: List.of();
+		// Narrowed to what this player's technique actually includes. That is a
+		// recognition decision as much as a permission one: leaving another
+		// sorcerer's phrases in the search lets them win, so a Gojo player saying
+		// "purple" could lose to an enrolled "fuga" they can never use.
+		Set<String> allowed = JjkBridge.allowedKeys(minecraft.player);
+		PhraseRecognizer.Vocabulary vocabulary = new PhraseRecognizer.Vocabulary(
+				allowed, VoiceConfig.get().incantationsFor(allowed), JjkBridge.chantableMovesets());
 
 		Util.backgroundExecutor().execute(() -> {
-			PhraseRecognizer.ChantResult chant = chantPhrases.isEmpty()
-					? null
-					: PhraseRecognizer.recogniseChant(audio, chantPhrases);
-			PhraseRecognizer.Result result = PhraseRecognizer.recognise(audio);
+			PhraseRecognizer.Result result = PhraseRecognizer.recognise(audio, vocabulary);
 			minecraft.execute(() -> {
 				try {
-					if (preferChant(chant, result))
-						applyChant(minecraft, chant);
-					else
-						applyResult(minecraft, result);
+					applyResult(minecraft, result);
 				} finally {
 					PROCESSING.set(false);
 				}
 			});
 		});
-	}
-
-	/**
-	 * Decides between charging the active ability and doing something else.
-	 *
-	 * <p>The chant band is deliberately loose, which on its own would let a near
-	 * miss swallow a real command -- switch to Red while Purple is up, and "reversal
-	 * red" could land inside Purple's near band and charge Purple instead. So a
-	 * near chant yields to any confident match, and only an exact chant outranks
-	 * one. Two exact readings is the genuinely ambiguous case, and there the closer
-	 * distance wins.
-	 */
-	private static boolean preferChant(PhraseRecognizer.ChantResult chant, PhraseRecognizer.Result result) {
-		if (chant == null || !chant.charged())
-			return false;
-		if (result == null || !result.matched())
-			return true;
-		if (chant.quality() != PhraseRecognizer.ChantQuality.EXACT)
-			return false;
-		return chant.distance() <= result.distance();
-	}
-
-	/**
-	 * Turns a recognised chant into ticks of hold.
-	 *
-	 * <p>The charge is the time actually spoken, so a longer incantation charges
-	 * more -- which is the same relationship holding the key already has. A near
-	 * match is credited at a fraction of it, so being slightly off still progresses
-	 * but saying it cleanly is worth more.
-	 */
-	private static void applyChant(Minecraft minecraft, PhraseRecognizer.ChantResult chant) {
-		if (minecraft.player == null || chant == null || !chant.charged())
-			return;
-		VoiceConfig config = VoiceConfig.get();
-
-		double credit = chant.quality() == PhraseRecognizer.ChantQuality.EXACT ? 1.0D : config.nearChantCredit;
-		int ticks = (int) Math.round(chant.seconds() * 20.0D * credit);
-		ticks = Math.min(Math.max(ticks, 1), config.maxChantTicks);
-
-		PacketDistributor.sendToServer(new VoiceChantPayload(ticks));
-		if (config.announceMatches)
-			actionBar(minecraft, Component.translatable(
-					chant.quality() == PhraseRecognizer.ChantQuality.EXACT
-							? "message.jjkvoice.chant.exact"
-							: "message.jjkvoice.chant.near",
-					chant.phrase(), String.format("%.1f", ticks / 20.0D))
-					.withStyle(chant.quality() == PhraseRecognizer.ChantQuality.EXACT
-							? ChatFormatting.LIGHT_PURPLE
-							: ChatFormatting.GRAY));
 	}
 
 	private static void applyResult(Minecraft minecraft, PhraseRecognizer.Result result) {
@@ -198,13 +141,15 @@ public final class VoiceClientEvents {
 			case MATCHED -> {
 				if (result.commandKey().isEmpty())
 					return;
-				// The server re-checks this key against the host mod's own command
-				// set, so a wrong guess here costs nothing but a dropped packet.
-				PacketDistributor.sendToServer(new VoiceCastPayload(result.commandKey()));
+				// What this name does -- select, charge, release or cast -- depends on
+				// state only the server has, so only how it was heard is sent.
+				PacketDistributor.sendToServer(new VoiceCastPayload(
+						result.commandKey(), result.exact(), result.incantation()));
 				if (config.announceMatches)
-					actionBar(minecraft, Component.translatable("message.jjkvoice.matched",
+					actionBar(minecraft, Component.translatable(
+							result.incantation() ? "message.jjkvoice.incanted" : "message.jjkvoice.matched",
 							result.phrase(), result.commandKey(), String.format("%.2f", result.distance()))
-							.withStyle(ChatFormatting.LIGHT_PURPLE));
+							.withStyle(result.exact() ? ChatFormatting.LIGHT_PURPLE : ChatFormatting.GRAY));
 			}
 			case NOT_ENROLLED -> chat(minecraft, Component.translatable("message.jjkvoice.not_enrolled")
 					.withStyle(ChatFormatting.YELLOW));

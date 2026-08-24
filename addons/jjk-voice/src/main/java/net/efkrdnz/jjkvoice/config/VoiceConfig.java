@@ -11,6 +11,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -88,30 +89,42 @@ public final class VoiceConfig {
 	public boolean announceMatches = true;
 
 	/**
-	 * Extra chant phrases per ability, on top of the ability's own phrases.
+	 * The incantations that charge an ability, keyed by the ability they charge.
 	 *
-	 * <p>Empty by default, and that is usually enough: saying an ability's name
-	 * while it is <em>not</em> active selects it, and saying it again once it
-	 * <em>is</em> active chants it. Nothing extra to enroll. Put a real incantation
-	 * here when you would rather charge with different words than you select with.
+	 * <p>Separate from {@link #commands} because they mean something different.
+	 * An ability's name selects it, charges it a step, or lets it go, depending on
+	 * where you already are. Reciting its incantation charges it outright -- heard
+	 * cleanly it carries the technique to full output, which is what reciting one
+	 * is for.
+	 *
+	 * <p>The entries below are a starting point, not scripture. Put whatever you
+	 * actually say here; the recogniser has no dictionary and does not care whether
+	 * it is canon.
 	 */
-	public Map<String, List<String>> chants = new LinkedHashMap<>();
+	public Map<String, List<String>> chants = defaultChants();
+
+	private static Map<String, List<String>> defaultChants() {
+		Map<String, List<String>> chants = new LinkedHashMap<>();
+		chants.put("gojo_blue", new ArrayList<>(List.of("cursed technique lapse blue")));
+		chants.put("gojo_red", new ArrayList<>(List.of("phase paramita pillars of light",
+				"cursed technique reversal red")));
+		chants.put("gojo_purple", new ArrayList<>(List.of("imaginary technique hollow purple")));
+		chants.put("sukuna_dismantle", new ArrayList<>(List.of("cursed technique dismantle")));
+		chants.put("sukuna_wcs", new ArrayList<>(List.of("world dismantling slash")));
+		return chants;
+	}
 
 	/**
 	 * How far past a phrase's accept threshold still counts as a chant.
 	 *
-	 * <p>Chanting is the safe place to be generous. A near miss here only charges
-	 * slightly, where a near miss on firing would waste a cooldown -- so chants use
-	 * this looser band and are credited at {@link #nearChantCredit} of the time
-	 * spoken, while actions keep the tight threshold.
+	 * <p>Chanting is the safe place to be generous. A near miss here is worth half
+	 * a tier, so two of them add up to one and the words are never simply wasted;
+	 * a near miss on firing would spend a cooldown on a guess. Ability names and
+	 * incantations get this looser band, immediate actions keep the tight one.
 	 */
 	public double chantNearMultiplier = 1.75D;
 
-	/** Share of the spoken time a near-miss chant is worth. */
-	public double nearChantCredit = 0.5D;
 
-	/** Ceiling on ticks one chant can grant, so a held key cannot be out-charged. */
-	public int maxChantTicks = 60;
 
 	/**
 	 * The starting phrase list, carried over from the phrase map the previous
@@ -135,21 +148,13 @@ public final class VoiceConfig {
 		Map<String, List<String>> defaults = new LinkedHashMap<>();
 
 		// Immediate actions.
+		// Immediate techniques. Cursed Speech takes effect the moment it is spoken
+		// and Sukuna's slash is meant to be spammable, so these stay single words.
 		defaults.put("domain_expansion", new ArrayList<>(List.of("domain expansion", "ryouiki tenkai")));
-		defaults.put("dismantle", new ArrayList<>(List.of("dismantle", "kaisen", "slash")));
-		defaults.put("fuga", new ArrayList<>(List.of("fuga", "open the furnace", "divine flames", "flame arrow")));
+		defaults.put("dismantle", new ArrayList<>(List.of("kaisen", "slash")));
+		defaults.put("fuga", new ArrayList<>(List.of("fuga", "open the furnace", "divine flames")));
+		defaults.put("release", new ArrayList<>(List.of("release")));
 
-		// Ability selections. The old map called these hollow_purple, reversal_red,
-		// lapse_blue and cleave; those are the spoken names, while the keys below are
-		// what the mod calls the abilities in its own radial menu.
-		defaults.put("gojo_purple", new ArrayList<>(List.of("hollow purple", "imaginary purple", "imaginary technique purple")));
-		defaults.put("gojo_red", new ArrayList<>(List.of("reversal red")));
-		defaults.put("gojo_blue", new ArrayList<>(List.of("lapse blue")));
-		defaults.put("sukuna_cleave", new ArrayList<>(List.of("cleave")));
-
-		// Inumaki's Cursed Speech. One word each, deliberately: they are spoken as
-		// single commands and every extra phrase is another enrollment sitting.
-		// These fire immediately -- Cursed Speech has no charge state to build.
 		defaults.put("dont_move", new ArrayList<>(List.of("don't move")));
 		defaults.put("die", new ArrayList<>(List.of("die")));
 		defaults.put("blast", new ArrayList<>(List.of("blast")));
@@ -166,6 +171,16 @@ public final class VoiceConfig {
 		defaults.put("shrink", new ArrayList<>(List.of("shrink")));
 		defaults.put("weep", new ArrayList<>(List.of("weep")));
 		defaults.put("kneel", new ArrayList<>(List.of("kneel")));
+
+		// Ability names. Saying one selects it, says it again to charge, and again
+		// to let it go -- so these must not collide with the words above. "kaisen"
+		// slashes; "dismantle" is the stance you charge.
+		defaults.put("gojo_blue", new ArrayList<>(List.of("lapse blue")));
+		defaults.put("gojo_red", new ArrayList<>(List.of("reversal red")));
+		defaults.put("gojo_purple", new ArrayList<>(List.of("hollow purple", "imaginary purple")));
+		defaults.put("sukuna_dismantle", new ArrayList<>(List.of("dismantle")));
+		defaults.put("sukuna_cleave", new ArrayList<>(List.of("cleave")));
+		defaults.put("sukuna_wcs", new ArrayList<>(List.of("world slash")));
 
 		return defaults;
 	}
@@ -316,26 +331,32 @@ public final class VoiceConfig {
 		if (chants == null)
 			chants = new LinkedHashMap<>();
 		chantNearMultiplier = clamp(chantNearMultiplier, 1.0D, 4.0D);
-		nearChantCredit = clamp(nearChantCredit, 0.0D, 1.0D);
-		maxChantTicks = (int) clamp(maxChantTicks, 5, 200);
 	}
 
 	/**
 	 * Everything that counts as chanting {@code moveset}: its own selection phrases
 	 * plus any extra incantations configured for it.
 	 */
-	public List<String> chantPhrasesFor(String moveset) {
-		String key = normaliseCommand(moveset);
-		List<String> phrases = new ArrayList<>(phrasesFor(key));
-		List<String> extra = chants.get(key);
-		if (extra != null) {
-			for (String phrase : extra) {
-				String cleaned = normalisePhrase(phrase);
-				if (!cleaned.isEmpty() && !phrases.contains(cleaned))
-					phrases.add(cleaned);
-			}
+	/** The incantations enrolled for one ability. */
+	public List<String> incantationsFor(String moveset) {
+		List<String> phrases = chants.get(normaliseCommand(moveset));
+		return phrases == null ? List.of() : List.copyOf(phrases);
+	}
+
+	/**
+	 * The incantations for every ability the speaker is entitled to, ready for the
+	 * recogniser. Abilities they cannot use are left out entirely rather than
+	 * searched and then refused.
+	 */
+	public Map<String, List<String>> incantationsFor(Set<String> allowed) {
+		Map<String, List<String>> narrowed = new LinkedHashMap<>();
+		for (Map.Entry<String, List<String>> entry : chants.entrySet()) {
+			if (allowed != null && !allowed.contains(entry.getKey()))
+				continue;
+			if (entry.getValue() != null && !entry.getValue().isEmpty())
+				narrowed.put(entry.getKey(), List.copyOf(entry.getValue()));
 		}
-		return phrases;
+		return narrowed;
 	}
 
 	public static String normalisePhrase(String phrase) {

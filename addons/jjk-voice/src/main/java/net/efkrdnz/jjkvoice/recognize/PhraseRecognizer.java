@@ -1,6 +1,8 @@
 package net.efkrdnz.jjkvoice.recognize;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import net.efkrdnz.jjkvoice.audio.MicrophoneCapture;
 import net.efkrdnz.jjkvoice.audio.PcmResampler;
@@ -8,17 +10,17 @@ import net.efkrdnz.jjkvoice.config.VoiceConfig;
 
 /**
  * Decides whether a captured clip is one of the player's enrolled phrases, and
- * which technique that phrase is bound to.
+ * which technique that phrase belongs to.
  *
  * <p>Everything runs locally and deterministically: resample, trim, featurise,
  * then compare against each enrolled print with {@link DtwMatcher}. The closest
  * print wins if it falls inside the threshold that phrase calibrated during
  * enrollment.
  *
- * <p>Unlike a single-skill voice addon this searches across every configured
- * technique at once, so the winning phrase also decides what happens. Commands
- * with nothing enrolled are skipped rather than failed, which is what makes
- * partial enrollment usable.
+ * <p>Unlike a single-skill voice addon this searches across every technique at
+ * once, so the winning phrase also decides what happens. Commands with nothing
+ * enrolled are skipped rather than failed, which is what makes partial
+ * enrollment usable.
  */
 public final class PhraseRecognizer {
 	public static final int TARGET_SAMPLE_RATE = 16_000;
@@ -36,17 +38,36 @@ public final class PhraseRecognizer {
 	}
 
 	/**
-	 * @param commandKey the host-mod command to run, or empty when nothing matched
-	 * @param phrase     the winning phrase, for feedback
-	 * @param distance   the best distance seen, for tuning feedback
+	 * What the recogniser is allowed to hear.
+	 *
+	 * <p>Narrowed to the speaker's own technique before it gets here. That is not
+	 * only a permission check: leaving another sorcerer's phrases in the search
+	 * lets them win, so a Gojo player saying "purple" could lose to an enrolled
+	 * "fuga" they can never use. Removing them makes the remaining field the only
+	 * thing competing.
+	 *
+	 * @param allowed      command keys to search, from the host mod
+	 * @param incantations ability to the incantations that charge it
+	 * @param loose        keys where a near miss still counts, because charging one
+	 *                     step too little is recoverable where a wrong cast is not
 	 */
-	public record Result(Outcome outcome, String commandKey, String phrase, double distance, double threshold) {
+	public record Vocabulary(Set<String> allowed, Map<String, List<String>> incantations, Set<String> loose) {
+	}
+
+	/**
+	 * @param commandKey  the host-mod command spoken, or empty when nothing matched
+	 * @param phrase      the winning phrase, for feedback
+	 * @param exact       inside the calibrated threshold, rather than merely near
+	 * @param incantation matched an incantation rather than the ability's name
+	 */
+	public record Result(Outcome outcome, String commandKey, String phrase, boolean exact, boolean incantation,
+			double distance, double threshold) {
 		public boolean matched() {
 			return outcome == Outcome.MATCHED;
 		}
 
 		static Result rejected(Outcome outcome) {
-			return new Result(outcome, "", "", Double.MAX_VALUE, 0.0D);
+			return new Result(outcome, "", "", false, false, Double.MAX_VALUE, 0.0D);
 		}
 	}
 
@@ -60,83 +81,7 @@ public final class PhraseRecognizer {
 		return MfccExtractor.extract(trimmed, TARGET_SAMPLE_RATE);
 	}
 
-	/** Seconds of actual speech left after silence trimming. */
-	public static double speechSeconds(MicrophoneCapture.CapturedAudio audio) {
-		if (audio == null)
-			return 0.0D;
-		short[] resampled = PcmResampler.resample(audio.samples(), audio.sampleRate(), TARGET_SAMPLE_RATE);
-		double[] normalised = PcmResampler.toNormalized(resampled);
-		return (double) PcmResampler.trimSilence(normalised, TARGET_SAMPLE_RATE).length / TARGET_SAMPLE_RATE;
-	}
-
-	/** How well a clip matched the chant it was measured against. */
-	public enum ChantQuality {
-		NONE,
-		NEAR,
-		EXACT
-	}
-
-	/**
-	 * @param seconds the spoken length, which is what the charge is measured in
-	 */
-	public record ChantResult(ChantQuality quality, String phrase, double seconds, double distance, double threshold) {
-		public boolean charged() {
-			return quality != ChantQuality.NONE;
-		}
-	}
-
-	/**
-	 * Measures a clip against the phrases that chant the active ability.
-	 *
-	 * <p>Two bands rather than one. Inside the calibrated threshold is an exact
-	 * chant; out to {@code chantNearMultiplier} of it is a near one, credited at a
-	 * fraction of the time spoken. Being generous is safe here in a way it is not
-	 * for firing: the worst a wrong near-match can do is charge an ability the
-	 * player already has selected, where a wrong action would spend a cooldown.
-	 */
-	public static ChantResult recogniseChant(MicrophoneCapture.CapturedAudio audio, List<String> chantPhrases) {
-		VoiceConfig config = VoiceConfig.get();
-		if (audio == null || chantPhrases == null || chantPhrases.isEmpty())
-			return new ChantResult(ChantQuality.NONE, "", 0.0D, Double.MAX_VALUE, 0.0D);
-
-		short[] resampled = PcmResampler.resample(audio.samples(), audio.sampleRate(), TARGET_SAMPLE_RATE);
-		double[] normalised = PcmResampler.toNormalized(resampled);
-		double[] speech = PcmResampler.trimSilence(normalised, TARGET_SAMPLE_RATE);
-		double seconds = (double) speech.length / TARGET_SAMPLE_RATE;
-		if (seconds < config.minSpeechSeconds || seconds > config.maxSpeechSeconds)
-			return new ChantResult(ChantQuality.NONE, "", seconds, Double.MAX_VALUE, 0.0D);
-
-		float[][] spoken = MfccExtractor.extract(speech, TARGET_SAMPLE_RATE);
-		if (spoken.length == 0)
-			return new ChantResult(ChantQuality.NONE, "", seconds, Double.MAX_VALUE, 0.0D);
-
-		String best = "";
-		double bestDistance = Double.MAX_VALUE;
-		double bestThreshold = 0.0D;
-		for (String phrase : chantPhrases) {
-			VoicePrintStore.PhrasePrint print = VoicePrintStore.find(phrase).orElse(null);
-			if (print == null || print.templates == null || print.templates.isEmpty())
-				continue;
-			for (float[][] template : print.templates) {
-				double distance = DtwMatcher.distance(spoken, template);
-				if (distance < bestDistance) {
-					bestDistance = distance;
-					best = print.phrase;
-					bestThreshold = print.threshold;
-				}
-			}
-		}
-
-		if (bestThreshold <= 0.0D)
-			return new ChantResult(ChantQuality.NONE, "", seconds, bestDistance, 0.0D);
-		if (bestDistance <= bestThreshold)
-			return new ChantResult(ChantQuality.EXACT, best, seconds, bestDistance, bestThreshold);
-		if (bestDistance <= bestThreshold * config.chantNearMultiplier)
-			return new ChantResult(ChantQuality.NEAR, best, seconds, bestDistance, bestThreshold);
-		return new ChantResult(ChantQuality.NONE, best, seconds, bestDistance, bestThreshold);
-	}
-
-	public static Result recognise(MicrophoneCapture.CapturedAudio audio) {
+	public static Result recognise(MicrophoneCapture.CapturedAudio audio, Vocabulary vocabulary) {
 		VoiceConfig config = VoiceConfig.get();
 		if (audio == null)
 			return Result.rejected(Outcome.TOO_SHORT);
@@ -154,7 +99,8 @@ public final class PhraseRecognizer {
 		if (VoiceConfig.MODE_SHOUT.equals(config.mode)) {
 			double loudness = PcmResampler.rootMeanSquare(speech);
 			return loudness >= config.shoutRmsThreshold
-					? new Result(Outcome.MATCHED, config.shoutCommand, "(shout)", loudness, config.shoutRmsThreshold)
+					? new Result(Outcome.MATCHED, config.shoutCommand, "(shout)", true, false, loudness,
+							config.shoutRmsThreshold)
 					: Result.rejected(Outcome.TOO_QUIET);
 		}
 
@@ -162,37 +108,58 @@ public final class PhraseRecognizer {
 		if (spoken.length == 0)
 			return Result.rejected(Outcome.TOO_SHORT);
 
-		String bestCommand = "";
-		String bestPhrase = "";
-		double bestDistance = Double.MAX_VALUE;
-		double bestThreshold = 0.0D;
-		boolean anyEnrolled = false;
+		Best best = new Best();
+		for (String commandKey : vocabulary.allowed())
+			best.consider(spoken, commandKey, config.phrasesFor(commandKey), false);
+		// Incantations are searched under the ability they charge, so a match
+		// already carries which ability it was for -- there is nothing to look up.
+		for (Map.Entry<String, List<String>> entry : vocabulary.incantations().entrySet())
+			best.consider(spoken, entry.getKey(), entry.getValue(), true);
 
-		for (String commandKey : config.commands.keySet()) {
-			List<String> phrases = config.phrasesFor(commandKey);
-			for (String phrase : phrases) {
-				VoicePrintStore.PhrasePrint print = VoicePrintStore.find(phrase).orElse(null);
+		if (!best.anyEnrolled)
+			return Result.rejected(Outcome.NOT_ENROLLED);
+		if (best.distance <= best.threshold)
+			return new Result(Outcome.MATCHED, best.commandKey, best.phrase, true, best.incantation,
+					best.distance, best.threshold);
+		// A near miss is only worth taking where being one step under-charged is
+		// recoverable. Casting on a near miss would spend a cooldown on a guess.
+		if ((best.incantation || vocabulary.loose().contains(best.commandKey))
+				&& best.distance <= best.threshold * config.chantNearMultiplier)
+			return new Result(Outcome.MATCHED, best.commandKey, best.phrase, false, best.incantation,
+					best.distance, best.threshold);
+		return new Result(Outcome.NO_MATCH, "", best.phrase, false, false, best.distance, best.threshold);
+	}
+
+	/** Running best across every phrase searched, whatever bucket it came from. */
+	private static final class Best {
+		private String commandKey = "";
+		private String phrase = "";
+		private boolean incantation;
+		private double distance = Double.MAX_VALUE;
+		private double threshold;
+		private boolean anyEnrolled;
+
+		private void consider(float[][] spoken, String commandKey, List<String> phrases, boolean incantation) {
+			if (phrases == null)
+				return;
+			for (String candidate : phrases) {
+				VoicePrintStore.PhrasePrint print = VoicePrintStore.find(candidate).orElse(null);
 				if (print == null || print.templates == null || print.templates.isEmpty())
 					continue;
 				anyEnrolled = true;
 
 				// Closest template wins: enrollment repeats are alternatives, not an average.
 				for (float[][] template : print.templates) {
-					double distance = DtwMatcher.distance(spoken, template);
-					if (distance < bestDistance) {
-						bestDistance = distance;
-						bestCommand = commandKey;
-						bestPhrase = print.phrase;
-						bestThreshold = print.threshold;
-					}
+					double measured = DtwMatcher.distance(spoken, template);
+					if (measured >= distance)
+						continue;
+					distance = measured;
+					threshold = print.threshold;
+					phrase = print.phrase;
+					this.commandKey = commandKey;
+					this.incantation = incantation;
 				}
 			}
 		}
-
-		if (!anyEnrolled)
-			return Result.rejected(Outcome.NOT_ENROLLED);
-		if (bestDistance > bestThreshold)
-			return new Result(Outcome.NO_MATCH, "", bestPhrase, bestDistance, bestThreshold);
-		return new Result(Outcome.MATCHED, bestCommand, bestPhrase, bestDistance, bestThreshold);
 	}
 }

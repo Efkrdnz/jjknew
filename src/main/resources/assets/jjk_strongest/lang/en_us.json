@@ -70,5 +70,6 @@
   "entity.jjk_strongest.imaginary_purple": "Imaginary Purple",
   "death.attack.technique_red": "%1$s died",
   "block.jjk_strongest.custom_portal": "Custom Portal",
-  "effect.jjk_strongest.zone": "Zone Boost"
+  "effect.jjk_strongest.zone": "Zone Boost",
+  "message.jjk_strongest.chant_lapsed": "§8The chant fades."
 }

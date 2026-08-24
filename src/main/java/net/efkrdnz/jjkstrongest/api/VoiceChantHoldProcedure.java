@@ -1,54 +1,82 @@
 package net.efkrdnz.jjkstrongest.api;
 
-import net.neoforged.neoforge.event.tick.PlayerTickEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.bus.api.SubscribeEvent;
-
-import net.minecraft.world.entity.Entity;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 
+import net.efkrdnz.jjkstrongest.init.JjkStrongestModMobEffects;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.tick.PlayerTickEvent;
+
 /**
- * Keeps a spoken chant "held" for as long as it was spoken for.
+ * Lets a spoken chant lapse if it is never released.
  *
- * <p>Holding a technique key charges an ability by leaving {@code chanting} set
- * while ChantOnTickProcedure advances the counter one per tick. A spoken chant
- * grants the same thing measured in ticks, and this drains that grant so the
- * chant ends on its own when the voice runs out — the same way letting go of the
- * key ends it.
+ * <p>Holding a technique key has a natural end: the player lets go. A chant does
+ * not, so without this a charge raised by voice would sit on the player until
+ * they happened to press something, and would still be there after they had
+ * moved on to another ability entirely.
  *
- * <p>Nothing here touches ChantCounter or the power multipliers. Doing so would
- * duplicate a curve that already exists in exactly one place, and the two copies
- * would eventually disagree. The chant simply stays open, and the mod's own tick
- * procedure does the charging.
- *
- * <p>Only chants this API started are ever ended here. A player physically
- * holding the key owns their chant and keeps it until they release.
+ * <p>It only ever ends a chant a voice started, and only while that same chant is
+ * still the one running. A player who took over with the key owns it from then
+ * on, and this must not cut them off mid-charge.
  */
 @EventBusSubscriber
-public final class VoiceChantHoldProcedure {
-	private VoiceChantHoldProcedure() {
-	}
-
+public class VoiceChantHoldProcedure {
 	@SubscribeEvent
 	public static void onPlayerTick(PlayerTickEvent.Post event) {
-		Entity entity = event.getEntity();
-		if (!(entity instanceof Player) || entity.level().isClientSide())
+		Player player = event.getEntity();
+		if (player == null || player.level().isClientSide())
 			return;
+		CompoundTag data = player.getPersistentData();
 
-		double remaining = entity.getPersistentData().getDouble(JjkVoiceApi.HOLD_TICKS);
+		int remaining = data.getInt(JjkVoiceApi.HOLD_TICKS);
 		if (remaining <= 0)
 			return;
 
-		remaining -= 1;
-		entity.getPersistentData().putDouble(JjkVoiceApi.HOLD_TICKS, Math.max(0, remaining));
+		String owned = data.getString(JjkVoiceApi.HOLD_STATE);
+		if (owned == null || owned.isEmpty() || !owned.equals(data.getString("chanting"))) {
+			// Released, or replaced by something else. Either way it is no longer ours.
+			data.putInt(JjkVoiceApi.HOLD_TICKS, 0);
+			data.putString(JjkVoiceApi.HOLD_STATE, "");
+			return;
+		}
+
+		keepPurpleAlive(player, owned);
+
+		remaining--;
+		data.putInt(JjkVoiceApi.HOLD_TICKS, remaining);
 		if (remaining > 0)
 			return;
 
-		// The grant is spent. Release the chant, but only if a voice opened it --
-		// otherwise a player mid-hold would have the key pulled out from under them.
-		if (entity.getPersistentData().getBoolean(JjkVoiceApi.HOLD_OWNED)) {
-			entity.getPersistentData().putString("chanting", "");
-			entity.getPersistentData().putBoolean(JjkVoiceApi.HOLD_OWNED, false);
-		}
+		// Lapsed. Clearing the chant is enough to drop the charge -- ChantOnTick
+		// zeroes the counter and the multiplier on the next tick by itself.
+		data.putString("chanting", "");
+		data.putString(JjkVoiceApi.HOLD_STATE, "");
+		player.displayClientMessage(Component.translatable("message.jjk_strongest.chant_lapsed"), true);
+	}
+
+	/**
+	 * Holds Hollow Purple's charging effect open for as long as it is being
+	 * chanted.
+	 *
+	 * <p>Technique3's press grants PURPLE_CHARGING for fifty ticks and its release
+	 * refuses to fire without it, but Purple's first output tier is at seventy --
+	 * so the effect is already gone by the time there is anything to show for the
+	 * charge, and nothing anywhere refreshes it. Chanting takes longer still, being
+	 * paced by speech rather than a held key, so without this the technique could
+	 * be charged to full and then decline to come out.
+	 *
+	 * <p>Scoped to chants this started. It does not change what holding the key
+	 * does, which is left exactly as it was.
+	 */
+	private static void keepPurpleAlive(Player player, String chant) {
+		if (!"purple".equals(chant) || !(player instanceof LivingEntity living))
+			return;
+		if (living.hasEffect(JjkStrongestModMobEffects.PURPLE_CHARGING))
+			return;
+		living.addEffect(new MobEffectInstance(JjkStrongestModMobEffects.PURPLE_CHARGING, 50, 1, false, false));
 	}
 }
