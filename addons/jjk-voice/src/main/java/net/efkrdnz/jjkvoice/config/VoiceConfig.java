@@ -89,6 +89,20 @@ public final class VoiceConfig {
 	public boolean announceMatches = true;
 
 	/**
+	 * Which shape this file was written in.
+	 *
+	 * <p>Only reason it exists: chanting changed what a phrase <em>means</em>, so
+	 * an untouched older file is not merely missing entries, it is wrong. Filling
+	 * gaps alone would leave "dismantle" bound to the immediate slash and the
+	 * Dismantle stance permanently unchantable, because one phrase cannot mean both
+	 * "do it now" and "wind it up".
+	 */
+	public int configVersion = CURRENT_VERSION;
+
+	/** Bumped when an upgrade needs more than new keys being filled in. */
+	private static final int CURRENT_VERSION = 2;
+
+	/**
 	 * The incantations that charge an ability, keyed by the ability they charge.
 	 *
 	 * <p>Separate from {@link #commands} because they mean something different.
@@ -124,8 +138,6 @@ public final class VoiceConfig {
 	 */
 	public double chantNearMultiplier = 1.75D;
 
-
-
 	/**
 	 * The starting phrase list, carried over from the phrase map the previous
 	 * speech-to-text app used.
@@ -139,15 +151,14 @@ public final class VoiceConfig {
 	 * word for another. Enrolling a misreading would only widen what counts as the
 	 * phrase and make false triggers more likely.
 	 *
-	 * <p>Seven abilities rather than every command the mod exposes, because that is
-	 * what the old map covered and every extra phrase costs enrollment time. The
-	 * rest are still reachable with {@code /jjkvoice add <command> <phrase>}, and
-	 * tab-complete lists them.
+	 * <p>You never face the whole list. Only the commands your own technique
+	 * includes are searched or offered, so this is five or so phrases for Gojo and
+	 * seventeen for Inumaki, not all of them. Anything left out is still reachable
+	 * with {@code /jjkvoice add <command> <phrase>}, and tab-complete lists them.
 	 */
 	private static Map<String, List<String>> defaultCommands() {
 		Map<String, List<String>> defaults = new LinkedHashMap<>();
 
-		// Immediate actions.
 		// Immediate techniques. Cursed Speech takes effect the moment it is spoken
 		// and Sukuna's slash is meant to be spammable, so these stay single words.
 		defaults.put("domain_expansion", new ArrayList<>(List.of("domain expansion", "ryouiki tenkai")));
@@ -265,6 +276,7 @@ public final class VoiceConfig {
 			VoiceConfig loaded = GSON.fromJson(reader, VoiceConfig.class);
 			if (loaded == null)
 				return new VoiceConfig();
+			loaded.migrate();
 			loaded.sanitise();
 			return loaded;
 		} catch (IOException | JsonSyntaxException exception) {
@@ -286,6 +298,41 @@ public final class VoiceConfig {
 	}
 
 	/** Repairs values a hand-edited file could otherwise put out of range. */
+	/**
+	 * Brings an older file up to date without discarding anything chosen in it.
+	 *
+	 * <p>Missing keys are filled from the defaults on every load, so a technique
+	 * added later simply appears. Removing an entry you did not want is therefore
+	 * not a way to keep it gone -- clear its phrase list instead, which survives.
+	 */
+	private void migrate() {
+		if (commands == null)
+			commands = new LinkedHashMap<>();
+		if (chants == null)
+			chants = new LinkedHashMap<>();
+
+		if (configVersion < 2) {
+			// "dismantle" now selects and charges the stance; the immediate slash
+			// answers to "kaisen" and "slash", which that entry already carried.
+			List<String> slash = commands.get("dismantle");
+			if (slash != null) {
+				slash.removeIf(phrase -> "dismantle".equals(normalisePhrase(phrase)));
+				if (slash.isEmpty())
+					commands.remove("dismantle");
+			}
+		}
+
+		for (Map.Entry<String, List<String>> entry : defaultCommands().entrySet())
+			commands.putIfAbsent(entry.getKey(), new ArrayList<>(entry.getValue()));
+		for (Map.Entry<String, List<String>> entry : defaultChants().entrySet())
+			chants.putIfAbsent(entry.getKey(), new ArrayList<>(entry.getValue()));
+
+		if (configVersion < CURRENT_VERSION) {
+			configVersion = CURRENT_VERSION;
+			save();
+		}
+	}
+
 	private void sanitise() {
 		if (commands == null || commands.isEmpty())
 			commands = defaultCommands();
