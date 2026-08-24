@@ -64,7 +64,6 @@ public class DismantleTravelEntity extends AbstractArrow implements ItemSupplier
 
 	private void setupDefaults() {
 		this.setBaseDamage(0);
-		this.setKnockback(0);
 		this.setCritArrow(false);
 		this.setSilent(true);
 		this.setNoGravity(true);
@@ -74,19 +73,19 @@ public class DismantleTravelEntity extends AbstractArrow implements ItemSupplier
 
 
 	@Override
-	protected void defineSynchedData() {
-		super.defineSynchedData();
-		this.entityData.define(SLASH_LENGTH, 10.0f);
-		this.entityData.define(SLASH_WIDTH, 0.18f);
-		this.entityData.define(SLASH_STYLE, 0);
-		this.entityData.define(SLASH_ROLL, 0.0f);
-		this.entityData.define(SLASH_SEED, 0.0f);
-		this.entityData.define(DIR_X, 0.0f);
-		this.entityData.define(DIR_Y, 0.0f);
-		this.entityData.define(DIR_Z, 1.0f);
-		this.entityData.define(COLOR_R, 1.0f);
-		this.entityData.define(COLOR_G, 0.2f);
-		this.entityData.define(COLOR_B, 0.2f);
+	protected void defineSynchedData(SynchedEntityData.Builder builder) {
+		super.defineSynchedData(builder);
+		builder.define(SLASH_LENGTH, 10.0f);
+		builder.define(SLASH_WIDTH, 0.18f);
+		builder.define(SLASH_STYLE, 0);
+		builder.define(SLASH_ROLL, 0.0f);
+		builder.define(SLASH_SEED, 0.0f);
+		builder.define(DIR_X, 0.0f);
+		builder.define(DIR_Y, 0.0f);
+		builder.define(DIR_Z, 1.0f);
+		builder.define(COLOR_R, 1.0f);
+		builder.define(COLOR_G, 0.2f);
+		builder.define(COLOR_B, 0.2f);
 	}
 
 	public void setSlashParams(float length, float width, int style, float roll, float seed, float dirX, float dirY, float dirZ, float r, float g, float b) {

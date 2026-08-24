@@ -116,7 +116,7 @@ public class ChantOverlayRenderProcedure {
 		poseStack.mulPose(com.mojang.math.Axis.YN.rotationDegrees(yaw));
 		poseStack.mulPose(com.mojang.math.Axis.XP.rotationDegrees(pitch));
 		poseStack.mulPose(com.mojang.math.Axis.ZN.rotationDegrees(roll + 180.0F));
-		poseStack.mulPoseMatrix(new Matrix4f().scaling(scale, scale, -scale));
+		poseStack.mulPose(new Matrix4f().scaling(scale, scale, -scale));
 		poseStack.translate(0.0F, -offset, 0.0F);
 		Lighting.setupForEntityInInventory();
 		if (entity instanceof LivingEntity livingEntity) {
@@ -176,7 +176,7 @@ public class ChantOverlayRenderProcedure {
 			poseStack.mulPose(com.mojang.math.Axis.YN.rotationDegrees(yaw));
 			poseStack.mulPose(com.mojang.math.Axis.XP.rotationDegrees(pitch));
 			poseStack.mulPose(com.mojang.math.Axis.ZN.rotationDegrees(roll));
-			poseStack.mulPoseMatrix(new Matrix4f().scaling(1.0F, -1.0F, 1.0F));
+			poseStack.mulPose(new Matrix4f().scaling(1.0F, -1.0F, 1.0F));
 			poseStack.scale(scale, scale, scale);
 			if (!bakedModel.usesBlockLight())
 				Lighting.setupForFlatItems();
@@ -211,10 +211,10 @@ public class ChantOverlayRenderProcedure {
 		int alpha = color >>> 24;
 		Matrix4f matrix4f = guiGraphics.pose().last().pose();
 		VertexConsumer vertexConsumer = guiGraphics.bufferSource().getBuffer(RenderType.gui());
-		vertexConsumer.vertex(matrix4f, x3, y3, -depth).color(red, green, blue, alpha).endVertex();
-		vertexConsumer.vertex(matrix4f, x3, y4, -depth).color(red, green, blue, alpha).endVertex();
-		vertexConsumer.vertex(matrix4f, x4, y4, -depth).color(red, green, blue, alpha).endVertex();
-		vertexConsumer.vertex(matrix4f, x4, y3, -depth).color(red, green, blue, alpha).endVertex();
+		vertexConsumer.addVertex(matrix4f, x3, y3, -depth).setColor(red, green, blue, alpha);
+		vertexConsumer.addVertex(matrix4f, x3, y4, -depth).setColor(red, green, blue, alpha);
+		vertexConsumer.addVertex(matrix4f, x4, y4, -depth).setColor(red, green, blue, alpha);
+		vertexConsumer.addVertex(matrix4f, x4, y3, -depth).setColor(red, green, blue, alpha);
 	}
 
 	public static void renderShape(VertexBuffer vertexBuffer, double x, double y, double depth, float yaw, float pitch, float roll, float xScale, float yScale, float zScale, int color) {
@@ -231,7 +231,7 @@ public class ChantOverlayRenderProcedure {
 		poseStack.scale(xScale, yScale, zScale);
 		PoseStack modelViewStack = RenderSystem.getModelViewStack();
 		modelViewStack.pushPose();
-		modelViewStack.mulPoseMatrix(poseStack.last().pose());
+		modelViewStack.mulPose(poseStack.last().pose());
 		RenderSystem.setShaderColor((color >> 16 & 255) / 255.0F, (color >> 8 & 255) / 255.0F, (color & 255) / 255.0F, (color >>> 24) / 255.0F);
 		vertexBuffer.bind();
 		vertexBuffer.drawWithShader(modelViewStack.last().pose(), RenderSystem.getProjectionMatrix(), vertexBuffer.getFormat().hasUV(0) ? GameRenderer.getPositionTexColorShader() : GameRenderer.getPositionColorShader());
@@ -340,13 +340,12 @@ public class ChantOverlayRenderProcedure {
 		poseStack.translate(offsetX, offsetY, 0.0F);
 		Matrix4f matrix4f = poseStack.last().pose();
 		RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
-		BufferBuilder bufferBuilder = Tesselator.getInstance().getBuilder();
-		bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
-		bufferBuilder.vertex(matrix4f, -0.5F, -0.5F, 0.0F).uv(0.0F, 0.0F).color(red, green, blue, alpha).endVertex();
-		bufferBuilder.vertex(matrix4f, -0.5F, 0.5F, 0.0F).uv(0.0F, 1.0F).color(red, green, blue, alpha).endVertex();
-		bufferBuilder.vertex(matrix4f, 0.5F, 0.5F, 0.0F).uv(1.0F, 1.0F).color(red, green, blue, alpha).endVertex();
-		bufferBuilder.vertex(matrix4f, 0.5F, -0.5F, 0.0F).uv(1.0F, 0.0F).color(red, green, blue, alpha).endVertex();
-		BufferUploader.drawWithShader(bufferBuilder.end());
+		BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+		bufferBuilder.addVertex(matrix4f, -0.5F, -0.5F, 0.0F).setUv(0.0F, 0.0F).setColor(red, green, blue, alpha);
+		bufferBuilder.addVertex(matrix4f, -0.5F, 0.5F, 0.0F).setUv(0.0F, 1.0F).setColor(red, green, blue, alpha);
+		bufferBuilder.addVertex(matrix4f, 0.5F, 0.5F, 0.0F).setUv(1.0F, 1.0F).setColor(red, green, blue, alpha);
+		bufferBuilder.addVertex(matrix4f, 0.5F, -0.5F, 0.0F).setUv(1.0F, 0.0F).setColor(red, green, blue, alpha);
+		BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
 		poseStack.popPose();
 	}
 

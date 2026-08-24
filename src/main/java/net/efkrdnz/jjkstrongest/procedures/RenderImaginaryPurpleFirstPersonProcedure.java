@@ -45,10 +45,10 @@ public class RenderImaginaryPurpleFirstPersonProcedure {
 		var bufferSource = mc.renderBuffers().bufferSource();
 		VertexConsumer vc = bufferSource.getBuffer(JjkShaderManager.IMAGINARY_PURPLE_RENDER_TYPE);
 		Matrix4f matrix = poseStack.last().pose();
-		vc.vertex(matrix, -1, -1, 0).uv(0, 1).endVertex();
-		vc.vertex(matrix, 1, -1, 0).uv(1, 1).endVertex();
-		vc.vertex(matrix, 1, 1, 0).uv(1, 0).endVertex();
-		vc.vertex(matrix, -1, 1, 0).uv(0, 0).endVertex();
+		vc.addVertex(matrix, -1, -1, 0).setUv(0, 1);
+		vc.addVertex(matrix, 1, -1, 0).setUv(1, 1);
+		vc.addVertex(matrix, 1, 1, 0).setUv(1, 0);
+		vc.addVertex(matrix, -1, 1, 0).setUv(0, 0);
 		bufferSource.endBatch(JjkShaderManager.IMAGINARY_PURPLE_RENDER_TYPE);
 		poseStack.popPose();
 		RenderSystem.disableBlend();

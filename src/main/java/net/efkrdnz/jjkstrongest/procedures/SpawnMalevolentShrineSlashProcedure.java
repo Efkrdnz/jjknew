@@ -69,7 +69,7 @@ public class SpawnMalevolentShrineSlashProcedure {
 		if (silent)
 			entityToSpawn.setSilent(true);
 		if (fire)
-			entityToSpawn.setSecondsOnFire(100);
+			entityToSpawn.igniteForSeconds(100);
 		if (particles)
 			entityToSpawn.setCritArrow(false);
 		entityToSpawn.pickup = pickup;

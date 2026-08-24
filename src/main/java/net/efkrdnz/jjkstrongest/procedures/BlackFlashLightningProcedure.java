@@ -83,6 +83,6 @@ public class BlackFlashLightningProcedure {
 
 	// add vertex to buffer
 	private static void addVertex(VertexConsumer buffer, Matrix4f matrix, Vec3 pos, float r, float g, float b) {
-		buffer.vertex(matrix, (float) pos.x, (float) pos.y, (float) pos.z).color(r, g, b, 1.0f).endVertex();
+		buffer.addVertex(matrix, (float) pos.x, (float) pos.y, (float) pos.z).setColor(r, g, b, 1.0f);
 	}
 }

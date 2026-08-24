@@ -3,7 +3,7 @@ package net.efkrdnz.jjkstrongest.procedures;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.bus.api.Event;
-import net.minecraftforge.event.entity.living.LivingAttackEvent;
+import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
 
 import net.minecraft.world.level.Level;
 import net.minecraft.world.item.TridentItem;
@@ -31,7 +31,7 @@ import javax.annotation.Nullable;
 @EventBusSubscriber
 public class BlackFlashCheckProcedure {
 	@SubscribeEvent
-	public static void onEntityAttacked(LivingAttackEvent event) {
+	public static void onEntityAttacked(LivingIncomingDamageEvent event) {
 		if (event == null || event.isCanceled())
 			return;
 		Entity entity = event.getEntity();
@@ -97,8 +97,8 @@ public class BlackFlashCheckProcedure {
 					base_chance = 6;
 				}
 				// get zone bonus
-				if (sourceentity instanceof LivingEntity _livEnt && _livEnt.hasEffect(JjkStrongestModMobEffects.ZONE.get())) {
-					zone_level = _livEnt.getEffect(JjkStrongestModMobEffects.ZONE.get()).getAmplifier();
+				if (sourceentity instanceof LivingEntity _livEnt && _livEnt.hasEffect(JjkStrongestModMobEffects.ZONE)) {
+					zone_level = _livEnt.getEffect(JjkStrongestModMobEffects.ZONE).getAmplifier();
 				} else {
 					zone_level = 0;
 				}

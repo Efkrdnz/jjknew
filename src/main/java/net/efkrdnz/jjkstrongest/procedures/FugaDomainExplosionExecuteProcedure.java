@@ -74,7 +74,7 @@ public class FugaDomainExplosionExecuteProcedure {
 			if (damage < 40.0f)
 				damage = 40.0f;
 			target.hurt(jujutsuDamage, damage);
-			target.setSecondsOnFire(8);
+			target.igniteForSeconds(8);
 			target.setDeltaMovement(target.getDeltaMovement().add(0, 1.2, 0));
 			target.hurtMarked = true;
 		}

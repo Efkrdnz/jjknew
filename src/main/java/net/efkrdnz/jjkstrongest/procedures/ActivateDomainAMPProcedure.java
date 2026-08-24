@@ -11,6 +11,6 @@ public class ActivateDomainAMPProcedure {
 		if (entity == null)
 			return;
 		if (entity instanceof LivingEntity _entity && !_entity.level().isClientSide())
-			_entity.addEffect(new MobEffectInstance(JjkStrongestModMobEffects.DOMAIN_AMPLIFICATION.get(), 9999, 1, false, false));
+			_entity.addEffect(new MobEffectInstance(JjkStrongestModMobEffects.DOMAIN_AMPLIFICATION, 9999, 1, false, false));
 	}
 }

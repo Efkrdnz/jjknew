@@ -14,11 +14,11 @@ import net.efkrdnz.jjkstrongest.procedures.Technique3OnKeyPressedProcedure;
 
 import net.efkrdnz.jjkstrongest.JjkStrongestMod;
 
-public record Technique3Message(int type, int pressedms) implements CustomPacketPayload {
+public record Technique3Message(int pressType, int pressedms) implements CustomPacketPayload {
 	public static final CustomPacketPayload.Type<Technique3Message> TYPE = new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(JjkStrongestMod.MODID, "technique_3"));
 
 	public static final StreamCodec<RegistryFriendlyByteBuf, Technique3Message> STREAM_CODEC = StreamCodec.of((buffer, message) -> {
-		buffer.writeInt(message.type());
+		buffer.writeInt(message.pressType());
 		buffer.writeInt(message.pressedms());
 	}, buffer -> new Technique3Message(buffer.readInt(), buffer.readInt()));
 
@@ -29,7 +29,7 @@ public record Technique3Message(int type, int pressedms) implements CustomPacket
 
 	public static void handler(Technique3Message message, IPayloadContext context) {
 		// payload handlers already run on the main thread (HandlerThread.MAIN)
-		pressAction(context.player(), message.type(), message.pressedms());
+		pressAction(context.player(), message.pressType(), message.pressedms());
 	}
 
 	public static void pressAction(Player entity, int type, int pressedms) {

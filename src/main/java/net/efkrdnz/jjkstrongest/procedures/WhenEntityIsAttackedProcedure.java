@@ -3,7 +3,7 @@ package net.efkrdnz.jjkstrongest.procedures;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.bus.api.Event;
-import net.minecraftforge.event.entity.living.LivingAttackEvent;
+import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
 
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.damagesource.DamageSource;
@@ -16,7 +16,7 @@ import javax.annotation.Nullable;
 @EventBusSubscriber
 public class WhenEntityIsAttackedProcedure {
 	@SubscribeEvent
-	public static void onEntityAttacked(LivingAttackEvent event) {
+	public static void onEntityAttacked(LivingIncomingDamageEvent event) {
 		if (event != null && event.getEntity() != null) {
 			execute(event, event.getSource(), event.getEntity(), event.getSource().getDirectEntity(), event.getSource().getEntity());
 		}

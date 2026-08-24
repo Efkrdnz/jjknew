@@ -58,7 +58,7 @@ public class InformationOverloadBlindnessProcedure {
 	private static void execute(@Nullable Event event, Entity entity) {
 		if (entity == null)
 			return;
-		if (entity instanceof LivingEntity _livEnt0 && _livEnt0.hasEffect(JjkStrongestModMobEffects.INFORMATION_OVERLOAD.get())) {
+		if (entity instanceof LivingEntity _livEnt0 && _livEnt0.hasEffect(JjkStrongestModMobEffects.INFORMATION_OVERLOAD)) {
 			setDistance(1, 1);
 			setShape(FogShape.SPHERE);
 		}

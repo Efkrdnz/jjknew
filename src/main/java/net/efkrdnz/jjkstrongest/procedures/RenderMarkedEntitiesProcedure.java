@@ -97,7 +97,7 @@ public class RenderMarkedEntitiesProcedure {
 					if (worldEntity.getUUID().equals(uuid) && worldEntity.isAlive()) {
 						boolean isTargeted = uuidString.equals(targetedUUID);
 						ResourceLocation texture = isTargeted ? targetedTexture : normalTexture;
-						renderMarkOnEntity(poseStack, bufferSource, worldEntity, player, texture, event.getPartialTick(), isTargeted);
+						renderMarkOnEntity(poseStack, bufferSource, worldEntity, player, texture, event.getPartialTick().getGameTimeDeltaPartialTick(false), isTargeted);
 						break;
 					}
 				}
@@ -129,7 +129,7 @@ public class RenderMarkedEntitiesProcedure {
 		RenderType renderType = RenderType.eyes(texture);
 		VertexConsumer vertexConsumer = buffer.getBuffer(renderType);
 		Matrix4f matrix4f = poseStack.last().pose();
-		Matrix3f matrix3f = poseStack.last().normal();
+		PoseStack.Pose matrix3f = poseStack.last();
 		// quad vertices
 		float size = 1.0f;
 		int alpha = isTargeted ? 255 : 200;
@@ -143,6 +143,6 @@ public class RenderMarkedEntitiesProcedure {
 
 	// add vertex to buffer
 	private static void addVertex(VertexConsumer consumer, Matrix4f pose, Matrix3f normal, float x, float y, float z, float u, float v, int alpha) {
-		consumer.vertex(pose, x, y, z).color(255, 255, 255, alpha).uv(u, v).overlayCoords(0, 10).uv2(240, 240).normal(normal, 0, 1, 0).endVertex();
+		consumer.addVertex(pose, x, y, z).setColor(255, 255, 255, alpha).setUv(u, v).setUv1(0, 10).setUv2(240, 240).setNormal(normal, 0, 1, 0);
 	}
 }

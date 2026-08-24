@@ -14,7 +14,6 @@ import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.SpawnPlacements;
-import net.minecraft.world.entity.MobType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.damagesource.DamageTypes;
@@ -34,7 +33,7 @@ public class SukunaEntity extends Monster {
 
 	public SukunaEntity(EntityType<SukunaEntity> type, Level world) {
 		super(type, world);
-		setMaxUpStep(1.3f);
+		this.getAttribute(Attributes.STEP_HEIGHT).setBaseValue(1.3f);
 		xpReward = 0;
 		setNoAi(false);
 	}
@@ -52,10 +51,6 @@ public class SukunaEntity extends Monster {
 		this.goalSelector.addGoal(6, new FloatGoal(this));
 	}
 
-	@Override
-	public MobType getMobType() {
-		return MobType.UNDEFINED;
-	}
 
 	@Override
 	public double getMyRidingOffset() {
@@ -78,7 +73,7 @@ public class SukunaEntity extends Monster {
 			return false;
 		// While suppressed by Unlimited Void, Sukuna takes 3× damage —
 		// he is completely overwhelmed until his domain counter fires.
-		if (this.hasEffect(net.efkrdnz.jjkstrongest.init.JjkStrongestModMobEffects.INFORMATION_OVERLOAD.get()))
+		if (this.hasEffect(net.efkrdnz.jjkstrongest.init.JjkStrongestModMobEffects.INFORMATION_OVERLOAD))
 			amount *= 3.0f;
 		// hit counter for block trigger
 		long now = this.level().getGameTime();

@@ -78,10 +78,10 @@ public class RenderHollowPurpleSphereProcedure {
 				int b = 255;
 				int a = 255;
 				// render quad with bright purple tint
-				vertex.vertex(poseStack.last().pose(), x1, y1, z1).color(r, g, b, a).uv(u1, v1).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(LightTexture.FULL_BRIGHT).normal(poseStack.last().normal(), nx1, ny1, nz1).endVertex();
-				vertex.vertex(poseStack.last().pose(), x2, y2, z2).color(r, g, b, a).uv(u2, v1).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(LightTexture.FULL_BRIGHT).normal(poseStack.last().normal(), nx2, ny2, nz2).endVertex();
-				vertex.vertex(poseStack.last().pose(), x3, y3, z3).color(r, g, b, a).uv(u2, v2).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(LightTexture.FULL_BRIGHT).normal(poseStack.last().normal(), nx3, ny3, nz3).endVertex();
-				vertex.vertex(poseStack.last().pose(), x4, y4, z4).color(r, g, b, a).uv(u1, v2).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(LightTexture.FULL_BRIGHT).normal(poseStack.last().normal(), nx4, ny4, nz4).endVertex();
+				vertex.addVertex(poseStack.last().pose(), x1, y1, z1).setColor(r, g, b, a).setUv(u1, v1).setOverlay(OverlayTexture.NO_OVERLAY).setLight(LightTexture.FULL_BRIGHT).setNormal(poseStack.last(), nx1, ny1, nz1);
+				vertex.addVertex(poseStack.last().pose(), x2, y2, z2).setColor(r, g, b, a).setUv(u2, v1).setOverlay(OverlayTexture.NO_OVERLAY).setLight(LightTexture.FULL_BRIGHT).setNormal(poseStack.last(), nx2, ny2, nz2);
+				vertex.addVertex(poseStack.last().pose(), x3, y3, z3).setColor(r, g, b, a).setUv(u2, v2).setOverlay(OverlayTexture.NO_OVERLAY).setLight(LightTexture.FULL_BRIGHT).setNormal(poseStack.last(), nx3, ny3, nz3);
+				vertex.addVertex(poseStack.last().pose(), x4, y4, z4).setColor(r, g, b, a).setUv(u1, v2).setOverlay(OverlayTexture.NO_OVERLAY).setLight(LightTexture.FULL_BRIGHT).setNormal(poseStack.last(), nx4, ny4, nz4);
 			}
 		}
 	}

@@ -129,7 +129,7 @@ public class GojoNPCAIProcedure {
 
 		// ── Unlimited Void suppression ────────────────────────────────────────
 		if (entity instanceof LivingEntity uvLe
-				&& uvLe.hasEffect(JjkStrongestModMobEffects.INFORMATION_OVERLOAD.get())) {
+				&& uvLe.hasEffect(JjkStrongestModMobEffects.INFORMATION_OVERLOAD)) {
 			mob.setNoGravity(false);
 			mob.getNavigation().stop();
 			entity.setDeltaMovement(0, entity.getDeltaMovement().y, 0);

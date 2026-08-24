@@ -11,11 +11,11 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 
 import net.efkrdnz.jjkstrongest.JjkStrongestMod;
 
-public record AbilitymenuMessage(int type, int pressedms) implements CustomPacketPayload {
+public record AbilitymenuMessage(int pressType, int pressedms) implements CustomPacketPayload {
 	public static final CustomPacketPayload.Type<AbilitymenuMessage> TYPE = new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(JjkStrongestMod.MODID, "abilitymenu"));
 
 	public static final StreamCodec<RegistryFriendlyByteBuf, AbilitymenuMessage> STREAM_CODEC = StreamCodec.of((buffer, message) -> {
-		buffer.writeInt(message.type());
+		buffer.writeInt(message.pressType());
 		buffer.writeInt(message.pressedms());
 	}, buffer -> new AbilitymenuMessage(buffer.readInt(), buffer.readInt()));
 
@@ -30,7 +30,7 @@ public record AbilitymenuMessage(int type, int pressedms) implements CustomPacke
 			return;
 		String moveset = "";
 		String displayName = "";
-		switch (message.type()) {
+		switch (message.pressType()) {
 			case 0 :
 				moveset = "gojo_blue";
 				displayName = "Blue";

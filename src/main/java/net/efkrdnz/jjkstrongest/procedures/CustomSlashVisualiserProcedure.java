@@ -45,31 +45,29 @@ public class CustomSlashVisualiserProcedure {
 	}
 
 	private static void add(double x, double y, double z, float u, float v, int color) {
-		if (bufferBuilder == null || !bufferBuilder.building())
+		if (bufferBuilder == null)
 			return;
 		if (format == DefaultVertexFormat.POSITION_COLOR) {
-			bufferBuilder.vertex(x, y, z).color(color).endVertex();
+			bufferBuilder.addVertex(x, y, z).setColor(color);
 		} else if (format == DefaultVertexFormat.POSITION_TEX_COLOR) {
-			bufferBuilder.vertex(x, y, z).uv(u, v).color(color).endVertex();
+			bufferBuilder.addVertex(x, y, z).setUv(u, v).setColor(color);
 		}
 	}
 
 	private static boolean begin(VertexFormat.Mode mode, VertexFormat format, boolean update) {
-		if (CustomSlashVisualiserProcedure.bufferBuilder == null || !CustomSlashVisualiserProcedure.bufferBuilder.building()) {
+		if (CustomSlashVisualiserProcedure.bufferBuilder == null) {
 			if (update)
 				clear();
 			if (CustomSlashVisualiserProcedure.vertexBuffer == null) {
 				if (format == DefaultVertexFormat.POSITION_COLOR) {
 					CustomSlashVisualiserProcedure.mode = mode;
 					CustomSlashVisualiserProcedure.format = format;
-					CustomSlashVisualiserProcedure.bufferBuilder = Tesselator.getInstance().getBuilder();
-					CustomSlashVisualiserProcedure.bufferBuilder.begin(mode, DefaultVertexFormat.POSITION_COLOR);
+					CustomSlashVisualiserProcedure.bufferBuilder = Tesselator.getInstance().begin(mode, DefaultVertexFormat.POSITION_COLOR);
 					return true;
 				} else if (format == DefaultVertexFormat.POSITION_TEX_COLOR) {
 					CustomSlashVisualiserProcedure.mode = mode;
 					CustomSlashVisualiserProcedure.format = format;
-					CustomSlashVisualiserProcedure.bufferBuilder = Tesselator.getInstance().getBuilder();
-					CustomSlashVisualiserProcedure.bufferBuilder.begin(mode, DefaultVertexFormat.POSITION_TEX_COLOR);
+					CustomSlashVisualiserProcedure.bufferBuilder = Tesselator.getInstance().begin(mode, DefaultVertexFormat.POSITION_TEX_COLOR);
 					return true;
 				}
 			}
@@ -85,13 +83,13 @@ public class CustomSlashVisualiserProcedure {
 	}
 
 	private static void end() {
-		if (bufferBuilder == null || !bufferBuilder.building())
+		if (bufferBuilder == null)
 			return;
 		if (vertexBuffer != null)
 			vertexBuffer.close();
 		vertexBuffer = new VertexBuffer(VertexBuffer.Usage.STATIC);
 		vertexBuffer.bind();
-		vertexBuffer.upload(bufferBuilder.end());
+		vertexBuffer.upload(bufferBuilder.buildOrThrow());
 		VertexBuffer.unbind();
 	}
 
@@ -178,7 +176,7 @@ public class CustomSlashVisualiserProcedure {
 		if (level != null && entity != null) {
 			poseStack = event.getPoseStack();
 			projectionMatrix = event.getProjectionMatrix();
-			Vec3 pos = entity.getPosition(event.getPartialTick());
+			Vec3 pos = entity.getPosition(event.getPartialTick().getGameTimeDeltaPartialTick(false));
 			RenderSystem.enableBlend();
 			RenderSystem.defaultBlendFunc();
 			RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);

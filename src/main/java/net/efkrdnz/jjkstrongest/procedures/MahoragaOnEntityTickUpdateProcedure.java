@@ -142,7 +142,7 @@ public class MahoragaOnEntityTickUpdateProcedure {
 		// completely still. Wheel-spin adaptation continues via the event handler;
 		// movement is suppressed here until the effect is resisted or adapted to.
 		if (entity instanceof LivingEntity _uvLe &&
-				_uvLe.hasEffect(JjkStrongestModMobEffects.INFORMATION_OVERLOAD.get())) {
+				_uvLe.hasEffect(JjkStrongestModMobEffects.INFORMATION_OVERLOAD)) {
 			if (entity instanceof Mob _uvMob)
 				_uvMob.getNavigation().stop();
 			entity.setDeltaMovement(0, entity.getDeltaMovement().y, 0);

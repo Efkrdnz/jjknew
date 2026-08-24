@@ -3,7 +3,6 @@ package net.efkrdnz.jjkstrongest.procedures;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.bus.api.Event;
 import net.neoforged.neoforge.event.entity.living.MobEffectEvent;
 
 import net.minecraft.world.phys.AABB;
@@ -37,9 +36,9 @@ public class MahoragaEffectAdaptationEventsProcedure {
 		MobEffectInstance inst = event.getEffectInstance();
 		if (inst == null || inst.getEffect() == null)
 			return;
-		if (inst.getEffect().getCategory() != MobEffectCategory.HARMFUL)
+		if (inst.getEffect().value().getCategory() != MobEffectCategory.HARMFUL)
 			return;
-		ResourceLocation id = BuiltInRegistries.MOB_EFFECT.getKey(inst.getEffect());
+		ResourceLocation id = BuiltInRegistries.MOB_EFFECT.getKey(inst.getEffect().value());
 		if (id == null)
 			return;
 		String key = "maho_eff_" + sanitize(id);
@@ -47,7 +46,7 @@ public class MahoragaEffectAdaptationEventsProcedure {
 		int full = MahoragaConstantsProcedure.FULL_SPINS;
 		// already fully adapted -> deny and collapse if info overload
 		if (spins >= full) {
-			event.setResult(Event.Result.DENY);
+			event.setResult(MobEffectEvent.Applicable.Result.DO_NOT_APPLY);
 			if ("jjk_strongest:information_overload".equals(id.toString())) {
 				collapseDomainMahoragaIsInside(victim);
 			}
@@ -70,7 +69,7 @@ public class MahoragaEffectAdaptationEventsProcedure {
 			if (spins >= full) {
 				if (victim.hasEffect(inst.getEffect()))
 					victim.removeEffect(inst.getEffect());
-				event.setResult(Event.Result.DENY);
+				event.setResult(MobEffectEvent.Applicable.Result.DO_NOT_APPLY);
 				if ("jjk_strongest:information_overload".equals(id.toString())) {
 					collapseDomainMahoragaIsInside(victim);
 				}

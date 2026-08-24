@@ -78,10 +78,10 @@ public class FlameArrowExplosionRenderer extends EntityRenderer<FlameArrowExplos
 			Matrix4f matrix = poseStack.last().pose();
 			int light = LightTexture.FULL_BRIGHT;
 			// bright yellow-white core
-			vc.vertex(matrix, -1f, -1f, 0).color(1f, 1f, 0.9f, 1.0f).uv(0, 1).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(light).normal(0, 0, 1).endVertex();
-			vc.vertex(matrix, 1f, -1f, 0).color(1f, 1f, 0.9f, 1.0f).uv(1, 1).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(light).normal(0, 0, 1).endVertex();
-			vc.vertex(matrix, 1f, 1f, 0).color(1f, 1f, 0.9f, 1.0f).uv(1, 0).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(light).normal(0, 0, 1).endVertex();
-			vc.vertex(matrix, -1f, 1f, 0).color(1f, 1f, 0.9f, 1.0f).uv(0, 0).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(light).normal(0, 0, 1).endVertex();
+			vc.addVertex(matrix, -1f, -1f, 0).setColor(1f, 1f, 0.9f, 1.0f).setUv(0, 1).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(0, 0, 1);
+			vc.addVertex(matrix, 1f, -1f, 0).setColor(1f, 1f, 0.9f, 1.0f).setUv(1, 1).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(0, 0, 1);
+			vc.addVertex(matrix, 1f, 1f, 0).setColor(1f, 1f, 0.9f, 1.0f).setUv(1, 0).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(0, 0, 1);
+			vc.addVertex(matrix, -1f, 1f, 0).setColor(1f, 1f, 0.9f, 1.0f).setUv(0, 0).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(0, 0, 1);
 		}
 		poseStack.popPose();
 	}
@@ -100,10 +100,10 @@ public class FlameArrowExplosionRenderer extends EntityRenderer<FlameArrowExplos
 			VertexConsumer vc = bufferSource.getBuffer(JjkShaderManager.FLAME_ARROW_EXPLOSION_RENDER_TYPE);
 			Matrix4f matrix = poseStack.last().pose();
 			int light = LightTexture.FULL_BRIGHT;
-			vc.vertex(matrix, -1f, -1f, 0).color(1f, 1f, 1f, 1.0f).uv(0, 1).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(light).normal(0, 0, 1).endVertex();
-			vc.vertex(matrix, 1f, -1f, 0).color(1f, 1f, 1f, 1.0f).uv(1, 1).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(light).normal(0, 0, 1).endVertex();
-			vc.vertex(matrix, 1f, 1f, 0).color(1f, 1f, 1f, 1.0f).uv(1, 0).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(light).normal(0, 0, 1).endVertex();
-			vc.vertex(matrix, -1f, 1f, 0).color(1f, 1f, 1f, 1.0f).uv(0, 0).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(light).normal(0, 0, 1).endVertex();
+			vc.addVertex(matrix, -1f, -1f, 0).setColor(1f, 1f, 1f, 1.0f).setUv(0, 1).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(0, 0, 1);
+			vc.addVertex(matrix, 1f, -1f, 0).setColor(1f, 1f, 1f, 1.0f).setUv(1, 1).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(0, 0, 1);
+			vc.addVertex(matrix, 1f, 1f, 0).setColor(1f, 1f, 1f, 1.0f).setUv(1, 0).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(0, 0, 1);
+			vc.addVertex(matrix, -1f, 1f, 0).setColor(1f, 1f, 1f, 1.0f).setUv(0, 0).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(0, 0, 1);
 		}
 		poseStack.popPose();
 	}
@@ -153,10 +153,10 @@ public class FlameArrowExplosionRenderer extends EntityRenderer<FlameArrowExplos
 				float topLeft = -0.5f * taper;
 				float topRight = 0.5f * taper;
 				// bright yellow-white at bottom, orange-red at top
-				vc.vertex(matrix, bottomLeft, -0.5f, 0).color(1f, 1f, 0.95f, 1.0f).uv(0, 1).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(light).normal(0, 0, 1).endVertex();
-				vc.vertex(matrix, bottomRight, -0.5f, 0).color(1f, 1f, 0.95f, 1.0f).uv(1, 1).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(light).normal(0, 0, 1).endVertex();
-				vc.vertex(matrix, topRight, 0.5f, 0).color(1f, 0.35f, 0.08f, 0.6f).uv(1, 0).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(light).normal(0, 0, 1).endVertex();
-				vc.vertex(matrix, topLeft, 0.5f, 0).color(1f, 0.35f, 0.08f, 0.6f).uv(0, 0).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(light).normal(0, 0, 1).endVertex();
+				vc.addVertex(matrix, bottomLeft, -0.5f, 0).setColor(1f, 1f, 0.95f, 1.0f).setUv(0, 1).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(0, 0, 1);
+				vc.addVertex(matrix, bottomRight, -0.5f, 0).setColor(1f, 1f, 0.95f, 1.0f).setUv(1, 1).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(0, 0, 1);
+				vc.addVertex(matrix, topRight, 0.5f, 0).setColor(1f, 0.35f, 0.08f, 0.6f).setUv(1, 0).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(0, 0, 1);
+				vc.addVertex(matrix, topLeft, 0.5f, 0).setColor(1f, 0.35f, 0.08f, 0.6f).setUv(0, 0).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(0, 0, 1);
 			}
 			poseStack.popPose();
 		}
@@ -177,10 +177,10 @@ public class FlameArrowExplosionRenderer extends EntityRenderer<FlameArrowExplos
 			VertexConsumer vc = bufferSource.getBuffer(JjkShaderManager.FLAME_ARROW_EXPLOSION_RENDER_TYPE);
 			Matrix4f matrix = poseStack.last().pose();
 			int light = LightTexture.FULL_BRIGHT;
-			vc.vertex(matrix, -1f, -1f, 0).color(1f, 0.3f, 0.05f, 1.0f).uv(0, 1).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(light).normal(0, 0, 1).endVertex();
-			vc.vertex(matrix, 1f, -1f, 0).color(1f, 0.3f, 0.05f, 1.0f).uv(1, 1).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(light).normal(0, 0, 1).endVertex();
-			vc.vertex(matrix, 1f, 1f, 0).color(1f, 0.3f, 0.05f, 1.0f).uv(1, 0).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(light).normal(0, 0, 1).endVertex();
-			vc.vertex(matrix, -1f, 1f, 0).color(1f, 0.3f, 0.05f, 1.0f).uv(0, 0).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(light).normal(0, 0, 1).endVertex();
+			vc.addVertex(matrix, -1f, -1f, 0).setColor(1f, 0.3f, 0.05f, 1.0f).setUv(0, 1).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(0, 0, 1);
+			vc.addVertex(matrix, 1f, -1f, 0).setColor(1f, 0.3f, 0.05f, 1.0f).setUv(1, 1).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(0, 0, 1);
+			vc.addVertex(matrix, 1f, 1f, 0).setColor(1f, 0.3f, 0.05f, 1.0f).setUv(1, 0).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(0, 0, 1);
+			vc.addVertex(matrix, -1f, 1f, 0).setColor(1f, 0.3f, 0.05f, 1.0f).setUv(0, 0).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(0, 0, 1);
 		}
 		poseStack.popPose();
 	}

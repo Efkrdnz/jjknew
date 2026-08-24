@@ -37,7 +37,7 @@ public class MalevolentShrineSlashRenderer {
 		PoseStack poseStack = event.getPoseStack();
 		MultiBufferSource.BufferSource bufferSource = mc.renderBuffers().bufferSource();
 		Vec3 cameraPos = mc.gameRenderer.getMainCamera().getPosition();
-		float partialTick = event.getPartialTick();
+		float partialTick = event.getPartialTick().getGameTimeDeltaPartialTick(false);
 		float timeSeconds = (mc.level.getGameTime() + partialTick) / 20.0f;
 		// render all active slashes in batches
 		for (DomainSlash slash : MalevolentShrineSlashManager.getActiveSlashes()) {
@@ -78,10 +78,10 @@ public class MalevolentShrineSlashRenderer {
 		Matrix4f matrix = poseStack.last().pose();
 		int alphaInt = (int) (alpha * 255);
 		int color = (alphaInt << 24) | 0xFFFFFF;
-		vc.vertex(matrix, -0.5f, -0.5f, 0.0f).uv(0.0f, 1.0f).endVertex();
-		vc.vertex(matrix, 0.5f, -0.5f, 0.0f).uv(1.0f, 1.0f).endVertex();
-		vc.vertex(matrix, 0.5f, 0.5f, 0.0f).uv(1.0f, 0.0f).endVertex();
-		vc.vertex(matrix, -0.5f, 0.5f, 0.0f).uv(0.0f, 0.0f).endVertex();
+		vc.addVertex(matrix, -0.5f, -0.5f, 0.0f).setUv(0.0f, 1.0f);
+		vc.addVertex(matrix, 0.5f, -0.5f, 0.0f).setUv(1.0f, 1.0f);
+		vc.addVertex(matrix, 0.5f, 0.5f, 0.0f).setUv(1.0f, 0.0f);
+		vc.addVertex(matrix, -0.5f, 0.5f, 0.0f).setUv(0.0f, 0.0f);
 		poseStack.popPose();
 	}
 }

@@ -85,7 +85,7 @@ public class FlameArrowExplosionOnEntityTickUpdateProcedure {
 				if (!(entity == entityiterator) && !(entity instanceof TamableAnimal _tamIsTamedBy && entityiterator instanceof LivingEntity _livEnt ? _tamIsTamedBy.isOwnedBy(_livEnt) : false)) {
 					entityiterator.invulnerableTime = 0;
 					entityiterator.hurt(new DamageSource(world.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE).getHolderOrThrow(ResourceKey.create(Registries.DAMAGE_TYPE, ResourceLocation.parse("jjk_strongest:technique_fuga"))), owner), 50); // MASSIVE DAMAGE
-					entityiterator.setSecondsOnFire(25); // VERY LONG BURN
+					entityiterator.igniteForSeconds(25); // VERY LONG BURN
 				}
 			}
 			// SPHERICAL BLOCK DESTRUCTION
@@ -121,7 +121,7 @@ public class FlameArrowExplosionOnEntityTickUpdateProcedure {
 				if (!(entity == entityiterator) && !(entity instanceof TamableAnimal _tamIsTamedBy && entityiterator instanceof LivingEntity _livEnt ? _tamIsTamedBy.isOwnedBy(_livEnt) : false)) {
 					entityiterator.invulnerableTime = 0;
 					entityiterator.hurt(new DamageSource(world.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE).getHolderOrThrow(ResourceKey.create(Registries.DAMAGE_TYPE, ResourceLocation.parse("jjk_strongest:technique_fuga"))), owner), 5);
-					entityiterator.setSecondsOnFire(12);
+					entityiterator.igniteForSeconds(12);
 				}
 			}
 		}

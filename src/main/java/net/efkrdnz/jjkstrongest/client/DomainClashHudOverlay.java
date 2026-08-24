@@ -3,7 +3,7 @@ package net.efkrdnz.jjkstrongest.client;
 
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.bus.api.SubscribeEvent;
-import net.minecraftforge.client.event.RenderGuiOverlayEvent;
+import net.neoforged.neoforge.client.event.RenderGuiEvent;
 import net.neoforged.api.distmarker.Dist;
 
 import net.minecraft.world.phys.Vec3;
@@ -34,7 +34,7 @@ public class DomainClashHudOverlay {
 	private static final float MAX_CLASH_HP = 100f;
 
 	@SubscribeEvent
-	public static void onRenderHud(RenderGuiOverlayEvent.Post event) {
+	public static void onRenderHud(RenderGuiEvent.Post event) {
 		Minecraft mc = Minecraft.getInstance();
 		if (mc.level == null || mc.player == null)
 			return;

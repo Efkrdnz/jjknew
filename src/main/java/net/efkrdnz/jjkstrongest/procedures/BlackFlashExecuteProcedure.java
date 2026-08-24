@@ -30,13 +30,13 @@ public class BlackFlashExecuteProcedure {
 		}
 		// add zone effect to attacker
 		if (sourceentity instanceof LivingEntity _entity && !_entity.level().isClientSide()) {
-			if (_entity.hasEffect(JjkStrongestModMobEffects.ZONE.get())) {
-				zone_level = _entity.getEffect(JjkStrongestModMobEffects.ZONE.get()).getAmplifier() + 1;
+			if (_entity.hasEffect(JjkStrongestModMobEffects.ZONE)) {
+				zone_level = _entity.getEffect(JjkStrongestModMobEffects.ZONE).getAmplifier() + 1;
 				if (zone_level < max_zone_level) {
-					_entity.addEffect(new MobEffectInstance(JjkStrongestModMobEffects.ZONE.get(), -1, (int) zone_level, false, false));
+					_entity.addEffect(new MobEffectInstance(JjkStrongestModMobEffects.ZONE, -1, (int) zone_level, false, false));
 				}
 			} else {
-				_entity.addEffect(new MobEffectInstance(JjkStrongestModMobEffects.ZONE.get(), -1, 0, false, false));
+				_entity.addEffect(new MobEffectInstance(JjkStrongestModMobEffects.ZONE, -1, 0, false, false));
 			}
 		}
 		// apply debuffs to victim

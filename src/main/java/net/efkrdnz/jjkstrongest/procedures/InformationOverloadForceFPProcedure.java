@@ -39,7 +39,7 @@ public class InformationOverloadForceFPProcedure {
 		Minecraft minecraft = Minecraft.getInstance();
 		if (minecraft == null)
 			return;
-		boolean has = (entity instanceof LivingEntity _livEnt0 && _livEnt0.hasEffect(JjkStrongestModMobEffects.INFORMATION_OVERLOAD.get()));
+		boolean has = (entity instanceof LivingEntity _livEnt0 && _livEnt0.hasEffect(JjkStrongestModMobEffects.INFORMATION_OVERLOAD));
 		if (has) {
 			if (!forced) {
 				prev = minecraft.options.getCameraType();

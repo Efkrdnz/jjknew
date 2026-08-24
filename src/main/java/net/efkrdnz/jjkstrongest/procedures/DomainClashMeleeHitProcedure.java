@@ -2,7 +2,7 @@ package net.efkrdnz.jjkstrongest.procedures;
 
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.bus.api.SubscribeEvent;
-import net.minecraftforge.event.entity.living.LivingHurtEvent;
+import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
 
 import net.minecraft.world.entity.Entity;
 import net.minecraft.server.level.ServerLevel;
@@ -10,7 +10,7 @@ import net.minecraft.server.level.ServerLevel;
 @EventBusSubscriber(modid = "jjk_strongest")
 public class DomainClashMeleeHitProcedure {
 	@SubscribeEvent
-	public static void onLivingHurt(LivingHurtEvent event) {
+	public static void onLivingHurt(LivingDamageEvent.Pre event) {
 		// only run server side
 		if (event.getEntity().level().isClientSide())
 			return;

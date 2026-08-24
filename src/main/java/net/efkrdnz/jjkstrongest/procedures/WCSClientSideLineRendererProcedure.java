@@ -16,6 +16,7 @@ import net.minecraft.client.Minecraft;
 
 import net.efkrdnz.jjkstrongest.network.JjkStrongestModVariables;
 
+import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -50,7 +51,7 @@ public class WCSClientSideLineRendererProcedure {
 		double z1 = (entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).wcs_z1;
 		// calculate current aim point
 		Vec3 lookVec = entity.getLookAngle();
-		Vec3 eyePos = entity.getEyePosition(event.getPartialTick());
+		Vec3 eyePos = entity.getEyePosition(event.getPartialTick().getGameTimeDeltaPartialTick(false));
 		double x2 = eyePos.x + lookVec.x * 25;
 		double y2 = eyePos.y + lookVec.y * 25;
 		double z2 = eyePos.z + lookVec.z * 25;
@@ -72,26 +73,26 @@ public class WCSClientSideLineRendererProcedure {
 		RenderSystem.setShader(GameRenderer::getPositionColorShader);
 		RenderSystem.lineWidth(3.0F); // constant line width
 		Tesselator tesselator = Tesselator.getInstance();
-		BufferBuilder buffer = tesselator.getBuilder();
+		BufferBuilder buffer;
 		poseStack.pushPose();
 		// draw triangle edges
-		buffer.begin(VertexFormat.Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
+		buffer = tesselator.begin(VertexFormat.Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
 		// line from point 1 to point 2 (press to current aim)
 		drawLine(buffer, matrix, x1 - camPos.x, y1 - camPos.y, z1 - camPos.z, x2 - camPos.x, y2 - camPos.y, z2 - camPos.z, 1.0f, 1.0f, 1.0f, 1.0f); // white
 		// line from point 2 to point 3 (current aim to player)
 		drawLine(buffer, matrix, x2 - camPos.x, y2 - camPos.y, z2 - camPos.z, x3 - camPos.x, y3 - camPos.y, z3 - camPos.z, 1.0f, 1.0f, 1.0f, 1.0f); // white
 		// line from point 3 to point 1 (player to press)
 		drawLine(buffer, matrix, x3 - camPos.x, y3 - camPos.y, z3 - camPos.z, x1 - camPos.x, y1 - camPos.y, z1 - camPos.z, 1.0f, 1.0f, 1.0f, 1.0f); // white
-		tesselator.end();
+		BufferUploader.drawWithShader(buffer.buildOrThrow());
 		// draw points at vertices
-		buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+		buffer = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
 		// point 1 (red)
 		drawPoint(buffer, matrix, x1 - camPos.x, y1 - camPos.y, z1 - camPos.z, 1.0f, 0.0f, 0.0f, 1.0f, 0.3f);
 		// point 2 (green)
 		drawPoint(buffer, matrix, x2 - camPos.x, y2 - camPos.y, z2 - camPos.z, 0.0f, 1.0f, 0.0f, 1.0f, 0.3f);
 		// point 3 (blue)
 		drawPoint(buffer, matrix, x3 - camPos.x, y3 - camPos.y, z3 - camPos.z, 0.0f, 0.5f, 1.0f, 1.0f, 0.3f);
-		tesselator.end();
+		BufferUploader.drawWithShader(buffer.buildOrThrow());
 		poseStack.popPose();
 		// restore rendering state
 		RenderSystem.enableDepthTest();
@@ -113,8 +114,8 @@ public class WCSClientSideLineRendererProcedure {
 			double sx2 = x1 + (x2 - x1) * t2;
 			double sy2 = y1 + (y2 - y1) * t2;
 			double sz2 = z1 + (z2 - z1) * t2;
-			buffer.vertex(matrix, (float) sx1, (float) sy1, (float) sz1).color(r, g, b, a).endVertex();
-			buffer.vertex(matrix, (float) sx2, (float) sy2, (float) sz2).color(r, g, b, a).endVertex();
+			buffer.addVertex(matrix, (float) sx1, (float) sy1, (float) sz1).setColor(r, g, b, a);
+			buffer.addVertex(matrix, (float) sx2, (float) sy2, (float) sz2).setColor(r, g, b, a);
 		}
 	}
 
@@ -128,9 +129,9 @@ public class WCSClientSideLineRendererProcedure {
 		Vec3 right = new Vec3(-toCamera.z, 0, toCamera.x).normalize().scale(size);
 		Vec3 up = new Vec3(0, 1, 0).scale(size);
 		// draw quad facing camera
-		buffer.vertex(matrix, (float) (x - right.x - up.x), (float) (y - right.y - up.y), (float) (z - right.z - up.z)).color(r, g, b, a).endVertex();
-		buffer.vertex(matrix, (float) (x - right.x + up.x), (float) (y - right.y + up.y), (float) (z - right.z + up.z)).color(r, g, b, a).endVertex();
-		buffer.vertex(matrix, (float) (x + right.x + up.x), (float) (y + right.y + up.y), (float) (z + right.z + up.z)).color(r, g, b, a).endVertex();
-		buffer.vertex(matrix, (float) (x + right.x - up.x), (float) (y + right.y - up.y), (float) (z + right.z - up.z)).color(r, g, b, a).endVertex();
+		buffer.addVertex(matrix, (float) (x - right.x - up.x), (float) (y - right.y - up.y), (float) (z - right.z - up.z)).setColor(r, g, b, a);
+		buffer.addVertex(matrix, (float) (x - right.x + up.x), (float) (y - right.y + up.y), (float) (z - right.z + up.z)).setColor(r, g, b, a);
+		buffer.addVertex(matrix, (float) (x + right.x + up.x), (float) (y + right.y + up.y), (float) (z + right.z + up.z)).setColor(r, g, b, a);
+		buffer.addVertex(matrix, (float) (x + right.x - up.x), (float) (y + right.y - up.y), (float) (z + right.z - up.z)).setColor(r, g, b, a);
 	}
 }

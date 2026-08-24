@@ -51,8 +51,8 @@ public class ReturnOutputGeneralProcedure {
 		} else {
 			overworld = 0;
 		}
-		if (entity instanceof LivingEntity _livEnt6 && _livEnt6.hasEffect(JjkStrongestModMobEffects.ZONE.get())) {
-			BLACKFLASH = (1 + (entity instanceof LivingEntity _livEnt && _livEnt.hasEffect(JjkStrongestModMobEffects.ZONE.get()) ? _livEnt.getEffect(JjkStrongestModMobEffects.ZONE.get()).getAmplifier() : 0)) / 10;
+		if (entity instanceof LivingEntity _livEnt6 && _livEnt6.hasEffect(JjkStrongestModMobEffects.ZONE)) {
+			BLACKFLASH = (1 + (entity instanceof LivingEntity _livEnt && _livEnt.hasEffect(JjkStrongestModMobEffects.ZONE) ? _livEnt.getEffect(JjkStrongestModMobEffects.ZONE).getAmplifier() : 0)) / 10;
 		} else {
 			BLACKFLASH = 0;
 		}

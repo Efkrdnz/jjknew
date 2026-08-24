@@ -10,6 +10,7 @@ import net.minecraft.client.Minecraft;
 
 import net.efkrdnz.jjkstrongest.client.JjkShaderManager;
 
+import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.Tesselator;
@@ -52,10 +53,10 @@ public class RenderRedFirstPersonProcedure {
 			var bufferSource = mc.renderBuffers().bufferSource();
 			VertexConsumer vc = bufferSource.getBuffer(JjkShaderManager.RED_ORB_RENDER_TYPE);
 			Matrix4f matrix = poseStack.last().pose();
-			vc.vertex(matrix, -1, -1, 0).uv(0, 1).endVertex();
-			vc.vertex(matrix, 1, -1, 0).uv(1, 1).endVertex();
-			vc.vertex(matrix, 1, 1, 0).uv(1, 0).endVertex();
-			vc.vertex(matrix, -1, 1, 0).uv(0, 0).endVertex();
+			vc.addVertex(matrix, -1, -1, 0).setUv(0, 1);
+			vc.addVertex(matrix, 1, -1, 0).setUv(1, 1);
+			vc.addVertex(matrix, 1, 1, 0).setUv(1, 0);
+			vc.addVertex(matrix, -1, 1, 0).setUv(0, 0);
 			bufferSource.endBatch(JjkShaderManager.RED_ORB_RENDER_TYPE);
 			poseStack.popPose();
 		}
@@ -79,12 +80,11 @@ public class RenderRedFirstPersonProcedure {
 
 	private static void drawQuad(PoseStack poseStack, float u0, float v0, float u1, float v1) {
 		var mat = poseStack.last().pose();
-		BufferBuilder bb = Tesselator.getInstance().getBuilder();
-		bb.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
-		bb.vertex(mat, -0.5f, -0.5f, 0f).uv(u0, v1).endVertex();
-		bb.vertex(mat, 0.5f, -0.5f, 0f).uv(u1, v1).endVertex();
-		bb.vertex(mat, 0.5f, 0.5f, 0f).uv(u1, v0).endVertex();
-		bb.vertex(mat, -0.5f, 0.5f, 0f).uv(u0, v0).endVertex();
-		Tesselator.getInstance().end();
+		BufferBuilder bb = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+		bb.addVertex(mat, -0.5f, -0.5f, 0f).setUv(u0, v1);
+		bb.addVertex(mat, 0.5f, -0.5f, 0f).setUv(u1, v1);
+		bb.addVertex(mat, 0.5f, 0.5f, 0f).setUv(u1, v0);
+		bb.addVertex(mat, -0.5f, 0.5f, 0f).setUv(u0, v0);
+		BufferUploader.drawWithShader(bb.buildOrThrow());
 	}
 }

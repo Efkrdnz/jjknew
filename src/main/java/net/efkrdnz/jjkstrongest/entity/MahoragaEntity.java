@@ -2,12 +2,12 @@
 package net.efkrdnz.jjkstrongest.entity;
 
 import software.bernie.geckolib.util.GeckoLibUtil;
-import software.bernie.geckolib.core.object.PlayState;
-import software.bernie.geckolib.core.animation.RawAnimation;
-import software.bernie.geckolib.core.animation.AnimationState;
-import software.bernie.geckolib.core.animation.AnimationController;
-import software.bernie.geckolib.core.animation.AnimatableManager;
-import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
+import software.bernie.geckolib.animation.PlayState;
+import software.bernie.geckolib.animation.RawAnimation;
+import software.bernie.geckolib.animation.AnimationState;
+import software.bernie.geckolib.animation.AnimationController;
+import software.bernie.geckolib.animation.AnimatableManager;
+import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animatable.GeoEntity;
 
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -26,7 +26,6 @@ import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.Pose;
-import net.minecraft.world.entity.MobType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.EntityType;
@@ -66,21 +65,21 @@ public class MahoragaEntity extends Monster implements GeoEntity {
 		super(type, world);
 		xpReward = 0;
 		setNoAi(false);
-		setMaxUpStep(1.6f);
+		this.getAttribute(Attributes.STEP_HEIGHT).setBaseValue(1.6f);
 		setPersistenceRequired();
 	}
 
 	@Override
-	protected void defineSynchedData() {
-		super.defineSynchedData();
-		this.entityData.define(SHOOT, false);
-		this.entityData.define(ANIMATION, "undefined");
-		this.entityData.define(TEXTURE, "mahoraga");
-		this.entityData.define(DATA_DBG_STATE, "");
-		this.entityData.define(DATA_DBG_TARGET, "");
-		this.entityData.define(DATA_DBG_COOLDOWNS, "");
-		this.entityData.define(DATA_DBG_ADAPT, "");
-		this.entityData.define(DATA_DBG_EXTRA, "");
+	protected void defineSynchedData(SynchedEntityData.Builder builder) {
+		super.defineSynchedData(builder);
+		builder.define(SHOOT, false);
+		builder.define(ANIMATION, "undefined");
+		builder.define(TEXTURE, "mahoraga");
+		builder.define(DATA_DBG_STATE, "");
+		builder.define(DATA_DBG_TARGET, "");
+		builder.define(DATA_DBG_COOLDOWNS, "");
+		builder.define(DATA_DBG_ADAPT, "");
+		builder.define(DATA_DBG_EXTRA, "");
 	}
 
 	public void setTexture(String texture) {
@@ -110,10 +109,6 @@ public class MahoragaEntity extends Monster implements GeoEntity {
 		this.goalSelector.addGoal(8, new FloatGoal(this));
 	}
 
-	@Override
-	public MobType getMobType() {
-		return MobType.UNDEFINED;
-	}
 
 	@Override
 	public boolean removeWhenFarAway(double distanceToClosestPlayer) {
@@ -136,7 +131,7 @@ public class MahoragaEntity extends Monster implements GeoEntity {
 			return false;
 		// While suppressed by Unlimited Void, Mahoraga takes 3× damage —
 		// he is completely overwhelmed until his adaptation completes.
-		if (this.hasEffect(net.efkrdnz.jjkstrongest.init.JjkStrongestModMobEffects.INFORMATION_OVERLOAD.get()))
+		if (this.hasEffect(net.efkrdnz.jjkstrongest.init.JjkStrongestModMobEffects.INFORMATION_OVERLOAD))
 			amount *= 3.0f;
 		return super.hurt(source, amount);
 	}

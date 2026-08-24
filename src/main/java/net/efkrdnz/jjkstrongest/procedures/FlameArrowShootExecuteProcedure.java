@@ -21,8 +21,7 @@ public class FlameArrowShootExecuteProcedure {
 						AbstractArrow entityToSpawn = new FlameArrowEntity(JjkStrongestModEntities.FLAME_ARROW.get(), level);
 						entityToSpawn.setOwner(shooter);
 						entityToSpawn.setBaseDamage(damage);
-						entityToSpawn.setKnockback(knockback);
-						entityToSpawn.setSilent(true);
+						entityToSpawn.						entityToSpawn.setSilent(true);
 						return entityToSpawn;
 					}
 				}.getArrow(projectileLevel, entity, 0, 1);

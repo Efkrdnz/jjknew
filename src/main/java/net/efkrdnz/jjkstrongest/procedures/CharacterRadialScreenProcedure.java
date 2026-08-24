@@ -21,6 +21,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.List;
 import java.util.ArrayList;
 
+import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -203,26 +204,26 @@ public class CharacterRadialScreenProcedure {
 			RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 			guiGraphics.pose().pushPose();
 			Tesselator tesselator = Tesselator.getInstance();
-			BufferBuilder buffer = tesselator.getBuilder();
+			BufferBuilder buffer;
 			Matrix4f matrix = guiGraphics.pose().last().pose();
 			// center polygon with pulse
-			buffer.begin(VertexFormat.Mode.TRIANGLE_FAN, DefaultVertexFormat.POSITION_COLOR);
+			buffer = tesselator.begin(VertexFormat.Mode.TRIANGLE_FAN, DefaultVertexFormat.POSITION_COLOR);
 			int centerColor = toRGB24(20, 20, 20, (int) (180 * pulse));
 			int cr = (centerColor >> 16) & 0xFF;
 			int cg = (centerColor >> 8) & 0xFF;
 			int cb = centerColor & 0xFF;
 			int ca = (centerColor >> 24) & 0xFF;
-			buffer.vertex(matrix, centerX, centerY, 0.0F).color(cr, cg, cb, ca).endVertex();
+			buffer.addVertex(matrix, centerX, centerY, 0.0F).setColor(cr, cg, cb, ca);
 			int sides = Math.max(4, items.size());
 			for (int i = 0; i <= sides; i++) {
 				float angle = (float) ((i * Mth.TWO_PI / sides) - (Math.PI / 2));
 				float x = centerX + CENTER_CIRCLE_RADIUS * (float) Math.cos(angle);
 				float y = centerY + CENTER_CIRCLE_RADIUS * (float) Math.sin(angle);
-				buffer.vertex(matrix, x, y, 0.0F).color(cr, cg, cb, ca).endVertex();
+				buffer.addVertex(matrix, x, y, 0.0F).setColor(cr, cg, cb, ca);
 			}
-			tesselator.end();
+			BufferUploader.drawWithShader(buffer.buildOrThrow());
 			// main slots
-			buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+			buffer = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
 			for (int i = 0; i < items.size(); i++) {
 				float startAngle = getAngleFor(i - 0.5F);
 				float endAngle = getAngleFor(i + 0.5F);
@@ -242,9 +243,9 @@ public class CharacterRadialScreenProcedure {
 				}
 				drawSlot(guiGraphics.pose(), buffer, centerX, centerY, startAngle, endAngle, fillColor);
 			}
-			tesselator.end();
+			BufferUploader.drawWithShader(buffer.buildOrThrow());
 			// colored outlines
-			buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+			buffer = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
 			for (int i = 0; i < items.size(); i++) {
 				float startAngle = getAngleFor(i - 0.5F);
 				float endAngle = getAngleFor(i + 0.5F);
@@ -254,10 +255,10 @@ public class CharacterRadialScreenProcedure {
 				int outlineColor = toRGB24((abilityColor >> 16) & 0xFF, (abilityColor >> 8) & 0xFF, abilityColor & 0xFF, alpha);
 				drawOutline(guiGraphics.pose(), buffer, centerX, centerY, startAngle, endAngle, outlineColor);
 			}
-			tesselator.end();
+			BufferUploader.drawWithShader(buffer.buildOrThrow());
 			// inner glow for hovered
 			if (this.hovered >= 0 && this.hovered < items.size()) {
-				buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+				buffer = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
 				float startAngle = getAngleFor(this.hovered - 0.5F);
 				float endAngle = getAngleFor(this.hovered + 0.5F);
 				AbilityItem hoveredItem = items.get(this.hovered);
@@ -267,7 +268,7 @@ public class CharacterRadialScreenProcedure {
 				int gb = glowColor & 0xFF;
 				int innerGlow = toRGB24(gr, gg, gb, 100);
 				drawSlot(guiGraphics.pose(), buffer, centerX, centerY, startAngle, endAngle, innerGlow);
-				tesselator.end();
+				BufferUploader.drawWithShader(buffer.buildOrThrow());
 			}
 			guiGraphics.pose().popPose();
 			RenderSystem.disableBlend();
@@ -344,10 +345,10 @@ public class CharacterRadialScreenProcedure {
 			float y3 = centerY + RADIUS_OUT * (float) Math.sin(endAngle);
 			float x4 = centerX + RADIUS_IN * (float) Math.cos(endAngle);
 			float y4 = centerY + RADIUS_IN * (float) Math.sin(endAngle);
-			buffer.vertex(matrix, x2, y2, 0.0F).color(r, g, b, a).endVertex();
-			buffer.vertex(matrix, x1, y1, 0.0F).color(r, g, b, a).endVertex();
-			buffer.vertex(matrix, x4, y4, 0.0F).color(r, g, b, a).endVertex();
-			buffer.vertex(matrix, x3, y3, 0.0F).color(r, g, b, a).endVertex();
+			buffer.addVertex(matrix, x2, y2, 0.0F).setColor(r, g, b, a);
+			buffer.addVertex(matrix, x1, y1, 0.0F).setColor(r, g, b, a);
+			buffer.addVertex(matrix, x4, y4, 0.0F).setColor(r, g, b, a);
+			buffer.addVertex(matrix, x3, y3, 0.0F).setColor(r, g, b, a);
 		}
 
 		private void drawOutline(PoseStack poseStack, BufferBuilder buffer, float centerX, float centerY, float startAngle, float endAngle, int color) {
@@ -364,10 +365,10 @@ public class CharacterRadialScreenProcedure {
 			float y3 = centerY + (RADIUS_OUT + OUTLINE_WIDTH) * (float) Math.sin(endAngle);
 			float x4 = centerX + RADIUS_OUT * (float) Math.cos(endAngle);
 			float y4 = centerY + RADIUS_OUT * (float) Math.sin(endAngle);
-			buffer.vertex(matrix, x2, y2, 0.0F).color(r, g, b, a).endVertex();
-			buffer.vertex(matrix, x1, y1, 0.0F).color(r, g, b, a).endVertex();
-			buffer.vertex(matrix, x4, y4, 0.0F).color(r, g, b, a).endVertex();
-			buffer.vertex(matrix, x3, y3, 0.0F).color(r, g, b, a).endVertex();
+			buffer.addVertex(matrix, x2, y2, 0.0F).setColor(r, g, b, a);
+			buffer.addVertex(matrix, x1, y1, 0.0F).setColor(r, g, b, a);
+			buffer.addVertex(matrix, x4, y4, 0.0F).setColor(r, g, b, a);
+			buffer.addVertex(matrix, x3, y3, 0.0F).setColor(r, g, b, a);
 		}
 
 		private float getAngleFor(double i) {

@@ -33,7 +33,7 @@ public class Technique3OnKeypressProcedure {
 					z = entity.getZ();
 					yaw = entity.getYRot();
 					if (entity instanceof LivingEntity _entity && !_entity.level().isClientSide())
-						_entity.addEffect(new MobEffectInstance(JjkStrongestModMobEffects.PURPLE_CHARGING.get(), 50, 1, false, false));
+						_entity.addEffect(new MobEffectInstance(JjkStrongestModMobEffects.PURPLE_CHARGING, 50, 1, false, false));
 					entity.getPersistentData().putString("chanting", "purple");
 					PlayArmAnimationProcedure.execute(entity, "hollow_purple", true);
 				}

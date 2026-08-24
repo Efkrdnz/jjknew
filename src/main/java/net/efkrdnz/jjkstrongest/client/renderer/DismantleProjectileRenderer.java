@@ -79,10 +79,10 @@ public class DismantleProjectileRenderer extends EntityRenderer<DismantleProject
 		// Apply fade alpha to all vertices
 		int alpha = (int) (fadeAlpha * 255);
 		int color = (alpha << 24) | 0xFFFFFF; // ARGB format
-		vc.vertex(m, -0.5f, -0.5f, 0.0f).uv(0.0f, 1.0f).endVertex();
-		vc.vertex(m, 0.5f, -0.5f, 0.0f).uv(1.0f, 1.0f).endVertex();
-		vc.vertex(m, 0.5f, 0.5f, 0.0f).uv(1.0f, 0.0f).endVertex();
-		vc.vertex(m, -0.5f, 0.5f, 0.0f).uv(0.0f, 0.0f).endVertex();
+		vc.addVertex(m, -0.5f, -0.5f, 0.0f).setUv(0.0f, 1.0f);
+		vc.addVertex(m, 0.5f, -0.5f, 0.0f).setUv(1.0f, 1.0f);
+		vc.addVertex(m, 0.5f, 0.5f, 0.0f).setUv(1.0f, 0.0f);
+		vc.addVertex(m, -0.5f, 0.5f, 0.0f).setUv(0.0f, 0.0f);
 		poseStack.popPose();
 		// flush buffer
 		if (bufferSource instanceof MultiBufferSource.BufferSource bs) {

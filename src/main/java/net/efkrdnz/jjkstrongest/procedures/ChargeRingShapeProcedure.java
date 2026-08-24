@@ -23,31 +23,29 @@ public class ChargeRingShapeProcedure {
 	}
 
 	private static void add(double x, double y, double z, float u, float v, int color) {
-		if (bufferBuilder == null || !bufferBuilder.building())
+		if (bufferBuilder == null)
 			return;
 		if (format == DefaultVertexFormat.POSITION_COLOR) {
-			bufferBuilder.vertex(x, y, z).color(color).endVertex();
+			bufferBuilder.addVertex(x, y, z).setColor(color);
 		} else if (format == DefaultVertexFormat.POSITION_TEX_COLOR) {
-			bufferBuilder.vertex(x, y, z).uv(u, v).color(color).endVertex();
+			bufferBuilder.addVertex(x, y, z).setUv(u, v).setColor(color);
 		}
 	}
 
 	private static boolean begin(VertexFormat.Mode mode, VertexFormat format, boolean update) {
-		if (ChargeRingShapeProcedure.bufferBuilder == null || !ChargeRingShapeProcedure.bufferBuilder.building()) {
+		if (ChargeRingShapeProcedure.bufferBuilder == null) {
 			if (update)
 				clear();
 			if (ChargeRingShapeProcedure.vertexBuffer == null) {
 				if (format == DefaultVertexFormat.POSITION_COLOR) {
 					ChargeRingShapeProcedure.mode = mode;
 					ChargeRingShapeProcedure.format = format;
-					ChargeRingShapeProcedure.bufferBuilder = Tesselator.getInstance().getBuilder();
-					ChargeRingShapeProcedure.bufferBuilder.begin(mode, DefaultVertexFormat.POSITION_COLOR);
+					ChargeRingShapeProcedure.bufferBuilder = Tesselator.getInstance().begin(mode, DefaultVertexFormat.POSITION_COLOR);
 					return true;
 				} else if (format == DefaultVertexFormat.POSITION_TEX_COLOR) {
 					ChargeRingShapeProcedure.mode = mode;
 					ChargeRingShapeProcedure.format = format;
-					ChargeRingShapeProcedure.bufferBuilder = Tesselator.getInstance().getBuilder();
-					ChargeRingShapeProcedure.bufferBuilder.begin(mode, DefaultVertexFormat.POSITION_TEX_COLOR);
+					ChargeRingShapeProcedure.bufferBuilder = Tesselator.getInstance().begin(mode, DefaultVertexFormat.POSITION_TEX_COLOR);
 					return true;
 				}
 			}
@@ -63,13 +61,13 @@ public class ChargeRingShapeProcedure {
 	}
 
 	private static void end() {
-		if (bufferBuilder == null || !bufferBuilder.building())
+		if (bufferBuilder == null)
 			return;
 		if (vertexBuffer != null)
 			vertexBuffer.close();
 		vertexBuffer = new VertexBuffer(VertexBuffer.Usage.DYNAMIC);
 		vertexBuffer.bind();
-		vertexBuffer.upload(bufferBuilder.end());
+		vertexBuffer.upload(bufferBuilder.buildOrThrow());
 		VertexBuffer.unbind();
 		bufferBuilder = null;
 	}

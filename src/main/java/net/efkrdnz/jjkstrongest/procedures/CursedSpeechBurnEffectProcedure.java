@@ -25,7 +25,7 @@ public class CursedSpeechBurnEffectProcedure {
 		}
 		// set on fire — duration scales with power advantage
 		int fireTicks = (int) (100 * Math.max(0.2, 1.5 - powerRatio * 0.3));
-		target.setSecondsOnFire(fireTicks / 20 + 1);
+		target.igniteForSeconds(fireTicks / 20 + 1);
 		// fire damage burst
 		float damage = (float) (10.0 * Math.max(0.1, 1.2 - powerRatio * 0.25));
 		target.hurt(new DamageSource(world.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE)

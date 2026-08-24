@@ -5,7 +5,8 @@ import org.joml.Matrix4f;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.bus.api.EventPriority;
-import net.minecraftforge.client.event.RenderGuiOverlayEvent;
+import net.neoforged.neoforge.client.event.RenderGuiLayerEvent;
+import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.api.distmarker.Dist;
 
@@ -22,8 +23,8 @@ import com.mojang.blaze3d.systems.RenderSystem;
 public class ChargeIndicatorOverlayProcedure {
 	@OnlyIn(Dist.CLIENT)
 	@SubscribeEvent(priority = EventPriority.NORMAL)
-	public static void renderOverlay(RenderGuiOverlayEvent.Post event) {
-		if (event.getOverlay().id().toString().equals("minecraft:crosshair")) {
+	public static void renderOverlay(RenderGuiLayerEvent.Post event) {
+		if (VanillaGuiLayers.CROSSHAIR.equals(event.getName())) {
 			execute(event.getGuiGraphics());
 		}
 	}

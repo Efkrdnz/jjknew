@@ -70,7 +70,7 @@ public class DomainUVLinesClientRenderer {
 			int age = domain.tickCount;
 			// lines window: 40 ticks right after barrier is done
 			if (age >= 40 && age < 80) {
-				renderDomainLines(domain, poseStack, bufferSource, event.getPartialTick(), cameraPos);
+				renderDomainLines(domain, poseStack, bufferSource, event.getPartialTick().getGameTimeDeltaPartialTick(false), cameraPos);
 			}
 		}
 		poseStack.popPose();
@@ -150,20 +150,16 @@ public class DomainUVLinesClientRenderer {
 		Vec3 lineDir = end.subtract(start).normalize();
 		Vec3 perpendicular = lineDir.cross(toCamera).normalize().scale(width);
 		Matrix4f matrix = poseStack.last().pose();
-		Matrix3f normal = poseStack.last().normal();
+		PoseStack.Pose normal = poseStack.last();
 		Vec3 normalVec = toCamera;
 		Vec3 v1 = start.subtract(perpendicular);
 		Vec3 v2 = start.add(perpendicular);
 		Vec3 v3 = end.add(perpendicular);
 		Vec3 v4 = end.subtract(perpendicular);
 		int light = LightTexture.FULL_BRIGHT;
-		buffer.vertex(matrix, (float) v1.x, (float) v1.y, (float) v1.z).color(r1, g1, b1, alpha).uv(0.0f, 0.0f).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(light).normal(normal, (float) normalVec.x, (float) normalVec.y, (float) normalVec.z)
-				.endVertex();
-		buffer.vertex(matrix, (float) v2.x, (float) v2.y, (float) v2.z).color(r1, g1, b1, alpha).uv(1.0f, 0.0f).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(light).normal(normal, (float) normalVec.x, (float) normalVec.y, (float) normalVec.z)
-				.endVertex();
-		buffer.vertex(matrix, (float) v3.x, (float) v3.y, (float) v3.z).color(r2, g2, b2, alpha).uv(1.0f, 1.0f).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(light).normal(normal, (float) normalVec.x, (float) normalVec.y, (float) normalVec.z)
-				.endVertex();
-		buffer.vertex(matrix, (float) v4.x, (float) v4.y, (float) v4.z).color(r2, g2, b2, alpha).uv(0.0f, 1.0f).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(light).normal(normal, (float) normalVec.x, (float) normalVec.y, (float) normalVec.z)
-				.endVertex();
+		buffer.addVertex(matrix, (float) v1.x, (float) v1.y, (float) v1.z).setColor(r1, g1, b1, alpha).setUv(0.0f, 0.0f).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(normal, (float) normalVec.x, (float) normalVec.y, (float) normalVec.z);
+		buffer.addVertex(matrix, (float) v2.x, (float) v2.y, (float) v2.z).setColor(r1, g1, b1, alpha).setUv(1.0f, 0.0f).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(normal, (float) normalVec.x, (float) normalVec.y, (float) normalVec.z);
+		buffer.addVertex(matrix, (float) v3.x, (float) v3.y, (float) v3.z).setColor(r2, g2, b2, alpha).setUv(1.0f, 1.0f).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(normal, (float) normalVec.x, (float) normalVec.y, (float) normalVec.z);
+		buffer.addVertex(matrix, (float) v4.x, (float) v4.y, (float) v4.z).setColor(r2, g2, b2, alpha).setUv(0.0f, 1.0f).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(normal, (float) normalVec.x, (float) normalVec.y, (float) normalVec.z);
 	}
 }

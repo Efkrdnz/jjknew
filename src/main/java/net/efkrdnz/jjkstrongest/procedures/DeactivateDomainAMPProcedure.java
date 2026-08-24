@@ -9,9 +9,9 @@ public class DeactivateDomainAMPProcedure {
 	public static void execute(Entity entity) {
 		if (entity == null)
 			return;
-		if (entity instanceof LivingEntity _livEnt0 && _livEnt0.hasEffect(JjkStrongestModMobEffects.DOMAIN_AMPLIFICATION.get())) {
+		if (entity instanceof LivingEntity _livEnt0 && _livEnt0.hasEffect(JjkStrongestModMobEffects.DOMAIN_AMPLIFICATION)) {
 			if (entity instanceof LivingEntity _entity)
-				_entity.removeEffect(JjkStrongestModMobEffects.DOMAIN_AMPLIFICATION.get());
+				_entity.removeEffect(JjkStrongestModMobEffects.DOMAIN_AMPLIFICATION);
 		}
 	}
 }

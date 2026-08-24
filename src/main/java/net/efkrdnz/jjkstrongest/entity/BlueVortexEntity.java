@@ -20,7 +20,7 @@ public class BlueVortexEntity extends Entity {
 
 
 	@Override
-	protected void defineSynchedData() {
+	protected void defineSynchedData(SynchedEntityData.Builder builder) {
 	}
 
 	@Override

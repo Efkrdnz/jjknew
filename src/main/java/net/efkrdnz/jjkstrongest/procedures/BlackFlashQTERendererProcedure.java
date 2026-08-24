@@ -5,7 +5,7 @@ import org.joml.Matrix4f;
 
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.bus.api.SubscribeEvent;
-import net.minecraftforge.client.event.RenderGuiOverlayEvent;
+import net.neoforged.neoforge.client.event.RenderGuiEvent;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.api.distmarker.Dist;
 
@@ -25,7 +25,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 @OnlyIn(Dist.CLIENT)
 public class BlackFlashQTERendererProcedure {
 	@SubscribeEvent
-	public static void onRenderOverlay(RenderGuiOverlayEvent.Post event) {
+	public static void onRenderOverlay(RenderGuiEvent.Post event) {
 		if (!BlackFlashQTEStateProcedure.INSTANCE.isActive())
 			return;
 		Minecraft mc = Minecraft.getInstance();
@@ -69,19 +69,18 @@ public class BlackFlashQTERendererProcedure {
 		RenderSystem.defaultBlendFunc();
 		RenderSystem.disableDepthTest();
 		Matrix4f m = ps.last().pose();
-		BufferBuilder buf = Tesselator.getInstance().getBuilder();
-		buf.begin(VertexFormat.Mode.TRIANGLE_FAN, DefaultVertexFormat.POSITION_COLOR);
+		BufferBuilder buf = Tesselator.getInstance().begin(VertexFormat.Mode.TRIANGLE_FAN, DefaultVertexFormat.POSITION_COLOR);
 		// center vertex = center color
-		buf.vertex(m, cx, cy, 0).color(cr, cg, cb, ca).endVertex();
+		buf.addVertex(m, cx, cy, 0).setColor(cr, cg, cb, ca);
 		// edge vertices = edge color
 		int seg = 72;
 		for (int i = 0; i <= seg; i++) {
 			float ang = (float) (2 * Math.PI * i / seg);
 			float x = cx + (float) Math.cos(ang) * radius;
 			float y = cy + (float) Math.sin(ang) * radius;
-			buf.vertex(m, x, y, 0).color(er, eg, eb, ea).endVertex();
+			buf.addVertex(m, x, y, 0).setColor(er, eg, eb, ea);
 		}
-		BufferUploader.drawWithShader(buf.end());
+		BufferUploader.drawWithShader(buf.buildOrThrow());
 		RenderSystem.enableDepthTest();
 		RenderSystem.disableBlend();
 	}
@@ -94,17 +93,16 @@ public class BlackFlashQTERendererProcedure {
 		RenderSystem.defaultBlendFunc();
 		RenderSystem.disableDepthTest();
 		Matrix4f m = ps.last().pose();
-		BufferBuilder buf = Tesselator.getInstance().getBuilder();
-		buf.begin(VertexFormat.Mode.TRIANGLE_STRIP, DefaultVertexFormat.POSITION_COLOR);
+		BufferBuilder buf = Tesselator.getInstance().begin(VertexFormat.Mode.TRIANGLE_STRIP, DefaultVertexFormat.POSITION_COLOR);
 		int seg = 96;
 		for (int i = 0; i <= seg; i++) {
 			float ang = (float) (2 * Math.PI * i / seg);
 			float cos = (float) Math.cos(ang);
 			float sin = (float) Math.sin(ang);
-			buf.vertex(m, cx + cos * outerR, cy + sin * outerR, 0).color(r, g, b, a).endVertex();
-			buf.vertex(m, cx + cos * innerR, cy + sin * innerR, 0).color(r, g, b, a).endVertex();
+			buf.addVertex(m, cx + cos * outerR, cy + sin * outerR, 0).setColor(r, g, b, a);
+			buf.addVertex(m, cx + cos * innerR, cy + sin * innerR, 0).setColor(r, g, b, a);
 		}
-		BufferUploader.drawWithShader(buf.end());
+		BufferUploader.drawWithShader(buf.buildOrThrow());
 		RenderSystem.enableDepthTest();
 		RenderSystem.disableBlend();
 	}
@@ -121,18 +119,17 @@ public class BlackFlashQTERendererProcedure {
 		RenderSystem.defaultBlendFunc();
 		RenderSystem.disableDepthTest();
 		Matrix4f m = ps.last().pose();
-		BufferBuilder buf = Tesselator.getInstance().getBuilder();
-		buf.begin(VertexFormat.Mode.TRIANGLE_STRIP, DefaultVertexFormat.POSITION_COLOR);
+		BufferBuilder buf = Tesselator.getInstance().begin(VertexFormat.Mode.TRIANGLE_STRIP, DefaultVertexFormat.POSITION_COLOR);
 		int seg = 72;
 		for (int i = 0; i <= seg; i++) {
 			float t = (float) i / seg;
 			float ang = startRad + (endRad - startRad) * t;
 			float cos = (float) Math.cos(ang);
 			float sin = (float) Math.sin(ang);
-			buf.vertex(m, cx + cos * outerR, cy + sin * outerR, 0).color(r, g, b, a).endVertex();
-			buf.vertex(m, cx + cos * innerR, cy + sin * innerR, 0).color(r, g, b, a).endVertex();
+			buf.addVertex(m, cx + cos * outerR, cy + sin * outerR, 0).setColor(r, g, b, a);
+			buf.addVertex(m, cx + cos * innerR, cy + sin * innerR, 0).setColor(r, g, b, a);
 		}
-		BufferUploader.drawWithShader(buf.end());
+		BufferUploader.drawWithShader(buf.buildOrThrow());
 		RenderSystem.enableDepthTest();
 		RenderSystem.disableBlend();
 	}
@@ -153,13 +150,12 @@ public class BlackFlashQTERendererProcedure {
 		float px = -sin * halfWidth;
 		float py = cos * halfWidth;
 		Matrix4f m = ps.last().pose();
-		BufferBuilder buf = Tesselator.getInstance().getBuilder();
-		buf.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
-		buf.vertex(m, innerX - px, innerY - py, 0).color(r, g, b, a).endVertex();
-		buf.vertex(m, innerX + px, innerY + py, 0).color(r, g, b, a).endVertex();
-		buf.vertex(m, outerX + px, outerY + py, 0).color(r, g, b, a).endVertex();
-		buf.vertex(m, outerX - px, outerY - py, 0).color(r, g, b, a).endVertex();
-		BufferUploader.drawWithShader(buf.end());
+		BufferBuilder buf = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+		buf.addVertex(m, innerX - px, innerY - py, 0).setColor(r, g, b, a);
+		buf.addVertex(m, innerX + px, innerY + py, 0).setColor(r, g, b, a);
+		buf.addVertex(m, outerX + px, outerY + py, 0).setColor(r, g, b, a);
+		buf.addVertex(m, outerX - px, outerY - py, 0).setColor(r, g, b, a);
+		BufferUploader.drawWithShader(buf.buildOrThrow());
 		RenderSystem.enableDepthTest();
 		RenderSystem.disableBlend();
 	}

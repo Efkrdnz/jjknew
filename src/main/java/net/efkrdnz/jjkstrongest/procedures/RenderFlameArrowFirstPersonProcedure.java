@@ -10,6 +10,7 @@ import net.minecraft.client.Minecraft;
 
 import net.efkrdnz.jjkstrongest.client.JjkShaderManager;
 
+import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.math.Axis;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -59,10 +60,10 @@ public class RenderFlameArrowFirstPersonProcedure {
 			poseStack.scale(-scale, scale, scale);
 			VertexConsumer vc = bufferSource.getBuffer(JjkShaderManager.FLAME_ARROW_RENDER_TYPE);
 			Matrix4f matrix = poseStack.last().pose();
-			vc.vertex(matrix, -0.5f, -0.5f, 0).uv(0, 1).endVertex();
-			vc.vertex(matrix, 0.5f, -0.5f, 0).uv(1, 1).endVertex();
-			vc.vertex(matrix, 0.5f, 0.5f, 0).uv(1, 0).endVertex();
-			vc.vertex(matrix, -0.5f, 0.5f, 0).uv(0, 0).endVertex();
+			vc.addVertex(matrix, -0.5f, -0.5f, 0).setUv(0, 1);
+			vc.addVertex(matrix, 0.5f, -0.5f, 0).setUv(1, 1);
+			vc.addVertex(matrix, 0.5f, 0.5f, 0).setUv(1, 0);
+			vc.addVertex(matrix, -0.5f, 0.5f, 0).setUv(0, 0);
 			bufferSource.endBatch(JjkShaderManager.FLAME_ARROW_RENDER_TYPE);
 			poseStack.popPose();
 			// shader quad 2 - perpendicular
@@ -74,10 +75,10 @@ public class RenderFlameArrowFirstPersonProcedure {
 			poseStack.scale(-scale, scale, scale);
 			vc = bufferSource.getBuffer(JjkShaderManager.FLAME_ARROW_RENDER_TYPE);
 			matrix = poseStack.last().pose();
-			vc.vertex(matrix, -0.5f, -0.5f, 0).uv(0, 1).endVertex();
-			vc.vertex(matrix, 0.5f, -0.5f, 0).uv(1, 1).endVertex();
-			vc.vertex(matrix, 0.5f, 0.5f, 0).uv(1, 0).endVertex();
-			vc.vertex(matrix, -0.5f, 0.5f, 0).uv(0, 0).endVertex();
+			vc.addVertex(matrix, -0.5f, -0.5f, 0).setUv(0, 1);
+			vc.addVertex(matrix, 0.5f, -0.5f, 0).setUv(1, 1);
+			vc.addVertex(matrix, 0.5f, 0.5f, 0).setUv(1, 0);
+			vc.addVertex(matrix, -0.5f, 0.5f, 0).setUv(0, 0);
 			bufferSource.endBatch(JjkShaderManager.FLAME_ARROW_RENDER_TYPE);
 			poseStack.popPose();
 		}
@@ -113,12 +114,11 @@ public class RenderFlameArrowFirstPersonProcedure {
 
 	private static void drawQuad(PoseStack poseStack) {
 		var mat = poseStack.last().pose();
-		BufferBuilder bb = Tesselator.getInstance().getBuilder();
-		bb.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
-		bb.vertex(mat, -0.5f, -0.5f, 0f).uv(0f, 1f).endVertex();
-		bb.vertex(mat, 0.5f, -0.5f, 0f).uv(1f, 1f).endVertex();
-		bb.vertex(mat, 0.5f, 0.5f, 0f).uv(1f, 0f).endVertex();
-		bb.vertex(mat, -0.5f, 0.5f, 0f).uv(0f, 0f).endVertex();
-		Tesselator.getInstance().end();
+		BufferBuilder bb = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+		bb.addVertex(mat, -0.5f, -0.5f, 0f).setUv(0f, 1f);
+		bb.addVertex(mat, 0.5f, -0.5f, 0f).setUv(1f, 1f);
+		bb.addVertex(mat, 0.5f, 0.5f, 0f).setUv(1f, 0f);
+		bb.addVertex(mat, -0.5f, 0.5f, 0f).setUv(0f, 0f);
+		BufferUploader.drawWithShader(bb.buildOrThrow());
 	}
 }

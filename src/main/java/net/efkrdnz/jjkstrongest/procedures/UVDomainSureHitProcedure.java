@@ -28,7 +28,7 @@ public class UVDomainSureHitProcedure {
 					if (entityiterator instanceof Player player && (player.isCreative() || player.isSpectator()))
 						continue;
 					if (entityiterator instanceof LivingEntity _entity && !_entity.level().isClientSide())
-						_entity.addEffect(new MobEffectInstance(JjkStrongestModMobEffects.INFORMATION_OVERLOAD.get(), 200, 1));
+						_entity.addEffect(new MobEffectInstance(JjkStrongestModMobEffects.INFORMATION_OVERLOAD, 200, 1));
 				}
 			}
 		}

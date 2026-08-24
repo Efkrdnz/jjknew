@@ -46,7 +46,7 @@ public class GetCurrentArmPoseProcedure {
 		float progress = entity.getPersistentData().getFloat("arm_anim_progress");
 		// add partial tick interpolation for smooth rendering
 		if (!holding) {
-			float partialTick = Minecraft.getInstance().getFrameTime();
+			float partialTick = Minecraft.getInstance().getTimer().getGameTimeDeltaPartialTick(false);
 			float smoothProgress = progress + (1.0f / anim.duration) * partialTick;
 			progress = Math.min(smoothProgress, 1.0f);
 		}

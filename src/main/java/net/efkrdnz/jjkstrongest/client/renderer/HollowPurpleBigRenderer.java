@@ -74,10 +74,10 @@ public class HollowPurpleBigRenderer extends MobRenderer<HollowPurpleBigEntity, 
 			float y1 = (float) Math.sin(angle1) * 0.5f;
 			float x2 = (float) Math.cos(angle2) * 0.5f;
 			float y2 = (float) Math.sin(angle2) * 0.5f;
-			vc.vertex(m, 0, 0, 0).uv(0.5f, 0.5f).endVertex();
-			vc.vertex(m, x1, y1, 0).uv(x1 + 0.5f, y1 + 0.5f).endVertex();
-			vc.vertex(m, x2, y2, 0).uv(x2 + 0.5f, y2 + 0.5f).endVertex();
-			vc.vertex(m, 0, 0, 0).uv(0.5f, 0.5f).endVertex();
+			vc.addVertex(m, 0, 0, 0).setUv(0.5f, 0.5f);
+			vc.addVertex(m, x1, y1, 0).setUv(x1 + 0.5f, y1 + 0.5f);
+			vc.addVertex(m, x2, y2, 0).setUv(x2 + 0.5f, y2 + 0.5f);
+			vc.addVertex(m, 0, 0, 0).setUv(0.5f, 0.5f);
 		}
 		poseStack.popPose();
 		if (bufferSource instanceof MultiBufferSource.BufferSource bs) {

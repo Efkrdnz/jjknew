@@ -132,10 +132,10 @@ public class DomainUVRenderer extends MobRenderer<DomainUVEntity, Modelblank_ent
 				float u2 = (lon + 1) / (float) lonSegments;
 				float v1 = lat / (float) latSegments;
 				float v2 = (lat + 1) / (float) latSegments;
-				vc.vertex(matrix, x1, y1, z1).uv(u1, v1).endVertex();
-				vc.vertex(matrix, x4, y4, z4).uv(u1, v2).endVertex();
-				vc.vertex(matrix, x3, y3, z3).uv(u2, v2).endVertex();
-				vc.vertex(matrix, x2, y2, z2).uv(u2, v1).endVertex();
+				vc.addVertex(matrix, x1, y1, z1).setUv(u1, v1);
+				vc.addVertex(matrix, x4, y4, z4).setUv(u1, v2);
+				vc.addVertex(matrix, x3, y3, z3).setUv(u2, v2);
+				vc.addVertex(matrix, x2, y2, z2).setUv(u2, v1);
 			}
 		}
 	}
@@ -152,10 +152,10 @@ public class DomainUVRenderer extends MobRenderer<DomainUVEntity, Modelblank_ent
 			float y1 = (float) Math.sin(angle1) * 0.5f;
 			float x2 = (float) Math.cos(angle2) * 0.5f;
 			float y2 = (float) Math.sin(angle2) * 0.5f;
-			vc.vertex(m, 0, 0, 0).uv(0.5f, 0.5f).endVertex();
-			vc.vertex(m, x1, y1, 0).uv(x1 + 0.5f, y1 + 0.5f).endVertex();
-			vc.vertex(m, x2, y2, 0).uv(x2 + 0.5f, y2 + 0.5f).endVertex();
-			vc.vertex(m, 0, 0, 0).uv(0.5f, 0.5f).endVertex();
+			vc.addVertex(m, 0, 0, 0).setUv(0.5f, 0.5f);
+			vc.addVertex(m, x1, y1, 0).setUv(x1 + 0.5f, y1 + 0.5f);
+			vc.addVertex(m, x2, y2, 0).setUv(x2 + 0.5f, y2 + 0.5f);
+			vc.addVertex(m, 0, 0, 0).setUv(0.5f, 0.5f);
 		}
 	}
 

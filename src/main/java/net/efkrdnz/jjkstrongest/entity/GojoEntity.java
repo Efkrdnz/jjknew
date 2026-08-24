@@ -12,7 +12,6 @@ import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
-import net.minecraft.world.entity.MobType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.damagesource.DamageTypes;
@@ -33,7 +32,7 @@ public class GojoEntity extends Monster {
 
 	public GojoEntity(EntityType<GojoEntity> type, Level world) {
 		super(type, world);
-		setMaxUpStep(1.3f);
+		this.getAttribute(Attributes.STEP_HEIGHT).setBaseValue(1.3f);
 		xpReward = 0;
 		setNoAi(false);
 		setPersistenceRequired();
@@ -52,10 +51,6 @@ public class GojoEntity extends Monster {
 		this.goalSelector.addGoal(6, new FloatGoal(this));
 	}
 
-	@Override
-	public MobType getMobType() {
-		return MobType.UNDEFINED;
-	}
 
 	@Override
 	public boolean removeWhenFarAway(double dist) {
@@ -82,7 +77,7 @@ public class GojoEntity extends Monster {
 	public boolean hurt(DamageSource source, float amount) {
 		if (source.is(DamageTypes.FALL))
 			return false;
-		if (this.hasEffect(JjkStrongestModMobEffects.INFORMATION_OVERLOAD.get())) {
+		if (this.hasEffect(JjkStrongestModMobEffects.INFORMATION_OVERLOAD)) {
 			// Unlimited Void penetrates Infinity and deals 3× damage —
 			// Gojo is overwhelmed until his adaptation (domain counter) fires.
 			amount *= 3.0f;

@@ -13,11 +13,11 @@ import net.efkrdnz.jjkstrongest.procedures.MarkExecuteOnKeyPressedProcedure;
 
 import net.efkrdnz.jjkstrongest.JjkStrongestMod;
 
-public record MarkExecuteMessage(int type, int pressedms) implements CustomPacketPayload {
+public record MarkExecuteMessage(int pressType, int pressedms) implements CustomPacketPayload {
 	public static final CustomPacketPayload.Type<MarkExecuteMessage> TYPE = new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(JjkStrongestMod.MODID, "mark_execute"));
 
 	public static final StreamCodec<RegistryFriendlyByteBuf, MarkExecuteMessage> STREAM_CODEC = StreamCodec.of((buffer, message) -> {
-		buffer.writeInt(message.type());
+		buffer.writeInt(message.pressType());
 		buffer.writeInt(message.pressedms());
 	}, buffer -> new MarkExecuteMessage(buffer.readInt(), buffer.readInt()));
 
@@ -28,7 +28,7 @@ public record MarkExecuteMessage(int type, int pressedms) implements CustomPacke
 
 	public static void handler(MarkExecuteMessage message, IPayloadContext context) {
 		// payload handlers already run on the main thread (HandlerThread.MAIN)
-		pressAction(context.player(), message.type(), message.pressedms());
+		pressAction(context.player(), message.pressType(), message.pressedms());
 	}
 
 	public static void pressAction(Player entity, int type, int pressedms) {

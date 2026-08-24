@@ -179,7 +179,7 @@ public class Technique3OnKeyPressedProcedure {
 							capability.syncPlayerVariables(entity);
 						}
 					}
-					if (entity instanceof LivingEntity _livEnt100 && _livEnt100.hasEffect(JjkStrongestModMobEffects.PURPLE_CHARGING.get())) {
+					if (entity instanceof LivingEntity _livEnt100 && _livEnt100.hasEffect(JjkStrongestModMobEffects.PURPLE_CHARGING)) {
 						if (!world.getEntitiesOfClass(HollowPurpleChargeEntity.class, AABB.ofSize(new Vec3(x, y, z), 100, 100, 100), e -> true).isEmpty()) {
 							if (!((Entity) world.getEntitiesOfClass(HollowPurpleChargeEntity.class, AABB.ofSize(new Vec3(x, y, z), 100, 100, 100), e -> true).stream().sorted(new Object() {
 								Comparator<Entity> compareDistOf(double _x, double _y, double _z) {
@@ -192,7 +192,7 @@ public class Technique3OnKeyPressedProcedure {
 									}
 								}.compareDistOf(x, y, z)).findFirst().orElse(null)).discard();
 							if (entity instanceof LivingEntity _entity)
-								_entity.removeEffect(JjkStrongestModMobEffects.PURPLE_CHARGING.get());
+								_entity.removeEffect(JjkStrongestModMobEffects.PURPLE_CHARGING);
 						}
 						if (entity instanceof Player _player && !_player.level().isClientSide())
 							_player.displayClientMessage(Component.literal("dismissed"), false);

@@ -56,10 +56,10 @@ public class DismantleTravelRenderer extends EntityRenderer<DismantleTravelEntit
 		poseStack.scale(L, W, 1.0f);
 		VertexConsumer vc = bufferSource.getBuffer(JjkShaderManager.DISMANTLE_RENDER_TYPE);
 		Matrix4f m = poseStack.last().pose();
-		vc.vertex(m, -0.5f, -0.5f, 0.0f).uv(0.0f, 1.0f).endVertex();
-		vc.vertex(m, 0.5f, -0.5f, 0.0f).uv(1.0f, 1.0f).endVertex();
-		vc.vertex(m, 0.5f, 0.5f, 0.0f).uv(1.0f, 0.0f).endVertex();
-		vc.vertex(m, -0.5f, 0.5f, 0.0f).uv(0.0f, 0.0f).endVertex();
+		vc.addVertex(m, -0.5f, -0.5f, 0.0f).setUv(0.0f, 1.0f);
+		vc.addVertex(m, 0.5f, -0.5f, 0.0f).setUv(1.0f, 1.0f);
+		vc.addVertex(m, 0.5f, 0.5f, 0.0f).setUv(1.0f, 0.0f);
+		vc.addVertex(m, -0.5f, 0.5f, 0.0f).setUv(0.0f, 0.0f);
 		poseStack.popPose();
 		if (bufferSource instanceof MultiBufferSource.BufferSource bs) {
 			bs.endBatch(JjkShaderManager.DISMANTLE_RENDER_TYPE);

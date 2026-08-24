@@ -30,12 +30,12 @@ public class Technique1OnKeyPressedProcedure {
 		}
 		if (((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).sorcerer).equals("gojo")) {
 			if (((entity.getData(JjkStrongestModVariables.PLAYER_VARIABLES)).current_moveset).equals("gojo_limitless")) {
-				if (entity instanceof LivingEntity _livEnt3 && _livEnt3.hasEffect(JjkStrongestModMobEffects.INFINITY.get())) {
+				if (entity instanceof LivingEntity _livEnt3 && _livEnt3.hasEffect(JjkStrongestModMobEffects.INFINITY)) {
 					if (entity instanceof LivingEntity _entity)
-						_entity.removeEffect(JjkStrongestModMobEffects.INFINITY.get());
+						_entity.removeEffect(JjkStrongestModMobEffects.INFINITY);
 				} else {
 					if (entity instanceof LivingEntity _entity && !_entity.level().isClientSide())
-						_entity.addEffect(new MobEffectInstance(JjkStrongestModMobEffects.INFINITY.get(), 1200, 0, false, false));
+						_entity.addEffect(new MobEffectInstance(JjkStrongestModMobEffects.INFINITY, 1200, 0, false, false));
 				}
 			}
 		}

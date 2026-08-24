@@ -76,10 +76,10 @@ public class FugaDomainExplosionRenderer extends EntityRenderer<FugaDomainExplos
 
 	private static void drawQuad(PoseStack poseStack, VertexConsumer vc, int light) {
 		Matrix4f m = poseStack.last().pose();
-		vc.vertex(m, -1f, -1f, 0).color(1f, 1f, 1f, 1f).uv(0, 1).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(light).normal(0, 0, 1).endVertex();
-		vc.vertex(m, 1f, -1f, 0).color(1f, 1f, 1f, 1f).uv(1, 1).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(light).normal(0, 0, 1).endVertex();
-		vc.vertex(m, 1f, 1f, 0).color(1f, 1f, 1f, 1f).uv(1, 0).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(light).normal(0, 0, 1).endVertex();
-		vc.vertex(m, -1f, 1f, 0).color(1f, 1f, 1f, 1f).uv(0, 0).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(light).normal(0, 0, 1).endVertex();
+		vc.addVertex(m, -1f, -1f, 0).setColor(1f, 1f, 1f, 1f).setUv(0, 1).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(0, 0, 1);
+		vc.addVertex(m, 1f, -1f, 0).setColor(1f, 1f, 1f, 1f).setUv(1, 1).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(0, 0, 1);
+		vc.addVertex(m, 1f, 1f, 0).setColor(1f, 1f, 1f, 1f).setUv(1, 0).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(0, 0, 1);
+		vc.addVertex(m, -1f, 1f, 0).setColor(1f, 1f, 1f, 1f).setUv(0, 0).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(0, 0, 1);
 	}
 
 	@Override

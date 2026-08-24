@@ -14,7 +14,7 @@ public class InformationOverloadDebugLinesClientRenderer {
 	// ----------------------------
 	// 1x1 white texture for "pixel/line" quads (tintable)
 	// ----------------------------
-	private static final net.minecraft.resources.ResourceLocation WHITE_TEX = new net.minecraft.resources.ResourceLocation(MODID, "io_white_1px");
+	private static final net.minecraft.resources.ResourceLocation WHITE_TEX = net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(MODID, "io_white_1px");
 	private static boolean WHITE_TEX_READY = false;
 
 	private static void ensureWhiteTex(net.minecraft.client.Minecraft mc) {
@@ -60,7 +60,7 @@ public class InformationOverloadDebugLinesClientRenderer {
 					.setWriteMaskState(new net.minecraft.client.renderer.RenderStateShard.WriteMaskStateShard(true, false)).createCompositeState(false));
 
 	private static net.minecraft.resources.ResourceLocation rl(String path) {
-		return new net.minecraft.resources.ResourceLocation(MODID, path);
+		return net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(MODID, path);
 	}
 
 	private static net.minecraft.client.renderer.RenderType makeEqType(String name, net.minecraft.resources.ResourceLocation tex, net.minecraft.client.renderer.RenderStateShard.TransparencyStateShard transp) {
@@ -203,10 +203,10 @@ public class InformationOverloadDebugLinesClientRenderer {
 			NativeImage b = buildWorldFilter(base, 3); // blue mono
 			base.close();
 			int id = WORLD_DYN_ID++;
-			net.minecraft.resources.ResourceLocation greyId = new net.minecraft.resources.ResourceLocation(MODID, "io_world_dyn/g_" + id);
-			net.minecraft.resources.ResourceLocation rId = new net.minecraft.resources.ResourceLocation(MODID, "io_world_dyn/r_" + id);
-			net.minecraft.resources.ResourceLocation gId = new net.minecraft.resources.ResourceLocation(MODID, "io_world_dyn/gg_" + id);
-			net.minecraft.resources.ResourceLocation bId = new net.minecraft.resources.ResourceLocation(MODID, "io_world_dyn/b_" + id);
+			net.minecraft.resources.ResourceLocation greyId = net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(MODID, "io_world_dyn/g_" + id);
+			net.minecraft.resources.ResourceLocation rId = net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(MODID, "io_world_dyn/r_" + id);
+			net.minecraft.resources.ResourceLocation gId = net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(MODID, "io_world_dyn/gg_" + id);
+			net.minecraft.resources.ResourceLocation bId = net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(MODID, "io_world_dyn/b_" + id);
 			mc.getTextureManager().register(greyId, new net.minecraft.client.renderer.texture.DynamicTexture(g));
 			mc.getTextureManager().register(rId, new net.minecraft.client.renderer.texture.DynamicTexture(r));
 			mc.getTextureManager().register(gId, new net.minecraft.client.renderer.texture.DynamicTexture(gg));
@@ -313,10 +313,10 @@ public class InformationOverloadDebugLinesClientRenderer {
 		float dx = cx + x3 * c - y3 * s;
 		float dy = cy + x3 * s + y3 * c;
 		// Match your drawTexturedQuad UV orientation
-		vc.vertex(m, ax, ay, 0).uv(u0, v1).color(r, g, b, a).endVertex();
-		vc.vertex(m, bx, by, 0).uv(u1, v1).color(r, g, b, a).endVertex();
-		vc.vertex(m, cx2, cy2, 0).uv(u1, v0).color(r, g, b, a).endVertex();
-		vc.vertex(m, dx, dy, 0).uv(u0, v0).color(r, g, b, a).endVertex();
+		vc.addVertex(m, ax, ay, 0).setUv(u0, v1).setColor(r, g, b, a);
+		vc.addVertex(m, bx, by, 0).setUv(u1, v1).setColor(r, g, b, a);
+		vc.addVertex(m, cx2, cy2, 0).setUv(u1, v0).setColor(r, g, b, a);
+		vc.addVertex(m, dx, dy, 0).setUv(u0, v0).setColor(r, g, b, a);
 	}
 
 	private static void renderWorldBackground(net.minecraft.client.renderer.MultiBufferSource.BufferSource bufferSource, org.joml.Matrix4f m, net.minecraft.client.Minecraft mc, float t, float strength, float life, float pull, int sceneId) {
@@ -452,7 +452,7 @@ public class InformationOverloadDebugLinesClientRenderer {
 			NativeImage mask = buildEquationMask(img);
 			img.close();
 			int id = EQ_DYN_ID++;
-			net.minecraft.resources.ResourceLocation dynId = new net.minecraft.resources.ResourceLocation(MODID, "io_eq_dyn/eq_" + id);
+			net.minecraft.resources.ResourceLocation dynId = net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(MODID, "io_eq_dyn/eq_" + id);
 			net.minecraft.client.renderer.texture.DynamicTexture dynTex = new net.minecraft.client.renderer.texture.DynamicTexture(mask);
 			mc.getTextureManager().register(dynId, dynTex);
 			net.minecraft.client.renderer.RenderType base = makeEqType("info_eq_" + id + "_base", dynId, ALPHA_BLEND);
@@ -594,7 +594,7 @@ public class InformationOverloadDebugLinesClientRenderer {
 		if (!mc.options.getCameraType().isFirstPerson())
 			return;
 		net.minecraft.world.entity.player.Player player = mc.player;
-		if (!player.hasEffect(net.efkrdnz.jjkstrongest.init.JjkStrongestModMobEffects.INFORMATION_OVERLOAD.get()))
+		if (!player.hasEffect(net.efkrdnz.jjkstrongest.init.JjkStrongestModMobEffects.INFORMATION_OVERLOAD))
 			return;
 		if (event.getHand() != net.minecraft.world.InteractionHand.MAIN_HAND)
 			return;
@@ -820,10 +820,10 @@ public class InformationOverloadDebugLinesClientRenderer {
 		float cy2 = cy + (x2 + wx2) * s + (y2 + wy2) * c;
 		float dx = cx + (x3 + wx3) * c - (y3 + wy3) * s;
 		float dy = cy + (x3 + wx3) * s + (y3 + wy3) * c;
-		vc.vertex(m, ax, ay, 0).uv(0, 1).color(r, g, b, a).endVertex();
-		vc.vertex(m, bx, by, 0).uv(1, 1).color(r, g, b, a).endVertex();
-		vc.vertex(m, cx2, cy2, 0).uv(1, 0).color(r, g, b, a).endVertex();
-		vc.vertex(m, dx, dy, 0).uv(0, 0).color(r, g, b, a).endVertex();
+		vc.addVertex(m, ax, ay, 0).setUv(0, 1).setColor(r, g, b, a);
+		vc.addVertex(m, bx, by, 0).setUv(1, 1).setColor(r, g, b, a);
+		vc.addVertex(m, cx2, cy2, 0).setUv(1, 0).setColor(r, g, b, a);
+		vc.addVertex(m, dx, dy, 0).setUv(0, 0).setColor(r, g, b, a);
 	}
 
 	// ----------------------------
@@ -1224,10 +1224,10 @@ public class InformationOverloadDebugLinesClientRenderer {
 		float ny = dx / len;
 		float ox = nx * w;
 		float oy = ny * w;
-		vc.vertex(m, x1 - ox, y1 - oy, 0).uv(0, 0).color(r, g, b, a).endVertex();
-		vc.vertex(m, x1 + ox, y1 + oy, 0).uv(0, 1).color(r, g, b, a).endVertex();
-		vc.vertex(m, x2 + ox, y2 + oy, 0).uv(1, 1).color(r, g, b, a).endVertex();
-		vc.vertex(m, x2 - ox, y2 - oy, 0).uv(1, 0).color(r, g, b, a).endVertex();
+		vc.addVertex(m, x1 - ox, y1 - oy, 0).setUv(0, 0).setColor(r, g, b, a);
+		vc.addVertex(m, x1 + ox, y1 + oy, 0).setUv(0, 1).setColor(r, g, b, a);
+		vc.addVertex(m, x2 + ox, y2 + oy, 0).setUv(1, 1).setColor(r, g, b, a);
+		vc.addVertex(m, x2 - ox, y2 - oy, 0).setUv(1, 0).setColor(r, g, b, a);
 	}
 
 	// Geo selection
@@ -1261,7 +1261,7 @@ public class InformationOverloadDebugLinesClientRenderer {
 	private static void ensureEdgeFractal(net.minecraft.client.Minecraft mc) {
 		if (EDGE_TEX != null)
 			return;
-		EDGE_RL = new net.minecraft.resources.ResourceLocation(MODID, "io_edge_fractal");
+		EDGE_RL = net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(MODID, "io_edge_fractal");
 		NativeImage img = new NativeImage(EDGE_W, EDGE_H, true);
 		EDGE_TEX = new net.minecraft.client.renderer.texture.DynamicTexture(img);
 		mc.getTextureManager().register(EDGE_RL, EDGE_TEX);
@@ -1336,10 +1336,10 @@ public class InformationOverloadDebugLinesClientRenderer {
 	}
 
 	private static void drawTexturedQuad(com.mojang.blaze3d.vertex.VertexConsumer vc, org.joml.Matrix4f m, float x0, float y0, float x1, float y1, float u0, float v0, float u1, float v1, float r, float g, float b, float a) {
-		vc.vertex(m, x0, y1, 0).uv(u0, v1).color(r, g, b, a).endVertex();
-		vc.vertex(m, x1, y1, 0).uv(u1, v1).color(r, g, b, a).endVertex();
-		vc.vertex(m, x1, y0, 0).uv(u1, v0).color(r, g, b, a).endVertex();
-		vc.vertex(m, x0, y0, 0).uv(u0, v0).color(r, g, b, a).endVertex();
+		vc.addVertex(m, x0, y1, 0).setUv(u0, v1).setColor(r, g, b, a);
+		vc.addVertex(m, x1, y1, 0).setUv(u1, v1).setColor(r, g, b, a);
+		vc.addVertex(m, x1, y0, 0).setUv(u1, v0).setColor(r, g, b, a);
+		vc.addVertex(m, x0, y0, 0).setUv(u0, v0).setColor(r, g, b, a);
 	}
 
 	private static void renderEdgeFractals(net.minecraft.client.renderer.MultiBufferSource.BufferSource bufferSource, org.joml.Matrix4f m, net.minecraft.client.Minecraft mc, float t, float strength, float life, float pull) {
@@ -1366,7 +1366,7 @@ public class InformationOverloadDebugLinesClientRenderer {
 	// Strength + helpers
 	// ----------------------------
 	private static float getStrength(net.minecraft.world.entity.player.Player player) {
-		var inst = player.getEffect(net.efkrdnz.jjkstrongest.init.JjkStrongestModMobEffects.INFORMATION_OVERLOAD.get());
+		var inst = player.getEffect(net.efkrdnz.jjkstrongest.init.JjkStrongestModMobEffects.INFORMATION_OVERLOAD);
 		if (inst == null)
 			return 0.0f;
 		int amp = inst.getAmplifier();

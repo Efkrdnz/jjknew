@@ -152,7 +152,7 @@ public class SukunaNPCAIProcedure {
 		// completely still — his domain should have fired before this point if he
 		// detected the domain expanding; if it didn't, he takes the full suppression.
 		if (entity instanceof LivingEntity _uvLe &&
-				_uvLe.hasEffect(JjkStrongestModMobEffects.INFORMATION_OVERLOAD.get())) {
+				_uvLe.hasEffect(JjkStrongestModMobEffects.INFORMATION_OVERLOAD)) {
 			mob.getNavigation().stop();
 			entity.setDeltaMovement(0, entity.getDeltaMovement().y, 0);
 			return;
@@ -246,7 +246,7 @@ public class SukunaNPCAIProcedure {
 	// ═════════════════════════════════════════════════════════════════════════
 	private static void checkDomainAMP(Entity entity, LivingEntity target) {
 		if (ACT_RCT.equals(entity.getPersistentData().getString(AI_ACTION))) return;
-		boolean tInfinity  = target.hasEffect(JjkStrongestModMobEffects.INFINITY.get());
+		boolean tInfinity  = target.hasEffect(JjkStrongestModMobEffects.INFINITY);
 		boolean hasAMP     = entity.getPersistentData().getBoolean(AI_DOMAIN_AMP);
 		if (tInfinity && !hasAMP)  { ActivateDomainAMPProcedure.execute(entity);   entity.getPersistentData().putBoolean(AI_DOMAIN_AMP, true);  }
 		if (!tInfinity && hasAMP)  { DeactivateDomainAMPProcedure.execute(entity); entity.getPersistentData().putBoolean(AI_DOMAIN_AMP, false); }

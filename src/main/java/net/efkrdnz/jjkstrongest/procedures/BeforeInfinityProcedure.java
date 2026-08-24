@@ -4,7 +4,8 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.bus.api.Event;
-import net.minecraftforge.event.entity.living.LivingAttackEvent;
+import net.neoforged.bus.api.ICancellableEvent;
+import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
 
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.Level;
@@ -25,7 +26,7 @@ import javax.annotation.Nullable;
 @EventBusSubscriber(modid = "jjk_strongest", bus = EventBusSubscriber.Bus.GAME)
 public class BeforeInfinityProcedure {
 	@SubscribeEvent
-	public static void onEntityAttacked(LivingAttackEvent event) {
+	public static void onEntityAttacked(LivingIncomingDamageEvent event) {
 		if (event != null && event.getEntity() != null) {
 			execute(event, event.getEntity().level(), event.getEntity().getX(), event.getEntity().getY(), event.getEntity().getZ(), event.getSource(), event.getEntity());
 		}
@@ -43,15 +44,15 @@ public class BeforeInfinityProcedure {
 			return;
 		if (!(entity instanceof LivingEntity victim))
 			return;
-		if (!(victim.hasEffect(JjkStrongestModMobEffects.INFINITY.get())))
+		if (!(victim.hasEffect(JjkStrongestModMobEffects.INFINITY)))
 			return;
 		// find attacker
 		Entity attacker = damagesource.getEntity();
 		if (attacker == null)
 			attacker = damagesource.getDirectEntity();
 		// domain amplification neutralizes infinity and removes it
-		if (attacker instanceof LivingEntity livingAttacker && livingAttacker.hasEffect(JjkStrongestModMobEffects.DOMAIN_AMPLIFICATION.get())) {
-			victim.removeEffect(JjkStrongestModMobEffects.INFINITY.get());
+		if (attacker instanceof LivingEntity livingAttacker && livingAttacker.hasEffect(JjkStrongestModMobEffects.DOMAIN_AMPLIFICATION)) {
+			victim.removeEffect(JjkStrongestModMobEffects.INFINITY);
 			// let the attack through without cancelling
 			return;
 		}
@@ -94,11 +95,8 @@ public class BeforeInfinityProcedure {
 	private static void cancel(@Nullable Event event) {
 		if (event == null)
 			return;
-		if (event.isCancelable()) {
-			event.setCanceled(true);
-		} else if (event.hasResult()) {
-			event.setResult(Event.Result.DENY);
-		}
+		if (event instanceof ICancellableEvent cancellable)
+			cancellable.setCanceled(true);
 	}
 
 	private static void playInfinitySound(LevelAccessor world, double x, double y, double z) {

@@ -3,7 +3,7 @@ package net.efkrdnz.jjkstrongest.procedures;
 
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.bus.api.SubscribeEvent;
-import net.minecraftforge.event.entity.living.LivingHurtEvent;
+import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
 
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.LivingEntity;
@@ -19,7 +19,7 @@ import net.efkrdnz.jjkstrongest.entity.MahoragaEntity;
 @EventBusSubscriber(modid = "jjk_strongest")
 public class MahoragaCombatEventsProcedure {
 	@SubscribeEvent
-	public static void onLivingHurt(LivingHurtEvent event) {
+	public static void onLivingHurt(LivingDamageEvent.Pre event) {
 		if (event == null)
 			return;
 		LivingEntity victim = event.getEntity();
@@ -28,7 +28,7 @@ public class MahoragaCombatEventsProcedure {
 		if (victim.level().isClientSide())
 			return;
 		DamageSource source = event.getSource();
-		float amount = event.getAmount();
+		float amount = event.getNewDamage();
 		// mark recently hurt for aura interrupt etc
 		victim.getPersistentData().putInt("maho_hurt_ticks", 10);
 		// only adapt to technique tag
@@ -100,7 +100,7 @@ public class MahoragaCombatEventsProcedure {
 			boolean burstEnough = recent >= need;
 			// fully adapted -> always cancel death and revive at FULL hp
 			if (spins >= full) {
-				event.setCanceled(true);
+				event.setNewDamage(0);
 				victim.setHealth(victim.getMaxHealth());
 				victim.invulnerableTime = 10;
 				victim.getPersistentData().putDouble("maho_recent_dmg", 0);
@@ -112,7 +112,7 @@ public class MahoragaCombatEventsProcedure {
 			}
 			// not enough burst -> cancel lethal, leave at 1 hp and FORCE a spin toward this type
 			if (!burstEnough) {
-				event.setCanceled(true);
+				event.setNewDamage(0);
 				victim.setHealth(1.0F);
 				victim.invulnerableTime = 8;
 				int before = spins;
@@ -126,11 +126,11 @@ public class MahoragaCombatEventsProcedure {
 				return;
 			}
 			// enough burst -> allow death normally
-			event.setAmount(newAmount);
+			event.setNewDamage(newAmount);
 			return;
 		}
 		// not lethal -> apply reduced amount
-		event.setAmount(newAmount);
+		event.setNewDamage(newAmount);
 	}
 
 	private static void doSpin(LivingEntity victim, Player notifyPlayer, String damageId, int spins, int full, boolean justCompleted) {

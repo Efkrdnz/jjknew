@@ -60,7 +60,7 @@ public class InformationOverloadFogColorProcedure {
 	private static void execute(@Nullable Event event, Entity entity) {
 		if (entity == null)
 			return;
-		if (entity instanceof LivingEntity _livEnt0 && _livEnt0.hasEffect(JjkStrongestModMobEffects.INFORMATION_OVERLOAD.get())) {
+		if (entity instanceof LivingEntity _livEnt0 && _livEnt0.hasEffect(JjkStrongestModMobEffects.INFORMATION_OVERLOAD)) {
 			setColor(1, 255 << 24 | 0 << 16 | 0 << 8 | 0);
 		}
 	}
