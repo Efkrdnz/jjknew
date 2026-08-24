@@ -115,6 +115,11 @@ Being generous is safe here in a way it is not for firing — the worst a wrong
 near-match can do is charge an ability you already have selected, where a wrong
 action would spend a cooldown. The action bar tells you which you got.
 
+A near chant always yields to a confident command, so switching abilities still
+works while one is charging: saying *"reversal red"* with Purple up selects Red
+rather than being read as a sloppy *"purple"*. Only an exact chant outranks a
+match, and if both are exact the closer one wins.
+
 You do not enroll anything extra. Chanting reuses the phrases already bound to
 that ability, so selecting and charging are the same recording. `chants` in the
 config only exists for adding a *different* phrase to chant with — a real

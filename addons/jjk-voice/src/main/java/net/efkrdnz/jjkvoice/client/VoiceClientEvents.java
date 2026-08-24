@@ -113,10 +113,10 @@ public final class VoiceClientEvents {
 			return;
 		}
 
-		// Chanting is tried first, and only for the ability already selected. That
-		// is what lets one phrase do both jobs: say an ability's name to draw it,
-		// say it again to charge it. Without the "already active" test the two
-		// would be indistinguishable.
+		// Chanting is measured only against the ability already selected. That is
+		// what lets one phrase do both jobs: say an ability's name to draw it, say
+		// it again to charge it. Without the "already active" test the two would be
+		// indistinguishable.
 		String moveset = JjkBridge.currentMoveset(minecraft.player);
 		List<String> chantPhrases = JjkBridge.isChantable(moveset)
 				? VoiceConfig.get().chantPhrasesFor(moveset)
@@ -126,12 +126,10 @@ public final class VoiceClientEvents {
 			PhraseRecognizer.ChantResult chant = chantPhrases.isEmpty()
 					? null
 					: PhraseRecognizer.recogniseChant(audio, chantPhrases);
-			PhraseRecognizer.Result result = (chant != null && chant.charged())
-					? null
-					: PhraseRecognizer.recognise(audio);
+			PhraseRecognizer.Result result = PhraseRecognizer.recognise(audio);
 			minecraft.execute(() -> {
 				try {
-					if (result == null)
+					if (preferChant(chant, result))
 						applyChant(minecraft, chant);
 					else
 						applyResult(minecraft, result);
@@ -140,6 +138,26 @@ public final class VoiceClientEvents {
 				}
 			});
 		});
+	}
+
+	/**
+	 * Decides between charging the active ability and doing something else.
+	 *
+	 * <p>The chant band is deliberately loose, which on its own would let a near
+	 * miss swallow a real command -- switch to Red while Purple is up, and "reversal
+	 * red" could land inside Purple's near band and charge Purple instead. So a
+	 * near chant yields to any confident match, and only an exact chant outranks
+	 * one. Two exact readings is the genuinely ambiguous case, and there the closer
+	 * distance wins.
+	 */
+	private static boolean preferChant(PhraseRecognizer.ChantResult chant, PhraseRecognizer.Result result) {
+		if (chant == null || !chant.charged())
+			return false;
+		if (result == null || !result.matched())
+			return true;
+		if (chant.quality() != PhraseRecognizer.ChantQuality.EXACT)
+			return false;
+		return chant.distance() <= result.distance();
 	}
 
 	/**
