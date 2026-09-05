@@ -61,10 +61,16 @@ import java.util.List;
  */
 public class DomainUVRenderer extends MobRenderer<DomainUVEntity, Modelblank_entity<DomainUVEntity>> {
 
-	/** The dome mesh, shared with the Shrine's sky. See {@link SkyMesh} for the resolution. */
-	private static final int LAT_SEGMENTS = SkyMesh.LAT_SEGMENTS;
-	private static final int LON_SEGMENTS = SkyMesh.LON_SEGMENTS;
-	private static final float[] UNIT_SPHERE = SkyMesh.UNIT_SPHERE;
+	/**
+	 * 32 x 64. The fragment stage reconstructs its view ray from {@code localPos}, which is
+	 * interpolated linearly across flat triangles — at 24 x 48 each quad spans about seven
+	 * degrees, and that faceting is visible both in the noise and on the silhouette of a
+	 * near-black sphere against the sky.
+	 */
+	private static final int LAT_SEGMENTS = 32;
+	private static final int LON_SEGMENTS = 64;
+	/** Unit sphere, wound inward, as (x, y, z, u, v) per vertex. */
+	private static final float[] UNIT_SPHERE = buildUnitSphere();
 
 	/** The floor disc: a fan of this many wedges, in this many rings, on the unit circle. */
 	private static final int DISC_SEGMENTS = 64;
@@ -357,6 +363,34 @@ public class DomainUVRenderer extends MobRenderer<DomainUVEntity, Modelblank_ent
 		return t * t * (3.0f - 2.0f * t);
 	}
 
+	/** Inward-wound unit sphere, generated once at class load. */
+	private static float[] buildUnitSphere() {
+		float[] data = new float[LAT_SEGMENTS * LON_SEGMENTS * 4 * 5];
+		int i = 0;
+		for (int lat = 0; lat < LAT_SEGMENTS; lat++) {
+			float theta1 = (lat / (float) LAT_SEGMENTS) * (float) Math.PI;
+			float theta2 = ((lat + 1) / (float) LAT_SEGMENTS) * (float) Math.PI;
+			for (int lon = 0; lon < LON_SEGMENTS; lon++) {
+				float phi1 = (lon / (float) LON_SEGMENTS) * 2.0f * (float) Math.PI;
+				float phi2 = ((lon + 1) / (float) LON_SEGMENTS) * 2.0f * (float) Math.PI;
+
+				// u and v are fractions of the segment counts, so the mapping the damage
+				// grid is keyed on is unchanged by the resolution bump.
+				float u1 = lon / (float) LON_SEGMENTS;
+				float u2 = (lon + 1) / (float) LON_SEGMENTS;
+				float v1 = lat / (float) LAT_SEGMENTS;
+				float v2 = (lat + 1) / (float) LAT_SEGMENTS;
+
+				// wound v1, v4, v3, v2 so the faces look inward
+				i = put(data, i, theta1, phi1, u1, v1);
+				i = put(data, i, theta2, phi1, u1, v2);
+				i = put(data, i, theta2, phi2, u2, v2);
+				i = put(data, i, theta1, phi2, u2, v1);
+			}
+		}
+		return data;
+	}
+
 	/**
 	 * Upward-facing unit disc as quads, generated once at class load. Rings rather than one
 	 * fan, so the triangles near the middle are not a hundred blocks long — the fragment
@@ -387,6 +421,15 @@ public class DomainUVRenderer extends MobRenderer<DomainUVEntity, Modelblank_ent
 		data[i++] = z;
 		data[i++] = x;
 		data[i++] = z;
+		return i;
+	}
+
+	private static int put(float[] data, int i, float theta, float phi, float u, float v) {
+		data[i++] = (float) (Math.sin(theta) * Math.cos(phi));
+		data[i++] = (float) Math.cos(theta);
+		data[i++] = (float) (Math.sin(theta) * Math.sin(phi));
+		data[i++] = u;
+		data[i++] = v;
 		return i;
 	}
 

@@ -1,60 +1,48 @@
 package net.efkrdnz.jjkstrongest.client;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 
-import net.minecraft.util.Mth;
+import net.neoforged.api.distmarker.OnlyIn;
+import net.neoforged.api.distmarker.Dist;
+
 import net.minecraft.world.phys.Vec3;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import net.efkrdnz.jjkstrongest.client.MalevolentShrineSlashManager;
 
-/**
- * The cuts currently in the air, client side.
- *
- * <p>A slash is born by packet and lives for a fixed number of ticks. What it looks like at
- * any moment is a function of how far through that life it is, worked out here and handed
- * to the shader as four bytes; the renderer draws every live one in a single batch.
- */
+import java.util.List;
+import java.util.Iterator;
+import java.util.ArrayList;
+
 @OnlyIn(Dist.CLIENT)
 public class MalevolentShrineSlashManager {
 	private static final List<DomainSlash> SLASHES = new ArrayList<>();
-	/** Hard cap. The shrine settles around 220 live, so this is headroom, not a governor. */
-	private static final int MAX_SLASHES = 400;
-
-	/** Style codes, shared with the server's spawn code and the shader's decoding. */
-	public static final int STYLE_CLEAVE = 0;
-	public static final int STYLE_DISMANTLE = 1;
-	public static final int STYLE_STRIKE = 2;
-
-	/** Ticks a blade takes to draw itself from origin to tip. A strike is instant. */
-	private static final float SWEEP_TICKS = 2.0f;
+	private static final int MAX_SLASHES = 300; // cap for performance
 
 	public static class DomainSlash {
-		/** The blade's CENTRE. Its origin is half a length back along the direction. */
-		public final Vec3 position;
-		public final Vec3 direction;
-		public final float length;
-		public final float width;
-		public final int style;
-		/** Per-slash brightness jitter, 0..1, derived from the packet's roll. */
-		public final float jitter;
-		public final float seed;
-		public final String domainUUID;
+		public Vec3 position;
+		public Vec3 direction;
+		public float length;
+		public float width;
+		public int style;
+		public float roll;
+		public float seed;
+		public float colorR, colorG, colorB;
 		public int age;
-		public final int maxAge;
+		public int maxAge;
+		public String domainUUID;
 
-		public DomainSlash(Vec3 pos, Vec3 dir, float len, float wid, int sty, float roll, float sed, int maxLife, String uuid) {
+		public DomainSlash(Vec3 pos, Vec3 dir, float len, float wid, int sty, float rol, float sed, float r, float g, float b, int maxLife, String uuid) {
 			this.position = pos;
-			this.direction = dir.lengthSqr() < 1.0E-8 ? new Vec3(0.0, 0.0, 1.0) : dir.normalize();
+			this.direction = dir.normalize();
 			this.length = len;
 			this.width = wid;
 			this.style = sty;
-			this.jitter = (float) (roll / (Math.PI * 2.0) - Math.floor(roll / (Math.PI * 2.0)));
+			this.roll = rol;
 			this.seed = sed;
+			this.colorR = r;
+			this.colorG = g;
+			this.colorB = b;
 			this.age = 0;
-			this.maxAge = Math.max(1, maxLife);
+			this.maxAge = maxLife;
 			this.domainUUID = uuid;
 		}
 
@@ -66,46 +54,59 @@ public class MalevolentShrineSlashManager {
 			return age >= maxAge;
 		}
 
-		/** 0 at birth, 1 at death, smooth between frames. */
-		public float progress(float partialTick) {
-			return Mth.clamp((age + partialTick) / maxAge, 0.0f, 1.0f);
+		public float getAlpha() {
+			// expansion for first 3 ticks
+			float expandProgress = Math.min(age / 3.0f, 1.0f);
+			expandProgress = 1.0f - (1.0f - expandProgress) * (1.0f - expandProgress);
+			// fade out in last 4 ticks
+			float fadeStartAge = maxAge - 4.0f;
+			float fadeAlpha = 1.0f;
+			if (age > fadeStartAge) {
+				float fadeProgress = (age - fadeStartAge) / 4.0f;
+				fadeAlpha = 1.0f - fadeProgress;
+			}
+			return expandProgress * fadeAlpha;
 		}
 
-		/** How far along the blade the leading edge has drawn, 0..1. Eased out, so it snaps. */
-		public float sweep(float partialTick) {
-			if (style == STYLE_STRIKE)
-				return 1.0f;
-			float p = Mth.clamp((age + partialTick) / SWEEP_TICKS, 0.0f, 1.0f);
-			return 1.0f - (1.0f - p) * (1.0f - p);
+		public float getCurrentLength() {
+			float expandProgress = Math.min(age / 3.0f, 1.0f);
+			expandProgress = 1.0f - (1.0f - expandProgress) * (1.0f - expandProgress);
+			return length * expandProgress;
 		}
 	}
 
+	// add slash to render queue
 	public static void addSlash(Vec3 position, Vec3 direction, float length, float width, int style, float roll, float seed, float r, float g, float b, int lifetime, String domainUUID) {
-		// The colour arguments are what the packet has always carried; the look is decided by
-		// style now and they are ignored. Kept so the packet codec does not have to change.
-		if (SLASHES.size() >= MAX_SLASHES)
+		// remove old slashes if at cap
+		if (SLASHES.size() >= MAX_SLASHES) {
 			SLASHES.remove(0);
-		SLASHES.add(new DomainSlash(position, direction, length, width, style, roll, seed, lifetime, domainUUID));
+		}
+		SLASHES.add(new DomainSlash(position, direction, length, width, style, roll, seed, r, g, b, lifetime, domainUUID));
 	}
 
+	// tick all slashes
 	public static void tick() {
 		Iterator<DomainSlash> iterator = SLASHES.iterator();
 		while (iterator.hasNext()) {
 			DomainSlash slash = iterator.next();
 			slash.tick();
-			if (slash.isExpired())
+			if (slash.isExpired()) {
 				iterator.remove();
+			}
 		}
 	}
 
+	// get all active slashes
 	public static List<DomainSlash> getActiveSlashes() {
 		return SLASHES;
 	}
 
+	// clear slashes for a specific domain
 	public static void clearDomain(String domainUUID) {
 		SLASHES.removeIf(slash -> slash.domainUUID.equals(domainUUID));
 	}
 
+	// clear all
 	public static void clearAll() {
 		SLASHES.clear();
 	}

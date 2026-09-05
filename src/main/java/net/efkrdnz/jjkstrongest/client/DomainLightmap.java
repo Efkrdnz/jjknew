@@ -64,17 +64,6 @@ public final class DomainLightmap {
 	 * a single frame; this is computed once a tick instead.
 	 */
 	private static volatile float strength;
-	/** The Shrine's, kept apart: a red cast that dims, where the Void's is a cool floor that lifts. */
-	private static volatile float shrineStrength;
-
-	/** How far the shrine's light darkens each channel at full strength. */
-	private static final float SHRINE_R = 0.95f;
-	private static final float SHRINE_G = 0.38f;
-	private static final float SHRINE_B = 0.30f;
-	/** A red floor under it, so the field is lit red rather than black. */
-	private static final float SHRINE_FLOOR_R = 0.22f;
-	private static final float SHRINE_FLOOR_G = 0.04f;
-	private static final float SHRINE_FLOOR_B = 0.03f;
 
 	private DomainLightmap() {
 	}
@@ -89,11 +78,6 @@ public final class DomainLightmap {
 		strength = strength + (target() - strength) * EASE;
 		if (strength < 0.002f)
 			strength = 0.0f;
-		// The shrine's own intensity already ramps with phase and distance; the ease here is
-		// only so the lightmap never steps between ticks.
-		shrineStrength = shrineStrength + (ShrineAtmosphereRenderer.presence() - shrineStrength) * EASE;
-		if (shrineStrength < 0.002f)
-			shrineStrength = 0.0f;
 	}
 
 	private static float target() {
@@ -129,35 +113,20 @@ public final class DomainLightmap {
 	 */
 	private static void adjust(Object[] params) {
 		float s = strength;
-		float sh = shrineStrength;
-		if ((s <= 0.0f && sh <= 0.0f) || params.length < 8 || !(params[7] instanceof Vector3f colors))
+		if (s <= 0.0f || params.length < 8 || !(params[7] instanceof Vector3f colors))
 			return;
 
-		if (s > 0.0f) {
-			// A floor, so nothing in the sphere is ever a silhouette however dark the pocket
-			// the carve left behind actually is.
-			float floor = AMBIENT * s;
-			float r = Math.max(colors.x(), floor * TINT_R);
-			float g = Math.max(colors.y(), floor * TINT_G);
-			float b = Math.max(colors.z(), floor * TINT_B);
+		// A floor, so nothing in the sphere is ever a silhouette however dark the pocket
+		// the carve left behind actually is.
+		float floor = AMBIENT * s;
+		float r = Math.max(colors.x(), floor * TINT_R);
+		float g = Math.max(colors.y(), floor * TINT_G);
+		float b = Math.max(colors.z(), floor * TINT_B);
 
-			// And a cast over the whole ramp, so a torch carried inside does not read as warm
-			// firelight against a place with no colour in it.
-			float cool = COOL * s;
-			float grey = (r + g + b) * (1.0f / 3.0f);
-			colors.set(Mth.lerp(cool, r, grey * TINT_R), Mth.lerp(cool, g, grey * TINT_G), Mth.lerp(cool, b, Math.min(1.0f, grey * TINT_B)));
-		}
-
-		if (sh > 0.0f) {
-			// Lit by a blood sky: every channel but red pulled down, and a red floor so the
-			// field reads as red and dim rather than as night.
-			float r = colors.x();
-			float g = colors.y();
-			float b = colors.z();
-			float dr = Math.max(r * SHRINE_R, SHRINE_FLOOR_R);
-			float dg = Math.max(g * SHRINE_G, SHRINE_FLOOR_G);
-			float db = Math.max(b * SHRINE_B, SHRINE_FLOOR_B);
-			colors.set(Mth.lerp(sh, r, dr), Mth.lerp(sh, g, dg), Mth.lerp(sh, b, db));
-		}
+		// And a cast over the whole ramp, so a torch carried inside does not read as warm
+		// firelight against a place with no colour in it.
+		float cool = COOL * s;
+		float grey = (r + g + b) * (1.0f / 3.0f);
+		colors.set(Mth.lerp(cool, r, grey * TINT_R), Mth.lerp(cool, g, grey * TINT_G), Mth.lerp(cool, b, Math.min(1.0f, grey * TINT_B)));
 	}
 }
