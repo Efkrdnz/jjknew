@@ -45,8 +45,11 @@ const vec3 VIOLET   = vec3(0.45, 0.35, 0.80);
 // The two switches are the revert: set either to false and the feature is gone, and the
 // compiler folds its code away with it. The numbers are what they were tuned to.
 
-/** Fraction of star cells that carry a star. Was 0.45 before the sky was thinned. */
-const float STAR_FILL = 0.26;
+/**
+ * Master multiplier on every star layer's count. 1.0 is the tuned sky; 0.5 halves it. Each
+ * layer carries its own fill fraction and this scales them all together.
+ */
+const float STAR_FILL = 1.0;
 
 /** One deep-blue cloud that drifts slowly around the sky. */
 const bool  DRIFT_NEBULA = true;
@@ -262,62 +265,115 @@ float infoStreams(float ang, float phi, float t) {
 
 // ---- sky layers ------------------------------------------------------------
 
-/** Cube-map face and its uv for a direction, so a star grid can be laid on the sky. */
-vec2 faceUv(vec3 d, out float face) {
+/**
+ * Cube-map face and its uv for a direction, so a star grid can be laid on the sky.
+ *
+ * Also hands back m, the dominant axis component. This is a tangent projection and its
+ * scale is 1/m² — one at a face centre, two at an edge, three at a corner — which is what the
+ * star layer has to undo, or stars shrink and crowd toward the cube's edges.
+ */
+vec2 faceUv(vec3 d, out float face, out float m) {
     vec3 a = abs(d);
     if (a.x >= a.y && a.x >= a.z) {
         face = d.x > 0.0 ? 0.0 : 1.0;
+        m = a.x;
         return d.yz / a.x;
     }
     if (a.y >= a.z) {
         face = d.y > 0.0 ? 2.0 : 3.0;
+        m = a.y;
         return d.xz / a.y;
     }
     face = d.z > 0.0 ? 4.0 : 5.0;
+    m = a.z;
     return d.xy / a.z;
 }
 
 /**
- * One layer of round stars.
+ * One layer of stars that are points.
  *
- * A cell grid on each cube face, at most one star per cell at a hashed offset, drawn as a
- * disc. Round points are most of what makes a sky read as space rather than as speckle; the
- * old threshold-on-noise gave speckle. Stars keep off the cell edges so a face seam cannot
- * cut one in half.
+ * A cell grid on each cube face, at most one star per cell at a hashed offset. Two things
+ * this gets right that the version before it did not:
+ *
+ * A star is never smaller than a pixel. Most stars here have an angular size well under
+ * one pixel, and a sub-pixel disc is sampled wherever the pixel centre happens to land — a
+ * smear at a fraction of its brightness that flickers as you turn. So the radius is clamped
+ * to the pixel footprint, and the brightness is not reduced for it: a point source on a
+ * sensor is at least one pixel wide at its full value.
+ *
+ * The cube's stretch is undone. The tangent projection doubles its scale toward a face
+ * edge, so a fixed cell-unit radius was half the angular size there while cells crowded
+ * together; that read as bands of small pale stars along great circles across the sky.
+ * Radius is divided by m² and the fill is multiplied by it, so size and density per solid
+ * angle are the same everywhere on the sphere.
+ *
+ * @param fill fraction of cells at a face centre that hold a star, times STAR_FILL
  */
-vec3 starLayer(vec3 d, float cells, float seed, float t) {
+vec3 starLayer(vec3 d, float cells, float fill, float seed, float t) {
     float face;
-    vec2 uv = (faceUv(d, face) * 0.5 + 0.5) * cells;
+    float m;
+    vec2 uv = (faceUv(d, face, m) * 0.5 + 0.5) * cells;
+    // Pixel footprint in cell units. Taken here, before any branch: a derivative after a
+    // per-fragment return is undefined.
+    vec2 fw = fwidth(uv);
+    float px = max(fw.x, fw.y);
+    float stretch = m * m;
+
     vec2 cell = floor(uv);
     vec2 f = uv - cell;
     vec2 id = cell + face * 131.0 + seed;
     float h = hash11(dot(id, vec2(12.9898, 78.233)) + seed);
-    // Most cells are empty. STAR_FILL is the one knob for how busy the sky is, and it thins
-    // every layer at once, the Milky Way's included.
-    float empty = 1.0 - STAR_FILL;
-    if (h < empty)
+    float chance = clamp(fill * STAR_FILL * stretch, 0.0, 0.95);
+    if (h > chance)
         return vec3(0.0);
+
+    // Power law over the stars that exist: many faint, a few bright, as a real field is.
+    float mag = pow(h / chance, 2.6);
     vec2 pos = random2(id) * 0.7 + 0.15;
-    float mag = (h - empty) / STAR_FILL;
-    float radius = 0.035 + 0.11 * mag * mag;
-    float star = smoothstep(radius, radius * 0.25, length(f - pos));
-    float twinkle = 0.85 + 0.15 * sin(t * (0.8 + 1.7 * h) + h * 40.0);
+    float angular = (0.030 + 0.12 * mag) / stretch;
+    float radius = max(angular, 0.85 * px);
+    vec2 o = f - pos;
+    float dist = length(o);
+    float star = smoothstep(radius, radius * 0.3, dist);
+
+    // Peak brightness: the faint end clearly visible, the bright end past white.
+    float peak = 0.55 + 1.7 * mag;
+    // The faint ones twinkle; the bright ones hold steady.
+    float twinkle = 1.0 - 0.35 * (1.0 - mag) * (0.5 + 0.5 * sin(t * (0.8 + 1.7 * h) + h * 40.0));
     float pick = hash11(h * 91.7 + seed);
     vec3 tint = pick < 0.6 ? BONE : (pick < 0.85 ? PALEBLUE : vec3(1.0, 0.86, 0.70));
-    return tint * star * (0.35 + 0.9 * mag) * twinkle;
+    // Bright leans blue-white, faint leans warm, a little.
+    tint = mix(tint, vec3(0.80, 0.88, 1.0), mag * 0.35);
+    tint = mix(tint, vec3(1.0, 0.90, 0.78), (1.0 - mag) * 0.20);
+
+    vec3 col = tint * star * peak * twinkle;
+    if (mag > 0.5) {
+        // What the eye reads as "bright star" rather than "big dot": a soft halo, and on
+        // the brightest few a faint four-point cross. Gated, so the common star pays nothing.
+        float halo = exp(-(dist * dist) / (radius * radius * 9.0)) * 0.22 * mag;
+        col += tint * halo * peak;
+        if (mag > 0.85) {
+            float spikes = exp(-abs(o.y) / (radius * 0.35)) * exp(-abs(o.x) / (radius * 4.0))
+                         + exp(-abs(o.x) / (radius * 0.35)) * exp(-abs(o.y) / (radius * 4.0));
+            col += tint * spikes * 0.5 * (mag - 0.85) / 0.15;
+        }
+    }
+    return col;
 }
 
 /** The galaxy seen edge-on: a tilted band, grained, cut by dark dust lanes, thick with stars. */
 vec3 milkyWay(vec3 d, float t) {
     vec3 normal = normalize(vec3(0.42, 0.78, -0.46));
     float band = exp(-pow(dot(d, normal) * 3.2, 2.0));
+    // The stars come first, before the early return below: starLayer takes a derivative,
+    // and a derivative after a per-fragment return is undefined. One hash per fragment.
+    vec3 stars = starLayer(d, 110.0, 0.30, 7.0, t) * band;
     if (band < 0.002)
         return vec3(0.0);
     float grain = fbm3(d * 3.0 + BrushSeed);
     float lane = smoothstep(0.45, 0.60, fbm3(d * 6.0 + 4.7 + BrushSeed * 0.3));
     vec3 col = mix(vec3(0.10, 0.13, 0.28), vec3(0.55, 0.60, 0.80), grain) * band * (1.0 - 0.75 * lane) * 0.5;
-    col += starLayer(d, 140.0, 7.0, t) * band * 0.8;
-    return col;
+    return col + stars;
 }
 
 /** Two faint clouds, blue and violet, kept away from the hole so it stays clean. */
@@ -381,11 +437,12 @@ vec3 skyAnalytic(vec3 d, float t, bool mirror) {
     float horizon = exp(-abs(d.y) * 9.0) * 0.55 + exp(-abs(d.y) * 2.5) * 0.12;
     col += HORIZON * horizon * (mirror ? 1.25 : 1.0);
 
-    // L1-L3: the deep field, on the bent ray.
-    col += starLayer(bent, 64.0, 1.0, t) * 0.9;
-    col += starLayer(bent, 20.0, 2.0, t) * 1.6;
+    // L1-L3: the deep field, on the bent ray. About four thousand faint and five hundred
+    // bright over the whole sphere; brightness lives in the layer now, not in a weight here.
+    col += starLayer(bent, 48.0, 0.30, 1.0, t);
+    col += starLayer(bent, 16.0, 0.35, 2.0, t);
     if (mirror)
-        col += starLayer(bent, 44.0, 5.0, t) * 0.8;
+        col += starLayer(bent, 44.0, 0.20, 5.0, t);
     col += milkyWay(bent, t);
     col += nebulae(bent, ang);
     if (DRIFT_NEBULA)
