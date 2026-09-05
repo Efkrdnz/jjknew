@@ -1,0 +1,120 @@
+import net.efkrdnz.jjkstrongest.domain.*;
+import net.minecraft.world.phys.Vec3;
+import java.util.Random;
+
+public class GeomTest {
+    static int pass = 0, fail = 0;
+    static void check(String name, boolean ok, String detail) {
+        if (ok) { pass++; System.out.println("  PASS  " + name); }
+        else { fail++; System.out.println("  FAIL  " + name + "   " + detail); }
+    }
+    static boolean near(double a, double b, double eps) { return Math.abs(a - b) <= eps; }
+
+    // The mesh's own convention, transcribed from DomainUVRenderer.buildUnitSphere:
+    //   x = sin(theta)cos(phi), y = cos(theta), z = sin(theta)sin(phi)
+    //   u = phi/2pi, v = theta/pi
+    static int meshCell(Vec3 d) {
+        double theta = Math.acos(Math.max(-1, Math.min(1, d.y)));
+        double phi = Math.atan2(d.z, d.x);
+        double u = phi / (Math.PI * 2.0); if (u < 0) u += 1.0;
+        double v = theta / Math.PI;
+        int lat = Math.min(15, (int) (v * 16));
+        int lon = Math.min(31, (int) (u * 32));
+        return lat * 32 + lon;
+    }
+
+    public static void main(String[] args) {
+        Random rng = new Random(20260905L);
+
+        System.out.println("longAxis: perpendicular to direction, and unit length");
+        boolean perpOk = true, unitOk = true;
+        for (int i = 0; i < 20000; i++) {
+            Vec3 dir = new Vec3(rng.nextDouble()*2-1, rng.nextDouble()*2-1, rng.nextDouble()*2-1).normalize();
+            if (dir.length() < 0.5) continue;
+            float roll = (float)(rng.nextDouble() * Math.PI * 2);
+            Vec3 u = DomainOcclusion.longAxis(dir, roll);
+            if (!near(u.dot(dir), 0.0, 1e-9)) perpOk = false;
+            if (!near(u.length(), 1.0, 1e-9)) unitOk = false;
+        }
+        check("perpendicular to direction (20k random)", perpOk, "dot != 0");
+        check("unit length (20k random)", unitOk, "|u| != 1");
+
+        Vec3 u0 = DomainOcclusion.longAxis(new Vec3(0,0,1), 0f);
+        check("dir=+Z, roll=0 -> +X", near(u0.x,1,1e-9)&&near(u0.y,0,1e-9)&&near(u0.z,0,1e-9), "got " + u0);
+
+        Vec3 uUp = DomainOcclusion.longAxis(new Vec3(0,1,0), 0f);
+        check("degenerate dir=+Y is finite and unit",
+              !Double.isNaN(uUp.x) && near(uUp.length(),1,1e-9), "got " + uUp);
+        check("degenerate dir=+Y perpendicular",
+              near(uUp.dot(new Vec3(0,1,0)),0,1e-9), "got " + uUp);
+
+        System.out.println("\nDomainOcclusion.clip");
+        DomainSphere sphere = new DomainSphere(new Vec3(0,0,0), 30.0, -1000.0, DomainPhase.ACTIVE, 1f);
+        // direction=+Z with roll=pi gives long axis -X
+        Vec3 dirZ = new Vec3(0,0,1);
+        float rollPi = (float) Math.PI;
+
+        DomainOcclusion.Clip crossing = DomainOcclusion.clip(new Vec3(40,0,0), dirZ, rollPi, 30.0, sphere);
+        check("crossing: not blocked", !crossing.blocked(), "blocked");
+        check("crossing: length 30 -> 25", near(crossing.length(), 25.0, 1e-6), "len=" + crossing.length());
+        check("crossing: centre moves to x=42.5", near(crossing.position().x, 42.5, 1e-6), "pos=" + crossing.position());
+        check("crossing: impact lands on the surface",
+              crossing.impact()!=null && near(crossing.impact().length(), 30.0, 1e-6),
+              "impact=" + crossing.impact());
+
+        DomainOcclusion.Clip clear = DomainOcclusion.clip(new Vec3(80,0,0), dirZ, rollPi, 30.0, sphere);
+        check("clear of the sphere: untouched", !clear.blocked() && near(clear.length(),30.0,1e-9) && clear.impact()==null,
+              "len=" + clear.length() + " impact=" + clear.impact());
+
+        DomainOcclusion.Clip inside = DomainOcclusion.clip(new Vec3(0,0,0), dirZ, rollPi, 10.0, sphere);
+        check("wholly inside: blocked", inside.blocked(), "not blocked");
+
+        System.out.println("\nDomainShell.cellFor agrees with the sphere mesh's UV");
+        int mismatches = 0; Vec3 firstBad = null;
+        for (int i = 0; i < 50000; i++) {
+            Vec3 d = new Vec3(rng.nextDouble()*2-1, rng.nextDouble()*2-1, rng.nextDouble()*2-1);
+            if (d.length() < 0.2) continue;
+            d = d.normalize();
+            if (DomainShell.cellFor(d.x,d.y,d.z) != meshCell(d)) { mismatches++; if (firstBad==null) firstBad = d; }
+        }
+        check("50k random directions map to the same cell", mismatches == 0,
+              mismatches + " mismatches, first at " + firstBad);
+        check("+X is longitude 0", DomainShell.cellFor(1,0,0) % 32 == 0, "lon=" + (DomainShell.cellFor(1,0,0)%32));
+        check("+Z is a quarter turn round", DomainShell.cellFor(0,0,1) % 32 == 8, "lon=" + (DomainShell.cellFor(0,0,1)%32));
+        check("+Y is the top band", DomainShell.cellFor(0,1,0) / 32 == 0, "lat=" + (DomainShell.cellFor(0,1,0)/32));
+        check("-Y is the bottom band", DomainShell.cellFor(0,-1,0) / 32 == 15, "lat=" + (DomainShell.cellFor(0,-1,0)/32));
+
+        System.out.println("\nTwo failure shapes from one grid");
+        DomainShell pressed = new DomainShell();
+        int ticks = 0;
+        while (!pressed.isShattered() && ticks < 5000) { pressed.applyPressure(DomainShell.FULL / 440f); ticks++; }
+        check("even pressure shatters the whole shell", pressed.isShattered(), "not shattered after " + ticks);
+        check("...in roughly the intended ~440 ticks", ticks >= 400 && ticks <= 480, "took " + ticks);
+
+        DomainShell punched = new DomainShell();
+        Vec3 spot = new Vec3(1, 0.3, 0.2).normalize();
+        int punches = 0;
+        while (!punched.hasBreach() && punches < 500) { punched.applyStrike(spot, 26.0f, 2); punches++; }
+        check("concentrated strikes open a hole", punched.hasBreach(), "no breach after " + punches);
+        check("...in roughly ten hits", punches >= 6 && punches <= 16, "took " + punches);
+        check("...while the shell overall is still healthy",
+              punched.totalIntegrity() > 0.9f, "integrity=" + punched.totalIntegrity());
+        check("...and the hole is where it was hit",
+              punched.isOpenTowards(spot.x, spot.y, spot.z), "breach elsewhere");
+        check("...and not on the far side",
+              !punched.isOpenTowards(-spot.x, -spot.y, -spot.z), "opposite side also open");
+
+        System.out.println("\nDomainIntersect");
+        DomainSphere uv = new DomainSphere(new Vec3(0,0,0), 30, -1000, DomainPhase.ACTIVE, 1f);
+        DomainSphere shrineNear = DomainSphere.openField(new Vec3(20,0,0), 100);
+        check("a shrine engulfing the void still counts as intersecting",
+              DomainIntersect.intersects(uv, shrineNear), "reported apart");
+        check("...but the lens is null there, as documented",
+              DomainIntersect.intersect(uv, shrineNear) == null, "lens returned");
+        check("far apart does not intersect",
+              !DomainIntersect.intersects(uv, DomainSphere.openField(new Vec3(500,0,0), 100)), "reported touching");
+
+        System.out.println("\n" + pass + " passed, " + fail + " failed");
+        if (fail > 0) System.exit(1);
+    }
+}

@@ -16,3 +16,4 @@ bin/
 addons/*/build/
 addons/*/.gradle/
 addons/*/run/
+tools/geometry-harness/build/
