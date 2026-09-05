@@ -163,8 +163,9 @@ public class MalevolentShrineTickProcedure {
 		DomainShell rivalShell = rival != null ? rival.shell() : null;
 		double radiusSq = RADIUS * RADIUS;
 		double twoPI = Math.PI * 2;
-		List<ServerPlayer> nearbyPlayers = world.getEntitiesOfClass(ServerPlayer.class, new AABB(centerX - 150, centerY - 150, centerZ - 150, centerX + 150, centerY + 150, centerZ + 150));
-		if (nearbyPlayers.isEmpty())
+		// Only a gate now: if nobody can see the domain there is no reason to do any of the
+		// slash maths at all. The packets themselves go out as one broadcast per slash.
+		if (world.getEntitiesOfClass(ServerPlayer.class, new AABB(centerX - 150, centerY - 150, centerZ - 150, centerX + 150, centerY + 150, centerZ + 150)).isEmpty())
 			return;
 		for (int i = 0; i < count; i++) {
 			double angle = world.random.nextDouble() * twoPI;
@@ -206,8 +207,7 @@ public class MalevolentShrineTickProcedure {
 				b = 0.1f + world.random.nextFloat() * 0.15f;
 			}
 			SpawnDomainSlashPacket packet = new SpawnDomainSlashPacket(slashX, slashY, slashZ, randomDir.x, randomDir.y, randomDir.z, length, width, style, roll, seed, r, g, b, 12, domainUUID);
-			for (ServerPlayer player : nearbyPlayers)
-				DomainSlashNetworkHandler.sendToPlayer(player, packet);
+			DomainSlashNetworkHandler.sendToNearby(world, centerX, centerY, centerZ, 150.0, packet);
 		}
 	}
 

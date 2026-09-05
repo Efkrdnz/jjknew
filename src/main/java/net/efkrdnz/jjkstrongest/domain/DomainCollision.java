@@ -84,48 +84,6 @@ public final class DomainCollision {
 	}
 
 	private static Vec3 clampAgainst(Entity entity, Vec3 movement, DomainSphere sphere, DomainShell shell) {
-		Vec3 pos = entity.position();
-		double half = entity.getBbWidth() * 0.5;
-		Vec3 out = movement;
-		Vec3 next = pos.add(out);
-
-		// A cell driven to zero is a hole, and a hole is a way through. This is the whole
-		// payoff of tracking integrity per direction rather than as one number.
-		if (shell != null) {
-			Vec3 outward = next.subtract(sphere.center());
-			if (shell.isOpenTowards(outward.x, outward.y, outward.z))
-				return out;
-		}
-
-		if (sphere.contains(pos.x, pos.y, pos.z)) {
-			// Inside: keep them off the floor plane and inside the dome.
-			if (next.y < sphere.floorY()) {
-				out = new Vec3(out.x, sphere.floorY() - pos.y, out.z);
-				next = pos.add(out);
-			}
-			double limit = Math.max(0.25, sphere.radius() - half);
-			Vec3 rel = next.subtract(sphere.center());
-			double dist = rel.length();
-			if (dist > limit && dist > EPSILON) {
-				Vec3 normal = rel.scale(1.0 / dist);
-				double outward = out.dot(normal);
-				if (outward > 0.0)
-					out = out.subtract(normal.scale(outward));
-			}
-		} else {
-			// Outside: the shell is solid from this side too, so a domain is a sealed
-			// room rather than a bag you can only leave. Below the floor plane the
-			// terrain is untouched, so ordinary block collision already covers it.
-			double limit = sphere.radius() + half;
-			Vec3 rel = next.subtract(sphere.center());
-			double dist = rel.length();
-			if (dist < limit && dist > EPSILON && next.y >= sphere.floorY()) {
-				Vec3 normal = rel.scale(1.0 / dist);
-				double inward = out.dot(normal);
-				if (inward < 0.0)
-					out = out.subtract(normal.scale(inward));
-			}
-		}
-		return out;
+		return sphere.clampMovement(entity.position(), entity.getBbWidth() * 0.5, movement, shell);
 	}
 }

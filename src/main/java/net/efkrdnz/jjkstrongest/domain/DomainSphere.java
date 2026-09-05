@@ -51,6 +51,65 @@ public record DomainSphere(Vec3 center, double radius, double floorY, DomainPhas
 		return center.y + radius;
 	}
 
+	/**
+	 * Clamps a movement so it cannot cross this shell.
+	 *
+	 * <p>Lives here rather than in {@link DomainCollision} because it is sphere geometry
+	 * and nothing else — no entity, no level, no registry. That keeps it reachable from
+	 * {@code tools/geometry-harness}, which matters: this is the most behaviourally
+	 * load-bearing maths in the engine and the environment cannot build the mod to test it
+	 * any other way.
+	 *
+	 * @param pos       the mover's current position
+	 * @param halfWidth half its bounding-box width
+	 * @param movement  the movement already resolved against blocks
+	 * @param shell     per-direction integrity, or null when the barrier is unbroken
+	 */
+	public Vec3 clampMovement(Vec3 pos, double halfWidth, Vec3 movement, DomainShell shell) {
+		final double epsilon = 1.0E-4;
+		Vec3 out = movement;
+		Vec3 next = pos.add(out);
+
+		// A cell driven to zero is a hole, and a hole is a way through. This is the whole
+		// payoff of tracking integrity per direction rather than as one number.
+		if (shell != null) {
+			Vec3 outward = next.subtract(center);
+			if (shell.isOpenTowards(outward.x, outward.y, outward.z))
+				return out;
+		}
+
+		if (contains(pos.x, pos.y, pos.z)) {
+			// Inside: keep them off the floor plane and inside the dome.
+			if (next.y < floorY) {
+				out = new Vec3(out.x, floorY - pos.y, out.z);
+				next = pos.add(out);
+			}
+			double limit = Math.max(0.25, radius - halfWidth);
+			Vec3 rel = next.subtract(center);
+			double dist = rel.length();
+			if (dist > limit && dist > epsilon) {
+				Vec3 normal = rel.scale(1.0 / dist);
+				double outward = out.dot(normal);
+				if (outward > 0.0)
+					out = out.subtract(normal.scale(outward));
+			}
+		} else {
+			// Outside: the shell is solid from this side too, so a domain is a sealed room
+			// rather than a bag you can only leave. Below the floor plane the terrain is
+			// untouched, so ordinary block collision already covers it.
+			double limit = radius + halfWidth;
+			Vec3 rel = next.subtract(center);
+			double dist = rel.length();
+			if (dist < limit && dist > epsilon && next.y >= floorY) {
+				Vec3 normal = rel.scale(1.0 / dist);
+				double inward = out.dot(normal);
+				if (inward < 0.0)
+					out = out.subtract(normal.scale(inward));
+			}
+		}
+		return out;
+	}
+
 	public boolean isUsable() {
 		return radius > 0.0;
 	}

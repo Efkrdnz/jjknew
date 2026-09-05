@@ -1,6 +1,7 @@
 package net.efkrdnz.jjkstrongest.procedures;
 
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.bus.api.Event;
 import net.neoforged.neoforge.client.event.ViewportEvent;
@@ -42,7 +43,7 @@ public class InformationOverloadFogColorProcedure {
 		}
 	}
 
-	@SubscribeEvent
+	@SubscribeEvent(priority = EventPriority.LOW)
 	public static void computeFogColor(ViewportEvent.ComputeFogColor event) {
 		provider = event;
 		ClientLevel level = Minecraft.getInstance().level;
@@ -61,7 +62,9 @@ public class InformationOverloadFogColorProcedure {
 		if (entity == null)
 			return;
 		if (entity instanceof LivingEntity _livEnt0 && _livEnt0.hasEffect(JjkStrongestModMobEffects.INFORMATION_OVERLOAD)) {
-			setColor(1, 255 << 24 | 0 << 16 | 0 << 8 | 0);
+			// Was pure black. The void's own near-black instead, so the haze reads as the
+			// domain closing in rather than as the world being switched off.
+			setColor(1, 255 << 24 | 2 << 16 | 3 << 8 | 9);
 		}
 	}
 }

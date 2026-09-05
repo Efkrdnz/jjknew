@@ -11,9 +11,14 @@ public class DomainSlashNetworkHandler {
 		PacketDistributor.sendToPlayer(player, packet);
 	}
 
-	// helper to send to all nearby players
-	public static void sendToNearby(ServerPlayer player, double x, double y, double z, double radius, SpawnDomainSlashPacket packet) {
-		if (player.level() instanceof ServerLevel level)
-			PacketDistributor.sendToPlayersNear(level, null, x, y, z, radius, packet);
+	/**
+	 * One broadcast for everyone in range, instead of one packet per player.
+	 *
+	 * <p>The shrine emits sixty to eighty slashes a tick and used to send each of them
+	 * separately to each watching player — with four people nearby that is over three
+	 * hundred packets a tick for a purely visual effect.
+	 */
+	public static void sendToNearby(ServerLevel level, double x, double y, double z, double radius, SpawnDomainSlashPacket packet) {
+		PacketDistributor.sendToPlayersNear(level, null, x, y, z, radius, packet);
 	}
 }

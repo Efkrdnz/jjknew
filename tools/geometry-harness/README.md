@@ -43,3 +43,7 @@ shaders, networking or rendering — those need a real build.
   landed, in roughly the intended number of hits, with the shell otherwise healthy
 - `DomainIntersect` handles the containment case a 100-block field over a 30-block dome
   actually produces
+- `DomainSphere.clampMovement` — walking into the shell from inside and from outside,
+  sliding along it rather than sticking, the floor plane holding you up without blocking you
+  going up, walking out through a breach while the far side stays sealed, and the invariant
+  that a clamp never lengthens a movement, over 20k random cases

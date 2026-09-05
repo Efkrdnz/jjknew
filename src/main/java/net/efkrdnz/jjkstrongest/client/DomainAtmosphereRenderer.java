@@ -1,6 +1,7 @@
 package net.efkrdnz.jjkstrongest.client;
 
 import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ViewportEvent;
@@ -38,8 +39,15 @@ public final class DomainAtmosphereRenderer {
 		return DomainRegistry.sphereAt(mc.level, player.getX(), player.getEyeY(), player.getZ());
 	}
 
-	/** Pulls the fog in to the shell so the outside world is not visible past it. */
-	@SubscribeEvent
+	/**
+	 * Pulls the fog in to the shell so the outside world is not visible past it.
+	 *
+	 * <p>Runs early on purpose. Three handlers in this mod write these same two events —
+	 * this one and Information Overload's pair — and none of them used to declare a
+	 * priority, so which one won inside a domain was undefined. The domain establishes the
+	 * base atmosphere; Information Overload composites over it afterwards.
+	 */
+	@SubscribeEvent(priority = EventPriority.HIGH)
 	public static void onRenderFog(ViewportEvent.RenderFog event) {
 		if (event.getMode() != FogRenderer.FogMode.FOG_TERRAIN)
 			return;
@@ -56,7 +64,7 @@ public final class DomainAtmosphereRenderer {
 	}
 
 	/** Tints the fog toward the void's own palette instead of the overworld sky. */
-	@SubscribeEvent
+	@SubscribeEvent(priority = EventPriority.HIGH)
 	public static void onComputeFogColor(ViewportEvent.ComputeFogColor event) {
 		if (sphereAroundCamera() == null)
 			return;

@@ -104,6 +104,58 @@ public class GeomTest {
         check("...and not on the far side",
               !punched.isOpenTowards(-spot.x, -spot.y, -spot.z), "opposite side also open");
 
+        System.out.println("\nDomainSphere.clampMovement");
+        DomainSphere room = new DomainSphere(new Vec3(0,0,0), 30.0, -1.0, DomainPhase.ACTIVE, 1f);
+        double half = 0.3; // player half-width
+
+        // walking straight at the wall from inside: the outward component goes, the rest stays
+        Vec3 atWall = room.clampMovement(new Vec3(29.5,0,0), half, new Vec3(1,0,0), null);
+        check("inside, into the wall: outward motion removed", near(atWall.x, 0, 1e-6), "x=" + atWall.x);
+
+        // running along the wall must still slide, not stick
+        Vec3 along = room.clampMovement(new Vec3(29.5,0,0), half, new Vec3(0.4,0,0.4), null);
+        check("inside, along the wall: tangential motion kept", along.z > 0.35, "z=" + along.z);
+        check("inside, along the wall: still inside afterwards",
+              new Vec3(29.5,0,0).add(along).length() <= 30.0 + 1e-6,
+              "|p|=" + new Vec3(29.5,0,0).add(along).length());
+
+        // free movement in open space is untouched
+        Vec3 free = room.clampMovement(new Vec3(0,0,0), half, new Vec3(0.5,0,0.2), null);
+        check("inside, well clear: movement untouched", near(free.x,0.5,1e-9) && near(free.z,0.2,1e-9), "got " + free);
+
+        // the floor plane holds you up
+        Vec3 falling = room.clampMovement(new Vec3(0,-1.0,0), half, new Vec3(0,-0.5,0), null);
+        check("floor plane stops a fall", near(-1.0 + falling.y, -1.0, 1e-9), "y=" + falling.y);
+
+        // and it does not stop you rising
+        Vec3 rising = room.clampMovement(new Vec3(0,-1.0,0), half, new Vec3(0,0.5,0), null);
+        check("floor plane does not block going up", near(rising.y, 0.5, 1e-9), "y=" + rising.y);
+
+        // from outside the shell is solid too
+        Vec3 barging = room.clampMovement(new Vec3(30.5,0,0), half, new Vec3(-1,0,0), null);
+        check("outside, into the wall: inward motion removed", near(barging.x, 0, 1e-6), "x=" + barging.x);
+
+        // a breach is a way through, from either side
+        DomainShell holed = new DomainShell();
+        Vec3 through = new Vec3(1,0,0);
+        for (int i = 0; i < 60 && !holed.isOpenTowards(through.x, through.y, through.z); i++)
+            holed.applyStrike(through, 26.0f, 2);
+        check("a hole can actually be opened", holed.isOpenTowards(1,0,0), "still sealed");
+        Vec3 escaping = room.clampMovement(new Vec3(29.5,0,0), half, new Vec3(1,0,0), holed);
+        check("breach lets you out", near(escaping.x, 1.0, 1e-9), "x=" + escaping.x);
+        Vec3 blockedElsewhere = room.clampMovement(new Vec3(-29.5,0,0), half, new Vec3(-1,0,0), holed);
+        check("the far side is still sealed", near(blockedElsewhere.x, 0, 1e-6), "x=" + blockedElsewhere.x);
+
+        // no clamp should ever lengthen a move
+        Random r2 = new Random(7L);
+        boolean grew = false;
+        for (int i = 0; i < 20000; i++) {
+            Vec3 p = new Vec3(r2.nextDouble()*80-40, r2.nextDouble()*80-40, r2.nextDouble()*80-40);
+            Vec3 mv = new Vec3(r2.nextDouble()-0.5, r2.nextDouble()-0.5, r2.nextDouble()-0.5);
+            if (room.clampMovement(p, half, mv, null).length() > mv.length() + 1e-9) grew = true;
+        }
+        check("a clamp never lengthens a move (20k random)", !grew, "some clamp grew the vector");
+
         System.out.println("\nDomainIntersect");
         DomainSphere uv = new DomainSphere(new Vec3(0,0,0), 30, -1000, DomainPhase.ACTIVE, 1f);
         DomainSphere shrineNear = DomainSphere.openField(new Vec3(20,0,0), 100);
