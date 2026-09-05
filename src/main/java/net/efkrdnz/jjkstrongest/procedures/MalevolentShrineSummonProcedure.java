@@ -12,16 +12,26 @@ import net.efkrdnz.jjkstrongest.entity.MalevolentShrineEntity;
 public class MalevolentShrineSummonProcedure {
 	// spawn malevolent shrine domain 4 blocks behind player
 	public static void execute(Level world, Entity player) {
-		if (world == null || player == null || world.isClientSide())
+		if (world == null || player == null)
 			return;
 		// get player facing direction
 		double yaw = Math.toRadians(player.getYRot() + 180);
 		double offsetX = -Math.sin(yaw) * 4.0;
 		double offsetZ = Math.cos(yaw) * 4.0;
 		// spawn position 4 blocks behind player
-		double spawnX = player.getX() + offsetX;
-		double spawnY = player.getY();
-		double spawnZ = player.getZ() + offsetZ;
+		execute(world, player, player.getX() + offsetX, player.getY(), player.getZ() + offsetZ);
+	}
+
+	/**
+	 * Summons at a chosen point rather than behind the caster.
+	 *
+	 * <p>The shrine's own placement is derived from the owner's yaw, which is right when a
+	 * sorcerer opens one around themselves and useless when something wants one put
+	 * somewhere specific — a rival spawned across the field to clash with, most of all.
+	 */
+	public static void execute(Level world, Entity player, double spawnX, double spawnY, double spawnZ) {
+		if (world == null || player == null || world.isClientSide())
+			return;
 		// spawn domain entity
 		if (world instanceof ServerLevel serverLevel) {
 			MalevolentShrineEntity domain = JjkStrongestModEntities.MALEVOLENT_SHRINE.get().spawn(serverLevel, BlockPos.containing(spawnX, spawnY, spawnZ), MobSpawnType.MOB_SUMMONED);

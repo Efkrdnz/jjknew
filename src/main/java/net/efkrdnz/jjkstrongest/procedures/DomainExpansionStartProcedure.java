@@ -23,6 +23,16 @@ public class DomainExpansionStartProcedure {
 	private static final int DURATION_TICKS = DEFINITION.durationTicks();
 
 	public static void execute(LevelAccessor world, double x, double y, double z, Entity caster, int domainType) {
+		execute(world, x, y, z, caster, domainType, true);
+	}
+
+	/**
+	 * @param gather whether to drag everything nearby onto the floor and put the caster on
+	 *               it too. A domain someone cast around themselves wants that; one spawned
+	 *               at a distance to be looked at does not — it would yank whoever asked for
+	 *               it across the map.
+	 */
+	public static void execute(LevelAccessor world, double x, double y, double z, Entity caster, int domainType, boolean gather) {
 		if (!(world instanceof ServerLevel serverLevel) || caster == null)
 			return;
 
@@ -49,8 +59,10 @@ public class DomainExpansionStartProcedure {
 		if (!serverLevel.addFreshEntity(domain))
 			return;
 
-		captureEntities(serverLevel, x, y, z);
-		caster.teleportTo(caster.getX(), y, caster.getZ());
+		if (gather) {
+			captureEntities(serverLevel, x, y, z);
+			caster.teleportTo(caster.getX(), y, caster.getZ());
+		}
 	}
 
 	/**
