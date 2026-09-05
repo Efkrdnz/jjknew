@@ -38,8 +38,11 @@ import java.util.Random;
 @EventBusSubscriber(modid = "jjk_strongest", value = Dist.CLIENT)
 public final class DomainInteriorParticles {
 
-	/** Emit on every Nth tick. With the lifetime below this settles at ~160 live motes. */
-	private static final int EMIT_INTERVAL = 2;
+	/**
+	 * Emit on every Nth tick. With the lifetime below this settles at ~100 live motes,
+	 * thinned from ~160 now the volume has a black hole in the middle of it to look at.
+	 */
+	private static final int EMIT_INTERVAL = 3;
 	/** Motes per emitting tick. The hard cap on this effect, before any settings scaling. */
 	private static final int MOTES_PER_EMIT = 2;
 	private static final int LIFETIME_MIN = 120;

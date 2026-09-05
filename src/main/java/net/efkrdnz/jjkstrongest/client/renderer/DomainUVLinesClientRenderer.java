@@ -34,6 +34,8 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 public class DomainUVLinesClientRenderer {
 	private static final Random random = new Random();
 	private static final ResourceLocation LINE_TEXTURE = ResourceLocation.parse("jjk_strongest:textures/entities/lightning_bolt.png");
+	/** Half the old count. The beat is a burst, not a blizzard. */
+	private static final int RAY_COUNT = 48;
 	private static final float OUTER_WIDTH = 0.045f;
 	private static final float INNER_WIDTH = 0.018f;
 	private static final RenderType LINE_RENDER_TYPE = RenderType.create("domain_uv_lines", DefaultVertexFormat.NEW_ENTITY, VertexFormat.Mode.QUADS, 256, false, true,
@@ -79,11 +81,22 @@ public class DomainUVLinesClientRenderer {
 		bufferSource.endBatch(LINE_RENDER_TYPE);
 	}
 
+	/**
+	 * The burst that writes the domain into the world, at the settling flash.
+	 *
+	 * <p>What this replaces was 140 rays whose colour was {@code random.nextInt(3)} between
+	 * red, purple and pink — the exact opposite of a monochrome interior — seeded from
+	 * {@code seed + domain.tickCount}, so the entire set reshuffled twenty times a second.
+	 * That reads as television static, not as an event.
+	 *
+	 * <p>Now: half as many rays, seeded from the domain's UUID and nothing else, so each
+	 * ray is a fixed line in space for the whole beat. What changes is their length, driven
+	 * off the phase with an ease-out, so the burst throws outward and retracts. Bone-white
+	 * core, cold blue glow — the same two colours as everything else in here.
+	 */
 	private static void renderDomainLines(DomainUVEntity domain, PoseStack poseStack, MultiBufferSource bufferSource, float partialTick, Vec3 cameraPos) {
-		// renders rays for the domain's settling phase
 		float progress = domain.getPhaseProgress();
 		float alpha = 1.0f;
-		// small fade in/out
 		if (progress < 0.15f)
 			alpha *= (progress / 0.15f);
 		if (progress > 0.85f)
@@ -94,42 +107,26 @@ public class DomainUVLinesClientRenderer {
 		poseStack.pushPose();
 		poseStack.translate(domain.getX(), domain.getY(), domain.getZ());
 		long seed = domain.getUUID().getMostSignificantBits() ^ domain.getUUID().getLeastSignificantBits();
-		random.setSeed(seed + domain.tickCount);
-		int rays = 140;
-		float length = Math.max(4.0f, domain.getShellRadius() * 1.2f);
-		for (int i = 0; i < rays; i++) {
+		// Seeded once per draw from the domain alone. The tick count deliberately does not
+		// go in here: that is what made every ray a different ray every frame.
+		random.setSeed(seed);
+		// Throw out fast, ease to a stop, then draw back in over the tail of the phase.
+		float eased = 1.0f - (1.0f - Math.min(1.0f, progress / 0.6f)) * (1.0f - Math.min(1.0f, progress / 0.6f));
+		float retract = progress > 0.8f ? 1.0f - (progress - 0.8f) / 0.2f : 1.0f;
+		float reach = Math.max(4.0f, domain.getShellRadius() * 1.2f) * eased * retract;
+		if (reach <= 0.05f) {
+			poseStack.popPose();
+			return;
+		}
+		for (int i = 0; i < RAY_COUNT; i++) {
 			Vec3 dir = randomUnitDirection(random);
+			// A little variety in length, fixed per ray because the seed is fixed.
+			float scale = 0.55f + random.nextFloat() * 0.45f;
 			Vec3 start = dir.scale(1.2);
-			Vec3 end = dir.scale(length);
-			int mode = random.nextInt(3);
-			float r1, g1, b1;
-			float r2, g2, b2;
-			if (mode == 0) { // red
-				r1 = 1.0f;
-				g1 = 0.05f;
-				b1 = 0.05f;
-				r2 = 1.0f;
-				g2 = 0.0f;
-				b2 = 0.0f;
-			} else if (mode == 1) { // purple
-				r1 = 0.75f;
-				g1 = 0.0f;
-				b1 = 1.0f;
-				r2 = 0.55f;
-				g2 = 0.0f;
-				b2 = 0.95f;
-			} else { // pink
-				r1 = 1.0f;
-				g1 = 0.2f;
-				b1 = 0.9f;
-				r2 = 0.9f;
-				g2 = 0.05f;
-				b2 = 0.75f;
-			}
-			// outer glow
-			renderBillboardQuadColor(poseStack, buffer, start, end, OUTER_WIDTH, r1 * 0.2f, g1 * 0.2f, b1 * 0.2f, r2 * 0.2f, g2 * 0.2f, b2 * 0.2f, alpha * 0.75f, cameraPos, domain.position());
-			// inner core
-			renderBillboardQuadColor(poseStack, buffer, start, end, INNER_WIDTH, r1, g1, b1, r2, g2, b2, alpha, cameraPos, domain.position());
+			Vec3 end = dir.scale(Math.max(1.4f, reach * scale));
+			// Cold blue glow around a bone-white core: the shell's palette, not a third one.
+			renderBillboardQuadColor(poseStack, buffer, start, end, OUTER_WIDTH, 0.22f, 0.30f, 0.52f, 0.10f, 0.16f, 0.34f, alpha * 0.65f, cameraPos, domain.position());
+			renderBillboardQuadColor(poseStack, buffer, start, end, INNER_WIDTH, 0.92f, 0.94f, 0.98f, 0.62f, 0.72f, 0.92f, alpha, cameraPos, domain.position());
 		}
 		poseStack.popPose();
 	}

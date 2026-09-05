@@ -62,6 +62,11 @@ public class BlueDustParticle extends TextureSheetParticle {
 		this.angularVelocity = spin;
 		this.angularAcceleration = spin * 0.01f;
 		this.quadSize = size;
+		// Bone-white with a cold cast rather than the saturated blue it is made of. The
+		// interior carries its structure in ink and bone and lets colour mean depth; a
+		// field of blue specks floating in front of that fights it. setColor is protected
+		// on Particle, so this has to happen here rather than at the call site.
+		this.setColor(0.88f, 0.91f, 0.98f);
 	}
 
 	@Override
