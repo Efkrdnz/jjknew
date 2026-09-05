@@ -18,8 +18,11 @@ import net.minecraft.core.particles.ParticleTypes;
 
 import net.efkrdnz.jjkstrongest.network.SpawnDomainSlashPacket;
 import net.efkrdnz.jjkstrongest.network.DomainSlashNetworkHandler;
+import net.efkrdnz.jjkstrongest.domain.DomainOcclusion;
+import net.efkrdnz.jjkstrongest.domain.DomainShell;
 import net.efkrdnz.jjkstrongest.domain.DomainSphere;
 import net.efkrdnz.jjkstrongest.entity.DomainUVEntity;
+import net.efkrdnz.jjkstrongest.entity.MalevolentShrineEntity;
 
 import java.util.UUID;
 import java.util.List;
@@ -28,12 +31,15 @@ public class MalevolentShrineTickProcedure {
 	private static final int MAX_LIFETIME = 600;
 	private static final int ABSOLUTE_MAX_LIFETIME = 1200;
 	private static final int STARTUP_DELAY = 40;
-	private static final double RADIUS = 100.0;
+	// Single source of truth for the shrine's reach, shared with its DomainSource volume.
+	private static final double RADIUS = MalevolentShrineEntity.FIELD_RADIUS;
 	private static final double RADIUS_SQ = RADIUS * RADIUS;
 	private static final int DAMAGE_INTERVAL = 4;
 	private static final int OWNER_CHECK_INTERVAL = 20;
 	private static final int BASE_SLASH_COUNT = 60;
 	private static final int SLASH_VARIANCE = 20;
+	/** What one slash stopped by a barrier costs that barrier. Small — pressure does the real work. */
+	private static final float IMPACT_DAMAGE = 0.35f;
 
 	public static void execute(Level world, double x, double y, double z, Entity domainEntity) {
 		if (world == null || domainEntity == null || world.isClientSide())
@@ -78,10 +84,10 @@ public class MalevolentShrineTickProcedure {
 		}
 		// slashes always fire — but filtered to exclude inside UV during clash
 		int slashCount = BASE_SLASH_COUNT + world.random.nextInt(SLASH_VARIANCE);
-		spawnSlashesViaPackets((ServerLevel) world, owner, x, y, z, slashCount, domainEntity.getStringUUID(), isClashing);
+		spawnSlashesViaPackets((ServerLevel) world, owner, x, y, z, slashCount, domainEntity, isClashing);
 		// damage every 4 ticks — also filtered during clash
 		if (lifetimeTicks % DAMAGE_INTERVAL == 0) {
-			damageEntitiesOptimized(world, owner, x, y, z, isClashing);
+			damageEntitiesOptimized(world, owner, x, y, z, isClashing, domainEntity);
 		}
 	}
 
@@ -135,7 +141,7 @@ public class MalevolentShrineTickProcedure {
 		}
 		int graceTicks = data.getInt("clashLostTicks") + 1;
 		data.putInt("clashLostTicks", graceTicks);
-		if (graceTicks < 40) {
+		if (graceTicks < DomainClashManagerProcedure.CLASH_END_GRACE_TICKS) {
 			return true;
 		}
 		data.putBoolean("isClashing", false);
@@ -145,11 +151,16 @@ public class MalevolentShrineTickProcedure {
 		return false;
 	}
 
-	private static void spawnSlashesViaPackets(ServerLevel world, Entity owner, double centerX, double centerY, double centerZ, int count, String domainUUID, boolean isClashing) {
+	private static void spawnSlashesViaPackets(ServerLevel world, Entity owner, double centerX, double centerY, double centerZ, int count, Entity domainEntity, boolean isClashing) {
+		String domainUUID = domainEntity.getStringUUID();
 		// Resolved once per tick. This used to be a fresh 300-block entity scan for
 		// every one of the sixty-odd slash candidates, i.e. up to eighty world scans
 		// a tick; now the inner loop is pure arithmetic.
-		DomainSphere rivalSphere = isClashing ? DomainClashManagerProcedure.rivalVoidSphere(world) : null;
+		// Not gated on the clash flag: a closed barrier stops what an open domain throws at
+		// it because it is a barrier, not because the two are formally locked together.
+		DomainUVEntity rival = DomainClashManagerProcedure.rivalVoid(world, domainEntity);
+		DomainSphere rivalSphere = rival != null ? rival.volume() : null;
+		DomainShell rivalShell = rival != null ? rival.shell() : null;
 		double radiusSq = RADIUS * RADIUS;
 		double twoPI = Math.PI * 2;
 		List<ServerPlayer> nearbyPlayers = world.getEntitiesOfClass(ServerPlayer.class, new AABB(centerX - 150, centerY - 150, centerZ - 150, centerX + 150, centerY + 150, centerZ + 150));
@@ -166,15 +177,25 @@ public class MalevolentShrineTickProcedure {
 			double slashX = centerX + offsetX;
 			double slashY = centerY + offsetY;
 			double slashZ = centerZ + offsetZ;
-			// during clash skip slash positions that are inside UV barrier
-			if (rivalSphere != null && rivalSphere.contains(slashX, slashY, slashZ))
-				continue;
 			Vec3 randomDir = new Vec3(world.random.nextDouble() - 0.5, world.random.nextDouble() - 0.5, world.random.nextDouble() - 0.5).normalize();
 			int styleRoll = world.random.nextInt(100);
 			int style = styleRoll < 30 ? 0 : 1;
 			float length = 25.0f + world.random.nextFloat() * 10.0f;
 			float width = 1.5f + world.random.nextFloat() * 1.5f;
 			float roll = world.random.nextFloat() * 6.2831853f;
+			// A rival barrier stops the slash at its surface rather than letting it cut
+			// through. What the barrier absorbs, it pays for in integrity.
+			if (rivalSphere != null) {
+				DomainOcclusion.Clip clip = DomainOcclusion.clip(new Vec3(slashX, slashY, slashZ), randomDir, roll, length, rivalSphere);
+				if (clip.impact() != null && rivalShell != null)
+					rivalShell.applyImpact(clip.impact().subtract(rivalSphere.center()), IMPACT_DAMAGE);
+				if (clip.blocked())
+					continue;
+				slashX = clip.position().x;
+				slashY = clip.position().y;
+				slashZ = clip.position().z;
+				length = (float) clip.length();
+			}
 			float seed = world.random.nextFloat() * 1000.0f;
 			float r, g, b;
 			if (style == 0) {
@@ -190,10 +211,16 @@ public class MalevolentShrineTickProcedure {
 		}
 	}
 
-	private static void damageEntitiesOptimized(Level world, Entity owner, double centerX, double centerY, double centerZ, boolean isClashing) {
+	private static void damageEntitiesOptimized(Level world, Entity owner, double centerX, double centerY, double centerZ, boolean isClashing, Entity domainEntity) {
 		if (world == null || owner == null)
 			return;
-		DomainSphere rivalSphere = isClashing && world instanceof ServerLevel srv ? DomainClashManagerProcedure.rivalVoidSphere(srv) : null;
+		DomainUVEntity rival = isClashing && world instanceof ServerLevel srv ? DomainClashManagerProcedure.rivalVoid(srv, domainEntity) : null;
+		DomainSphere rivalSphere = rival != null ? rival.volume() : null;
+		// A holed barrier is no longer cover. Rather than raycast every target against
+		// every breach, protection simply fades as the shell fails — which is also how it
+		// reads: the domain stops shielding you because it is coming apart.
+		DomainShell rivalShell = rival != null ? rival.shell() : null;
+		float shelter = rivalShell == null ? 1.0f : Math.max(0.0f, Math.min(1.0f, rivalShell.totalIntegrity() * 1.25f));
 		AABB boundingBox = new AABB(centerX - RADIUS, centerY - RADIUS, centerZ - RADIUS, centerX + RADIUS, centerY + RADIUS, centerZ + RADIUS);
 		List<Entity> entities = world.getEntitiesOfClass(Entity.class, boundingBox, e -> e instanceof LivingEntity && e != owner && !e.isPassengerOfSameVehicle(owner));
 		double radiusSq = RADIUS * RADIUS;

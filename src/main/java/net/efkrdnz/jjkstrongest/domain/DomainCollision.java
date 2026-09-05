@@ -70,7 +70,7 @@ public final class DomainCollision {
 			// centre point and then let them go.
 			if (!sphere.phase().isSealed())
 				continue;
-			result = clampAgainst(entity, result, sphere);
+			result = clampAgainst(entity, result, sphere, domain.shell());
 		}
 		return result;
 	}
@@ -83,11 +83,19 @@ public final class DomainCollision {
 		return entity.getType().is(TECHNIQUE);
 	}
 
-	private static Vec3 clampAgainst(Entity entity, Vec3 movement, DomainSphere sphere) {
+	private static Vec3 clampAgainst(Entity entity, Vec3 movement, DomainSphere sphere, DomainShell shell) {
 		Vec3 pos = entity.position();
 		double half = entity.getBbWidth() * 0.5;
 		Vec3 out = movement;
 		Vec3 next = pos.add(out);
+
+		// A cell driven to zero is a hole, and a hole is a way through. This is the whole
+		// payoff of tracking integrity per direction rather than as one number.
+		if (shell != null) {
+			Vec3 outward = next.subtract(sphere.center());
+			if (shell.isOpenTowards(outward.x, outward.y, outward.z))
+				return out;
+		}
 
 		if (sphere.contains(pos.x, pos.y, pos.z)) {
 			// Inside: keep them off the floor plane and inside the dome.

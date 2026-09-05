@@ -18,6 +18,14 @@ import net.minecraft.world.phys.Vec3;
  */
 public record DomainSphere(Vec3 center, double radius, double floorY, DomainPhase phase, float progress) {
 
+	/**
+	 * The reach of an open domain: a plain ball with no floor cut, since an open domain
+	 * has no interior to stand in — it just covers a volume.
+	 */
+	public static DomainSphere openField(Vec3 center, double radius) {
+		return new DomainSphere(center, radius, Double.NEGATIVE_INFINITY, DomainPhase.ACTIVE, 1.0f);
+	}
+
 	public boolean contains(double x, double y, double z) {
 		if (y < floorY)
 			return false;

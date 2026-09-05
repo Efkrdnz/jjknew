@@ -12,8 +12,11 @@ import net.minecraft.world.phys.Vec3;
 
 import net.efkrdnz.jjkstrongest.domain.DomainCarve;
 import net.efkrdnz.jjkstrongest.domain.DomainPhase;
+import net.efkrdnz.jjkstrongest.domain.DomainShell;
 import net.efkrdnz.jjkstrongest.domain.DomainSphere;
 import net.efkrdnz.jjkstrongest.entity.DomainUVEntity;
+import net.efkrdnz.jjkstrongest.network.DomainShellSyncPacket;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.UUID;
 
@@ -34,6 +37,8 @@ public class DomainUVEntityTickProcedure {
 	private static final int SETTLE_TICKS = 40;
 	/** Ticks spent shrinking while the terrain goes back. */
 	private static final int COLLAPSE_TICKS = 20;
+	/** Grace between a barrier being holed and the domain giving out. */
+	private static final int DESTABILISE_TICKS = 80;
 
 	public static void execute(LevelAccessor world, Entity entity) {
 		if (!(entity instanceof DomainUVEntity domain) || !(world instanceof ServerLevel level))
@@ -71,6 +76,11 @@ public class DomainUVEntityTickProcedure {
 				return;
 			// detectAndRunClash can lose the clash outright, which asks for a collapse
 			phase = domain.getPhase();
+		}
+
+		if (phase.isSealed() && !tickShell(domain, data)) {
+			beginCollapse(domain);
+			phase = DomainPhase.COLLAPSING;
 		}
 
 		switch (phase) {
@@ -150,6 +160,45 @@ public class DomainUVEntityTickProcedure {
 			}
 		}
 		data.remove("storedBlocks");
+	}
+
+	/**
+	 * Runs the barrier: heals what nothing is pressing on, and decides whether it still
+	 * stands.
+	 *
+	 * <p>Two ways to lose it, from the same grid. Even pressure from a rival open domain
+	 * runs every cell down together, so the shell reaches zero as a piece and shatters.
+	 * A concentrated attack drives one patch to zero first, and that hole is what kills
+	 * the domain — after a short grace, so a breach reads as the beginning of the end
+	 * rather than an instant loss.
+	 *
+	 * @return false once the barrier has given out
+	 */
+	private static boolean tickShell(DomainUVEntity domain, CompoundTag data) {
+		DomainShell shell = domain.shell();
+		if (shell == null)
+			return true;
+		shell.tickRegen();
+		domain.setShellIntegrity(shell.totalIntegrity());
+		// Five times a second, and only when something has actually changed. Next to the
+		// eighty slash packets a shrine already sends each player per tick, this is noise.
+		if (shell.isDirty() && domain.tickCount % 4 == 0) {
+			PacketDistributor.sendToPlayersTrackingEntity(domain, new DomainShellSyncPacket(domain.getId(), shell.version(), shell.snapshot()));
+			shell.markSynced();
+		}
+
+		if (shell.isShattered() || shell.totalIntegrity() <= 0.0f)
+			return false;
+
+		if (shell.hasBreach()) {
+			int left = data.contains("destabiliseTicks") ? data.getInt("destabiliseTicks") : DESTABILISE_TICKS;
+			// more holes, less time
+			left -= Math.max(1, shell.breachCount());
+			data.putInt("destabiliseTicks", left);
+			return left > 0;
+		}
+		data.remove("destabiliseTicks");
+		return true;
 	}
 
 	/** Puts the domain into its shutdown phase. Safe to call more than once. */

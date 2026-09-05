@@ -437,6 +437,15 @@ public class JjkShaderManager {
 	 *                  you stand; with it, walking across the domain parallaxes.
 	 */
 	public static boolean beginVoidBrushEffect(float timeSeconds, float brushSeed, float intensity, float radius, float progress, float phase, float camX, float camY, float camZ) {
+		return beginVoidBrushEffect(timeSeconds, brushSeed, intensity, radius, progress, phase, camX, camY, camZ, 1.0f, -1);
+	}
+
+	/**
+	 * @param integrity    how much of the barrier is left overall, 0..1
+	 * @param shellTexture GL id of the per-direction damage grid, or -1 if none yet
+	 */
+	public static boolean beginVoidBrushEffect(float timeSeconds, float brushSeed, float intensity, float radius, float progress, float phase, float camX, float camY, float camZ, float integrity,
+			int shellTexture) {
 		if (VOID_BRUSH_SHADER == null)
 			return false;
 		setUniformIfExistsVoidBrush("Time", timeSeconds);
@@ -446,6 +455,16 @@ public class JjkShaderManager {
 		setUniformIfExistsVoidBrush("Progress", progress);
 		setUniformIfExistsVoidBrush("Phase", phase);
 		setUniformIfExistsVoidBrush("CamOffset", camX, camY, camZ);
+		setUniformIfExistsVoidBrush("Integrity", integrity);
+		// Without a grid the sampler reads black, which would mean "totally destroyed" —
+		// the exact opposite of the truth. Flag it so the shader ignores the sampler.
+		setUniformIfExistsVoidBrush("HasShell", shellTexture >= 0 ? 1.0f : 0.0f);
+		if (shellTexture >= 0) {
+			try {
+				VOID_BRUSH_SHADER.setSampler("ShellSampler", shellTexture);
+			} catch (Exception ignored) {
+			}
+		}
 		return true;
 	}
 

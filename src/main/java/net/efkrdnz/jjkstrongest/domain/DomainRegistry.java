@@ -148,9 +148,8 @@ public final class DomainRegistry {
 	/**
 	 * Whether a point sits inside any Unlimited Void barrier.
 	 *
-	 * <p>Replaces two hand-rolled copies of this test that each did their own
-	 * world scan — {@code DomainClashManagerProcedure.isPosInsideUV} and
-	 * {@code ShrineScreenshakeProcedure.isPlayerInsideUV}.
+	 * <p>Replaces two hand-rolled copies of this test that each did their own world scan,
+	 * one of them re-running for every slash candidate the shrine considered.
 	 */
 	public static boolean isInside(Level level, double x, double y, double z) {
 		return sphereAt(level, x, y, z) != null;

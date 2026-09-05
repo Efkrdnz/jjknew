@@ -24,9 +24,12 @@ import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 
+import net.efkrdnz.jjkstrongest.domain.DomainBarrierKind;
+import net.efkrdnz.jjkstrongest.domain.DomainSource;
+import net.efkrdnz.jjkstrongest.domain.DomainSphere;
 import net.efkrdnz.jjkstrongest.init.JjkStrongestModEntities;
 
-public class MalevolentShrineEntity extends PathfinderMob {
+public class MalevolentShrineEntity extends PathfinderMob implements DomainSource {
 
 	// Clash state has to reach the client for the versus HUD to draw; persistent
 	// data never leaves the server.
@@ -46,6 +49,20 @@ public class MalevolentShrineEntity extends PathfinderMob {
 		super.defineSynchedData(builder);
 		builder.define(CLASH_HP, 100.0f);
 		builder.define(CLASHING, false);
+	}
+
+	/** How far the shrine's slashes and damage reach. Matches its tick procedure's radius. */
+	public static final double FIELD_RADIUS = 100.0;
+
+	@Override
+	public DomainSphere volume() {
+		return DomainSphere.openField(this.position(), FIELD_RADIUS);
+	}
+
+	@Override
+	public DomainBarrierKind barrierKind() {
+		// No shell: the shrine covers ground, it does not enclose it.
+		return DomainBarrierKind.OPEN;
 	}
 
 	public float getClashHP() {

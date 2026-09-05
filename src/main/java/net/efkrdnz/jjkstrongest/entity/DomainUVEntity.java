@@ -29,12 +29,15 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 
+import net.efkrdnz.jjkstrongest.domain.DomainBarrierKind;
 import net.efkrdnz.jjkstrongest.domain.DomainPhase;
+import net.efkrdnz.jjkstrongest.domain.DomainShell;
+import net.efkrdnz.jjkstrongest.domain.DomainSource;
 import net.efkrdnz.jjkstrongest.domain.DomainSphere;
 import net.efkrdnz.jjkstrongest.procedures.DomainUVEntityTickProcedure;
 import net.efkrdnz.jjkstrongest.init.JjkStrongestModEntities;
 
-public class DomainUVEntity extends PathfinderMob {
+public class DomainUVEntity extends PathfinderMob implements DomainSource {
 
 	// The shape of the domain, sent to clients by vanilla's entity tracker. Before
 	// this the numbers lived only in server-side persistent data, so every client
@@ -48,6 +51,12 @@ public class DomainUVEntity extends PathfinderMob {
 	private static final EntityDataAccessor<Integer> SHELL_SEED = SynchedEntityData.defineId(DomainUVEntity.class, EntityDataSerializers.INT);
 	private static final EntityDataAccessor<Float> CLASH_HP = SynchedEntityData.defineId(DomainUVEntity.class, EntityDataSerializers.FLOAT);
 	private static final EntityDataAccessor<Boolean> CLASHING = SynchedEntityData.defineId(DomainUVEntity.class, EntityDataSerializers.BOOLEAN);
+	// How much of the barrier is left, 0..1. Drives the HUD and the shader's crack density
+	// even before the per-cell grid arrives.
+	private static final EntityDataAccessor<Float> SHELL_INTEGRITY = SynchedEntityData.defineId(DomainUVEntity.class, EntityDataSerializers.FLOAT);
+	private static final EntityDataAccessor<Integer> BREACHES = SynchedEntityData.defineId(DomainUVEntity.class, EntityDataSerializers.INT);
+
+	private DomainShell shell;
 
 	public static final float DEFAULT_RADIUS = 30.0f;
 	public static final float DEFAULT_FLOOR_OFFSET = -1.0f;
@@ -72,6 +81,8 @@ public class DomainUVEntity extends PathfinderMob {
 		builder.define(SHELL_SEED, 0);
 		builder.define(CLASH_HP, 100.0f);
 		builder.define(CLASHING, false);
+		builder.define(SHELL_INTEGRITY, 1.0f);
+		builder.define(BREACHES, 0);
 	}
 
 	/**
@@ -80,6 +91,31 @@ public class DomainUVEntity extends PathfinderMob {
 	 */
 	public DomainSphere sphere() {
 		return new DomainSphere(this.position(), getShellRadius(), this.getY() + getFloorOffset(), getPhase(), getPhaseProgress());
+	}
+
+	@Override
+	public DomainSphere volume() {
+		return sphere();
+	}
+
+	@Override
+	public DomainBarrierKind barrierKind() {
+		return DomainBarrierKind.CLOSED;
+	}
+
+	/**
+	 * The shell's per-direction integrity.
+	 *
+	 * <p>Both sides carry one. The server drives it; the client's copy is filled from
+	 * {@code DomainShellSyncPacket} and has to exist because collision consults it — a
+	 * client that did not know where the holes were would refuse to walk through one the
+	 * server is happy to let it through.
+	 */
+	@Override
+	public DomainShell shell() {
+		if (this.shell == null)
+			this.shell = new DomainShell();
+		return this.shell;
 	}
 
 	public float getShellRadius() {
@@ -145,6 +181,23 @@ public class DomainUVEntity extends PathfinderMob {
 	public void setClashing(boolean clashing) {
 		if (this.entityData.get(CLASHING) != clashing)
 			this.entityData.set(CLASHING, clashing);
+	}
+
+	public float getShellIntegrity() {
+		return this.entityData.get(SHELL_INTEGRITY);
+	}
+
+	/** Written once a tick from the shell; only sent when it actually moves. */
+	public void setShellIntegrity(float integrity) {
+		if (Math.abs(this.entityData.get(SHELL_INTEGRITY) - integrity) > 0.002f)
+			this.entityData.set(SHELL_INTEGRITY, integrity);
+		int breaches = this.shell == null ? 0 : this.shell.breachCount();
+		if (this.entityData.get(BREACHES) != breaches)
+			this.entityData.set(BREACHES, breaches);
+	}
+
+	public int getBreachCount() {
+		return this.entityData.get(BREACHES);
 	}
 
 
@@ -217,6 +270,8 @@ public class DomainUVEntity extends PathfinderMob {
 		compound.putFloat("floorOffset", getFloorOffset());
 		compound.putInt("shellSeed", getShellSeed());
 		compound.putFloat("clashHP", getClashHP());
+		if (this.shell != null)
+			compound.put("shell", this.shell.save());
 	}
 
 	@Override
@@ -236,6 +291,11 @@ public class DomainUVEntity extends PathfinderMob {
 			setShellSeed(compound.getInt("shellSeed"));
 		if (compound.contains("clashHP"))
 			setClashHP(compound.getFloat("clashHP"));
+		if (compound.contains("shell")) {
+			DomainShell restored = new DomainShell();
+			restored.load(compound.getCompound("shell"));
+			this.shell = restored;
+		}
 	}
 
 	@Override

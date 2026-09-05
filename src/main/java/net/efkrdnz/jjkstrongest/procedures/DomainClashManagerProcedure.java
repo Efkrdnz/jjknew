@@ -7,19 +7,25 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.nbt.CompoundTag;
 
 import net.efkrdnz.jjkstrongest.domain.DomainRegistry;
+import net.efkrdnz.jjkstrongest.domain.DomainShell;
 import net.efkrdnz.jjkstrongest.domain.DomainSphere;
 import net.efkrdnz.jjkstrongest.entity.MalevolentShrineEntity;
 import net.efkrdnz.jjkstrongest.entity.DomainUVEntity;
 
+import java.util.UUID;
+
 public class DomainClashManagerProcedure {
-	// uv loses hp in 15s = 300 ticks → 100hp / 300 = 0.333/tick
-	private static final float UV_DRAIN_PER_TICK = 100f / 300f;
-	// shrine breaks after 20 melee hits → 5hp per hit
-	public static final float SHRINE_HP_PER_HIT = 5f;
+	/**
+	 * What an open domain's presence costs a closed barrier each tick, spread evenly over
+	 * the whole surface. Tuned so a shrine left unopposed shatters a full shell in about
+	 * twenty-two seconds — a Void now has to be defended, not merely cast.
+	 */
+	private static final float PRESSURE_PER_TICK = DomainShell.FULL / 440f;
 	private static final float MAX_CLASH_HP = 100f;
-	private static final double CLASH_DETECT_RADIUS = 130.0;
+	/** Damage the shrine's caster can absorb before they lose their grip on the domain. */
+	public static final float SHRINE_HOLD_POOL = 60f;
 	// ticks with no rival detected before clash is considered truly over
-	private static final int CLASH_END_GRACE_TICKS = 40;
+	public static final int CLASH_END_GRACE_TICKS = 40;
 
 	public static void execute(LevelAccessor world, Entity uvEntity, Entity shrineEntity) {
 		if (world == null || uvEntity == null || shrineEntity == null)
@@ -28,11 +34,9 @@ public class DomainClashManagerProcedure {
 			return;
 		CompoundTag uvData = uvEntity.getPersistentData();
 		CompoundTag shrineData = shrineEntity.getPersistentData();
-		// init clash hp only on first contact — never reset mid-clash
-		if (!uvData.contains("uvClashHP"))
-			uvData.putFloat("uvClashHP", MAX_CLASH_HP);
+		// The shrine's hold on its own domain is set once, on first contact.
 		if (!shrineData.contains("shrineClashHP"))
-			shrineData.putFloat("shrineClashHP", MAX_CLASH_HP);
+			shrineData.putFloat("shrineClashHP", SHRINE_HOLD_POOL);
 		// mark both as clashing and reset grace counter
 		uvData.putBoolean("isClashing", true);
 		shrineData.putBoolean("isClashing", true);
@@ -43,23 +47,29 @@ public class DomainClashManagerProcedure {
 		// store rival uuids
 		uvData.putString("rivalUUID", shrineEntity.getStringUUID());
 		shrineData.putString("rivalUUID", uvEntity.getStringUUID());
-		// drain uv hp passively every tick
-		float uvHP = uvData.getFloat("uvClashHP") - UV_DRAIN_PER_TICK;
-		uvData.putFloat("uvClashHP", uvHP);
-		// mirror onto synced data — the clash HUD reads this on the client, where
-		// persistent data has always been empty
-		if (uvEntity instanceof DomainUVEntity uv)
+		// The Void's clash health IS its barrier. An open domain has no surface of its own,
+		// so all it can do is lean on the closed one — evenly, from every side at once,
+		// which is why the shell gives way as a piece rather than holing somewhere.
+		float uvHP = MAX_CLASH_HP;
+		if (uvEntity instanceof DomainUVEntity uv) {
+			DomainShell shell = uv.shell();
+			if (shell != null) {
+				shell.applyPressure(PRESSURE_PER_TICK);
+				uvHP = shell.totalIntegrity() * MAX_CLASH_HP;
+			}
+			// mirror onto synced data — the clash HUD reads this on the client, where
+			// persistent data has always been empty
 			uv.setClashHP(Math.max(0f, uvHP));
-		// check uv collapse
+		}
 		if (uvHP <= 0f) {
 			collapseUV(world, uvEntity);
 			endClashWinner(shrineEntity);
 			return;
 		}
-		// check shrine collapse (hp drained by melee hits in DomainClashMeleeHitProcedure)
+		// The shrine has no barrier to break, so it holds only as long as its caster does.
 		float shrineHP = shrineData.getFloat("shrineClashHP");
 		if (shrineEntity instanceof MalevolentShrineEntity shrine)
-			shrine.setClashHP(Math.max(0f, shrineHP));
+			shrine.setClashHP(Math.max(0f, shrineHP / SHRINE_HOLD_POOL * MAX_CLASH_HP));
 		if (shrineHP <= 0f) {
 			collapseShrine(shrineEntity);
 			endClashWinner(uvEntity);
@@ -97,42 +107,53 @@ public class DomainClashManagerProcedure {
 		return false;
 	}
 
-	// check if a position is inside UV's barrier — used by the shrine to filter targets
-	public static boolean isPosInsideUV(ServerLevel level, double px, double py, double pz) {
-		return DomainRegistry.isInside(level, px, py, pz);
+	/**
+	 * The shrine is beaten through its caster: every point of damage they take is hold the
+	 * domain no longer has. Replaces a flat count of twenty melee hits, which cared how
+	 * often the caster was hit and not at all how hard.
+	 */
+	public static void onShrineOwnerHurt(ServerLevel level, Entity victim, float amount) {
+		if (victim == null || amount <= 0f)
+			return;
+		MalevolentShrineEntity shrine = DomainRegistry.shrineByOwner(level, victim.getStringUUID());
+		if (shrine == null)
+			return;
+		CompoundTag data = shrine.getPersistentData();
+		float hp = (data.contains("shrineClashHP") ? data.getFloat("shrineClashHP") : SHRINE_HOLD_POOL) - amount;
+		data.putFloat("shrineClashHP", hp);
+		shrine.setClashHP(Math.max(0f, hp / SHRINE_HOLD_POOL * MAX_CLASH_HP));
+		if (hp <= 0f)
+			data.putInt("domainLifetimeTicks", 600);
 	}
 
 	/**
-	 * The rival domain's sphere, resolved once so a caller looping over many candidate
-	 * points does not repeat the lookup for each one.
+	 * The Void this domain is actually locked with.
+	 *
+	 * <p>Resolved from the recorded {@code rivalUUID} rather than by taking the first live
+	 * Void in the level — with two domains open, the old behaviour could shield people
+	 * inside one of them from a shrine that was fighting the other.
 	 */
-	public static DomainSphere rivalVoidSphere(ServerLevel level) {
+	public static DomainUVEntity rivalVoid(ServerLevel level, Entity domainEntity) {
+		String rivalUUID = domainEntity.getPersistentData().getString("rivalUUID");
+		if (!rivalUUID.isEmpty()) {
+			try {
+				if (level.getEntity(UUID.fromString(rivalUUID)) instanceof DomainUVEntity uv && uv.isAlive())
+					return uv;
+			} catch (IllegalArgumentException malformedUUID) {
+				// fall through to the scan below
+			}
+		}
 		for (DomainUVEntity uv : DomainRegistry.voidsIn(level)) {
-			if (!uv.isAlive())
-				continue;
-			DomainSphere sphere = uv.sphere();
-			if (sphere.isUsable())
-				return sphere;
+			if (uv.isAlive() && uv.volume().isUsable())
+				return uv;
 		}
 		return null;
 	}
 
-	// drain shrine hp from a melee hit — called by DomainClashMeleeHitProcedure
-	public static void onMeleeHitShrineOwner(ServerLevel level, Entity attacker, Entity victim) {
-		if (attacker == null || victim == null)
-			return;
-		DomainUVEntity uvEntity = findUVByOwner(level, attacker.getStringUUID());
-		if (uvEntity == null)
-			return;
-		if (!uvEntity.getPersistentData().getBoolean("isClashing"))
-			return;
-		MalevolentShrineEntity shrine = findShrineByOwner(level, victim.getStringUUID());
-		if (shrine == null)
-			return;
-		if (!shrine.getPersistentData().getBoolean("isClashing"))
-			return;
-		float shrineHP = shrine.getPersistentData().getFloat("shrineClashHP") - SHRINE_HP_PER_HIT;
-		shrine.getPersistentData().putFloat("shrineClashHP", shrineHP);
+	/** Convenience for callers that only need the shape. */
+	public static DomainSphere rivalVoidSphere(ServerLevel level, Entity domainEntity) {
+		DomainUVEntity rival = rivalVoid(level, domainEntity);
+		return rival != null ? rival.volume() : null;
 	}
 
 	public static DomainUVEntity findUVByOwner(ServerLevel level, String ownerUUID) {
@@ -148,7 +169,6 @@ public class DomainClashManagerProcedure {
 	private static void collapseUV(LevelAccessor world, Entity uvEntity) {
 		uvEntity.getPersistentData().putInt("duration", 0);
 		uvEntity.getPersistentData().putBoolean("isClashing", false);
-		uvEntity.getPersistentData().remove("uvClashHP");
 		setSyncedClashing(uvEntity, false);
 		if (uvEntity instanceof DomainUVEntity uv)
 			DomainUVEntityTickProcedure.beginCollapse(uv);
@@ -179,7 +199,6 @@ public class DomainClashManagerProcedure {
 		setSyncedClashing(domainEntity, false);
 		data.putInt("clashLostTicks", 0);
 		data.remove("rivalUUID");
-		data.remove("uvClashHP");
 		data.remove("shrineClashHP");
 	}
 
