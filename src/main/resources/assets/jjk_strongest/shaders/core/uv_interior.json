@@ -1,0 +1,35 @@
+{
+  "blend": {
+    "func": "add",
+    "srcrgb": "srcalpha",
+    "dstrgb": "1-srcalpha"
+  },
+  "vertex": "jjk_strongest:uv_interior",
+  "fragment": "jjk_strongest:uv_interior",
+  "attributes": [
+    "Position",
+    "UV0"
+  ],
+  "samplers": [
+    { "name": "ShellSampler" }
+  ],
+  "uniforms": [
+    { "name": "ModelViewMat", "type": "matrix4x4", "count": 16, "values": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },
+    { "name": "ProjMat", "type": "matrix4x4", "count": 16, "values": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },
+    { "name": "Time", "type": "float", "count": 1, "values": [ 0.0 ] },
+    { "name": "BrushSeed", "type": "float", "count": 1, "values": [ 1.0 ] },
+    { "name": "Intensity", "type": "float", "count": 1, "values": [ 1.0 ] },
+    { "name": "Radius", "type": "float", "count": 1, "values": [ 30.0 ] },
+    { "name": "Progress", "type": "float", "count": 1, "values": [ 1.0 ] },
+    { "name": "Phase", "type": "float", "count": 1, "values": [ 2.0 ] },
+    { "name": "CamOffset", "type": "float", "count": 3, "values": [ 0.0, 0.0, 0.0 ] },
+    { "name": "Integrity", "type": "float", "count": 1, "values": [ 1.0 ] },
+    { "name": "HasShell", "type": "float", "count": 1, "values": [ 0.0 ] },
+    { "name": "FloorY", "type": "float", "count": 1, "values": [ -1.0 ] },
+    { "name": "Inside", "type": "float", "count": 1, "values": [ 0.0 ] },
+    { "name": "BhDir", "type": "float", "count": 3, "values": [ 0.0, 1.0, 0.0 ] },
+    { "name": "BhAng", "type": "float", "count": 2, "values": [ 0.1, 20.0 ] },
+    { "name": "BhAxis", "type": "float", "count": 3, "values": [ 0.0, 1.0, 0.0 ] },
+    { "name": "DiscStrength", "type": "float", "count": 1, "values": [ 1.0 ] }
+  ]
+}

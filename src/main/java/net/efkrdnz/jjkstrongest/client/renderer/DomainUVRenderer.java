@@ -20,34 +20,38 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 
 /**
- * Draws the domain interior.
+ * Draws Unlimited Void: one shader, on one mesh, in one draw.
  *
- * <p>Three things changed here, and they are the reason the sphere now reads as a
- * place rather than an effect:
+ * <p>This used to be four world-space passes — the shell, a camera-facing black-hole
+ * billboard at 0.9R, a flat star-shaped disc hanging at 0.6R, and fourteen brush-stroke
+ * quads. From inside a sphere there is exactly one shell fragment per pixel, so each of
+ * those extra passes was another near-fullscreen layer on top of it. The black hole is
+ * part of the interior shader's view ray now, which also makes it a real point in the
+ * world: it parallaxes as you walk, cannot clip through the shell, and cannot show you its
+ * own back face — three bugs the billboard had, all structurally impossible now. The rift
+ * disc is gone entirely; it was a different technique's iconography.
  *
- * <ul>
- * <li>The radius comes from the entity's synced shape, so what you see is exactly
- *     what you collide with. It used to be a hard-coded 25.2 against a 30-block
- *     barrier and a 28.5-block dome.</li>
- * <li>Depth testing is left on. Every draw here used to be wrapped in
- *     {@code disableDepthTest()} + {@code depthMask(false)}, so the interior painted
- *     over everything and entity visibility inside came down to render order.</li>
- * <li>The mesh is built once. It used to be rebuilt every frame, per domain —
- *     2560 sine and cosine calls a frame for a shape that never changes.</li>
- * </ul>
+ * <p>What is left is the shell mesh and, when you are inside it, the ink cards.
  */
 public class DomainUVRenderer extends MobRenderer<DomainUVEntity, Modelblank_entity<DomainUVEntity>> {
 
-	private static final int LAT_SEGMENTS = 24;
-	private static final int LON_SEGMENTS = 48;
 	/**
-	 * Hard cap on the brush strokes drifting inside the shell. Fourteen fills the volume
-	 * without any one of them being unavoidable, and it is 56 vertices a frame — nothing
-	 * against the sphere's 4608.
+	 * 32 x 64. The fragment stage reconstructs its view ray from {@code localPos}, which is
+	 * interpolated linearly across flat triangles — at 24 x 48 each quad spans about seven
+	 * degrees, and that faceting is visible both in the noise and on the silhouette of a
+	 * near-black sphere against the sky.
 	 */
-	private static final int RIBBON_COUNT = 14;
+	private static final int LAT_SEGMENTS = 32;
+	private static final int LON_SEGMENTS = 64;
 	/** Unit sphere, wound inward, as (x, y, z, u, v) per vertex. */
 	private static final float[] UNIT_SPHERE = buildUnitSphere();
+
+	/** Ink splatter cards drifting in the volume. Hard cap; they are real geometry. */
+	private static final int INK_COUNT = 20;
+
+	/** Black hole placement, as fractions of the radius: centred, lifted into the dome. */
+	private static final double BH_HEIGHT = 0.35;
+	private static final double BH_RADIUS = 0.10;
 
 	public DomainUVRenderer(EntityRendererProvider.Context context) {
 		super(context, new Modelblank_entity(context.bakeLayer(Modelblank_entity.LAYER_LOCATION)), 0f);
@@ -68,96 +72,77 @@ public class DomainUVRenderer extends MobRenderer<DomainUVEntity, Modelblank_ent
 		if (radius <= 0.01f)
 			return;
 
-		renderShell(entity, radius, partialTick, poseStack, bufferSource);
-		// The inner flourishes only belong to a domain that has finished opening.
-		if (entity.getPhase() == DomainPhase.ACTIVE || entity.getPhase() == DomainPhase.SETTLING) {
-			renderRift(entity, radius, partialTick, poseStack, bufferSource);
-			renderBlackHole(entity, radius, partialTick, poseStack, bufferSource);
-			renderRibbons(entity, radius, partialTick, poseStack, bufferSource);
-		}
+		Vec3 camOffset = this.entityRenderDispatcher.camera.getPosition().subtract(entity.getPosition(partialTick));
+		boolean inside = camOffset.lengthSqr() < (radius * radius);
+
+		renderInterior(entity, radius, partialTick, camOffset, inside, poseStack, bufferSource);
+		if (inside && (entity.getPhase() == DomainPhase.ACTIVE || entity.getPhase() == DomainPhase.SETTLING))
+			renderInk(entity, radius, partialTick, poseStack, bufferSource);
 	}
 
-	private void renderShell(DomainUVEntity entity, float radius, float partialTick, PoseStack poseStack, MultiBufferSource bufferSource) {
-		if (JjkShaderManager.VOID_BRUSH_RENDER_TYPE == null)
+	private void renderInterior(DomainUVEntity entity, float radius, float partialTick, Vec3 camOffset, boolean inside, PoseStack poseStack, MultiBufferSource bufferSource) {
+		if (JjkShaderManager.UV_INTERIOR_RENDER_TYPE == null)
 			return;
 
 		float timeSeconds = (entity.tickCount + partialTick) / 20.0f;
-		Vec3 camera = this.entityRenderDispatcher.camera.getPosition();
-		Vec3 center = entity.getPosition(partialTick);
-		Vec3 camOffset = camera.subtract(center);
-
 		int shellTexture = DomainShellTexture.upload(entity.shell());
-		if (!JjkShaderManager.beginVoidBrushEffect(timeSeconds, entity.getShellSeed() * 0.001f + 1.0f, 0.9f, radius, entity.getPhaseProgress(), entity.getPhase().ordinal(), (float) camOffset.x,
-				(float) camOffset.y, (float) camOffset.z, entity.getShellIntegrity(), shellTexture))
+
+		// The hole sits on the sphere's axis. Its direction and apparent size are worked
+		// out here rather than per fragment: it costs a normalize and a length once instead
+		// of once per pixel, and it means the placement can be tuned without touching GLSL.
+		Vec3 hole = new Vec3(0.0, radius * BH_HEIGHT, 0.0);
+		Vec3 toHole = hole.subtract(camOffset);
+		double holeDistance = Math.max(0.001, toHole.length());
+		Vec3 holeDir = toHole.scale(1.0 / holeDistance);
+		double holeWorldRadius = radius * BH_RADIUS;
+		float holeAngle = (float) Math.atan2(holeWorldRadius, holeDistance);
+		// The disc plane precesses, so the domain never looks like a still image.
+		double spin = timeSeconds * 0.05;
+		Vec3 axis = new Vec3(Math.sin(spin) * 0.35, 1.0, Math.cos(spin) * 0.35).normalize();
+
+		if (!JjkShaderManager.beginUvInterior(timeSeconds, entity.getShellSeed() * 0.001f + 1.0f, 0.9f, radius, entity.getPhaseProgress(), entity.getPhase().ordinal(), (float) camOffset.x,
+				(float) camOffset.y, (float) camOffset.z, entity.getFloorOffset(), inside, (float) holeDir.x, (float) holeDir.y, (float) holeDir.z, holeAngle, (float) holeDistance, (float) axis.x,
+				(float) axis.y, (float) axis.z, 1.0f, entity.getShellIntegrity(), shellTexture))
 			return;
 
 		poseStack.pushPose();
 		poseStack.scale(radius, radius, radius);
 
-		VertexConsumer vc = bufferSource.getBuffer(JjkShaderManager.VOID_BRUSH_RENDER_TYPE);
+		VertexConsumer vc = bufferSource.getBuffer(JjkShaderManager.UV_INTERIOR_RENDER_TYPE);
 		Matrix4f matrix = poseStack.last().pose();
 		for (int i = 0; i < UNIT_SPHERE.length; i += 5)
 			vc.addVertex(matrix, UNIT_SPHERE[i], UNIT_SPHERE[i + 1], UNIT_SPHERE[i + 2]).setUv(UNIT_SPHERE[i + 3], UNIT_SPHERE[i + 4]);
 
 		poseStack.popPose();
 		if (bufferSource instanceof MultiBufferSource.BufferSource bs)
-			bs.endBatch(JjkShaderManager.VOID_BRUSH_RENDER_TYPE);
-	}
-
-	private void renderBlackHole(DomainUVEntity entity, float radius, float partialTick, PoseStack poseStack, MultiBufferSource bufferSource) {
-		if (JjkShaderManager.VOID_BLACKHOLE_RENDER_TYPE == null)
-			return;
-		float timeSeconds = (entity.tickCount + partialTick) / 20.0f;
-		if (!JjkShaderManager.beginVoidBlackholeEffect(timeSeconds, 1.0f))
-			return;
-		poseStack.pushPose();
-		// Centred on the sphere's axis and lifted into the dome. It used to sit 0.6R due
-		// east — a hard-coded translate(18, 7, 0) from the 30-block era, converted to
-		// fractions but never re-centred.
-		poseStack.translate(0.0, radius * 0.35, 0.0);
-		// cameraOrientation() carries the 180° the hand-rolled yaw/pitch pair was missing,
-		// and the pitch sign the camera actually uses; without it this drew its own
-		// mirrored back face, visible only because the render type has culling off.
-		poseStack.mulPose(this.entityRenderDispatcher.cameraOrientation());
-		// The quad's half-extent is 0.5, so this is a world radius of 0.45R — a feature
-		// inside the shell rather than the 1.2R disc that used to clip straight through it.
-		poseStack.scale(radius * 0.9f, radius * 0.9f, radius * 0.9f);
-		renderCircularQuad(poseStack, bufferSource, JjkShaderManager.VOID_BLACKHOLE_RENDER_TYPE);
-		poseStack.popPose();
-		if (bufferSource instanceof MultiBufferSource.BufferSource bs)
-			bs.endBatch(JjkShaderManager.VOID_BLACKHOLE_RENDER_TYPE);
+			bs.endBatch(JjkShaderManager.UV_INTERIOR_RENDER_TYPE);
 	}
 
 	/**
-	 * Brush strokes lifted off the wall and into the volume.
+	 * Ink splatter suspended in the volume.
 	 *
-	 * <p>The shell paints "information shards" onto its own surface, which from inside
-	 * reads as wallpaper — the strokes sit at the same depth however you move. These are
-	 * the same idea as real geometry: a fixed set of camera-facing quads scattered through
-	 * the sphere, so they pass between you and the wall as you walk.
+	 * <p>These are geometry rather than another shader layer for one reason: they have to
+	 * pass in front of and behind the people in the room. Nothing painted onto the shell
+	 * surface can do that, however much parallax you fake into it.
 	 *
-	 * <p>All of them go out in one draw call. The stroke index rides in the V channel
+	 * <p>All twenty go out in one draw call. The card index rides in the V channel
 	 * ({@code v = id + sv * 0.5}) rather than in a uniform, so the shader can vary every
-	 * stroke without the renderer having to flush a batch per stroke.
+	 * card without the renderer flushing a batch per card.
 	 */
-	private void renderRibbons(DomainUVEntity entity, float radius, float partialTick, PoseStack poseStack, MultiBufferSource bufferSource) {
-		if (JjkShaderManager.VOID_RIBBON_RENDER_TYPE == null)
-			return;
-		// Nothing to see from outside — the shell's near face writes depth over all of it —
-		// so do not pay for the draw at all.
-		Vec3 camOffset = this.entityRenderDispatcher.camera.getPosition().subtract(entity.getPosition(partialTick));
-		if (camOffset.lengthSqr() > (radius * 1.05) * (radius * 1.05))
+	private void renderInk(DomainUVEntity entity, float radius, float partialTick, PoseStack poseStack, MultiBufferSource bufferSource) {
+		if (JjkShaderManager.UV_INK_RENDER_TYPE == null)
 			return;
 		float timeSeconds = (entity.tickCount + partialTick) / 20.0f;
 		int seed = entity.getShellSeed();
-		// Held back while the shell is still settling so the strokes arrive after the walls.
-		float alpha = entity.getPhase() == DomainPhase.SETTLING ? 0.85f * entity.getPhaseProgress() : 0.85f;
+		// Held back while the shell settles, so the volume fills after the walls arrive.
+		float alpha = entity.getPhase() == DomainPhase.SETTLING ? 0.9f * entity.getPhaseProgress() : 0.9f;
 		if (alpha <= 0.01f)
 			return;
-		if (!JjkShaderManager.beginVoidRibbonEffect(timeSeconds, seed * 0.001f + 1.0f, alpha, radius * 2.0f))
+		if (!JjkShaderManager.beginUvInk(timeSeconds, seed * 0.001f + 1.0f, alpha, radius * 2.0f))
 			return;
-		VertexConsumer vc = bufferSource.getBuffer(JjkShaderManager.VOID_RIBBON_RENDER_TYPE);
-		for (int i = 0; i < RIBBON_COUNT; i++) {
+
+		VertexConsumer vc = bufferSource.getBuffer(JjkShaderManager.UV_INK_RENDER_TYPE);
+		for (int i = 0; i < INK_COUNT; i++) {
 			float h1 = hash(seed, i, 0);
 			float h2 = hash(seed, i, 1);
 			float h3 = hash(seed, i, 2);
@@ -165,58 +150,42 @@ public class DomainUVRenderer extends MobRenderer<DomainUVEntity, Modelblank_ent
 			float h5 = hash(seed, i, 4);
 			float h6 = hash(seed, i, 5);
 
-			// Uniform on the sphere of directions, then pulled inward so no stroke ever
+			// Uniform on the sphere of directions, then pulled well inside so no card ever
 			// reaches the wall it is supposed to be floating in front of.
-			double azimuth = h1 * Math.PI * 2.0 + timeSeconds * (0.010 + h6 * 0.020);
+			double azimuth = h1 * Math.PI * 2.0 + timeSeconds * (0.008 + h6 * 0.016);
 			double polar = Math.acos(1.0 - 2.0 * h2);
-			double dist = radius * (0.22 + 0.58 * h3);
+			double dist = radius * (0.20 + 0.55 * h3);
 			double sinPolar = Math.sin(polar);
-			double bob = Math.sin(timeSeconds * (0.15 + h6 * 0.20) + i) * radius * 0.06;
+			double bob = Math.sin(timeSeconds * (0.12 + h6 * 0.18) + i) * radius * 0.05;
 
-			float length = radius * (0.20f + 0.30f * h4);
-			float width = length * (0.10f + 0.10f * h5);
+			// Mostly small, a few large. A field of identically-sized blots reads as a
+			// pattern; the spread is what makes it read as depth.
+			float size = radius * (h4 < 0.8f ? 0.05f + 0.07f * h4 : 0.16f + 0.10f * h4);
 
 			poseStack.pushPose();
 			poseStack.translate(dist * sinPolar * Math.cos(azimuth), dist * Math.cos(polar) + bob, dist * sinPolar * Math.sin(azimuth));
 			poseStack.mulPose(this.entityRenderDispatcher.cameraOrientation());
-			poseStack.mulPose(Axis.ZP.rotationDegrees(h5 * 360.0f + timeSeconds * (h6 - 0.5f) * 6.0f));
+			poseStack.mulPose(Axis.ZP.rotationDegrees(h5 * 360.0f + timeSeconds * (h6 - 0.5f) * 4.0f));
 
 			Matrix4f m = poseStack.last().pose();
-			float hx = length * 0.5f;
-			float hy = width * 0.5f;
+			float half = size * 0.5f;
 			float v0 = i;
 			float v1 = i + 0.5f;
-			vc.addVertex(m, -hx, -hy, 0.0f).setUv(0.0f, v0);
-			vc.addVertex(m, -hx, hy, 0.0f).setUv(0.0f, v1);
-			vc.addVertex(m, hx, hy, 0.0f).setUv(1.0f, v1);
-			vc.addVertex(m, hx, -hy, 0.0f).setUv(1.0f, v0);
+			vc.addVertex(m, -half, -half, 0.0f).setUv(0.0f, v0);
+			vc.addVertex(m, -half, half, 0.0f).setUv(0.0f, v1);
+			vc.addVertex(m, half, half, 0.0f).setUv(1.0f, v1);
+			vc.addVertex(m, half, -half, 0.0f).setUv(1.0f, v0);
 			poseStack.popPose();
 		}
 		if (bufferSource instanceof MultiBufferSource.BufferSource bs)
-			bs.endBatch(JjkShaderManager.VOID_RIBBON_RENDER_TYPE);
+			bs.endBatch(JjkShaderManager.UV_INK_RENDER_TYPE);
 	}
 
-	/** Stable per-domain, per-stroke noise, so the strokes do not reshuffle every frame. */
+	/** Stable per-domain, per-card noise, so the cards do not reshuffle every frame. */
 	private static float hash(int seed, int index, int channel) {
 		int h = seed * 374761393 + index * 668265263 + channel * 1442695041;
 		h = (h ^ (h >>> 13)) * 1274126177;
 		return ((h ^ (h >>> 16)) & 0x7fffffff) / (float) 0x7fffffff;
-	}
-
-	private void renderRift(DomainUVEntity entity, float radius, float partialTick, PoseStack poseStack, MultiBufferSource bufferSource) {
-		if (JjkShaderManager.VOID_RIFT_RENDER_TYPE == null)
-			return;
-		float timeSeconds = (entity.tickCount + partialTick) / 20.0f;
-		if (!JjkShaderManager.beginVoidRiftEffect(timeSeconds, 1.0f))
-			return;
-		poseStack.pushPose();
-		poseStack.translate(0.0, radius * 0.6, 0.0);
-		poseStack.mulPose(Axis.XP.rotationDegrees(90.0f));
-		poseStack.scale(radius * 1.45f, radius * 1.45f, radius * 1.45f);
-		renderCircularQuad(poseStack, bufferSource, JjkShaderManager.VOID_RIFT_RENDER_TYPE);
-		poseStack.popPose();
-		if (bufferSource instanceof MultiBufferSource.BufferSource bs)
-			bs.endBatch(JjkShaderManager.VOID_RIFT_RENDER_TYPE);
 	}
 
 	/** Inward-wound unit sphere, generated once at class load. */
@@ -230,6 +199,8 @@ public class DomainUVRenderer extends MobRenderer<DomainUVEntity, Modelblank_ent
 				float phi1 = (lon / (float) LON_SEGMENTS) * 2.0f * (float) Math.PI;
 				float phi2 = ((lon + 1) / (float) LON_SEGMENTS) * 2.0f * (float) Math.PI;
 
+				// u and v are fractions of the segment counts, so the mapping the damage
+				// grid is keyed on is unchanged by the resolution bump.
 				float u1 = lon / (float) LON_SEGMENTS;
 				float u2 = (lon + 1) / (float) LON_SEGMENTS;
 				float v1 = lat / (float) LAT_SEGMENTS;
@@ -252,25 +223,6 @@ public class DomainUVRenderer extends MobRenderer<DomainUVEntity, Modelblank_ent
 		data[i++] = u;
 		data[i++] = v;
 		return i;
-	}
-
-	private void renderCircularQuad(PoseStack poseStack, MultiBufferSource bufferSource, net.minecraft.client.renderer.RenderType renderType) {
-		VertexConsumer vc = bufferSource.getBuffer(renderType);
-		Matrix4f m = poseStack.last().pose();
-		int segments = 32;
-		float angleStep = (float) (2 * Math.PI / segments);
-		for (int i = 0; i < segments; i++) {
-			float angle1 = i * angleStep;
-			float angle2 = (i + 1) * angleStep;
-			float x1 = (float) Math.cos(angle1) * 0.5f;
-			float y1 = (float) Math.sin(angle1) * 0.5f;
-			float x2 = (float) Math.cos(angle2) * 0.5f;
-			float y2 = (float) Math.sin(angle2) * 0.5f;
-			vc.addVertex(m, 0, 0, 0).setUv(0.5f, 0.5f);
-			vc.addVertex(m, x1, y1, 0).setUv(x1 + 0.5f, y1 + 0.5f);
-			vc.addVertex(m, x2, y2, 0).setUv(x2 + 0.5f, y2 + 0.5f);
-			vc.addVertex(m, 0, 0, 0).setUv(0.5f, 0.5f);
-		}
 	}
 
 	@Override

@@ -42,16 +42,12 @@ public class JjkShaderManager {
 	public static RenderType FLAME_ARROW_EXPLOSION_RENDER_TYPE;
 	public static ShaderInstance IMAGINARY_PURPLE_SHADER;
 	public static RenderType IMAGINARY_PURPLE_RENDER_TYPE;
-	public static ShaderInstance VOID_BLACKHOLE_SHADER;
-	public static RenderType VOID_BLACKHOLE_RENDER_TYPE;
-	public static ShaderInstance VOID_BRUSH_SHADER;
-	public static RenderType VOID_BRUSH_RENDER_TYPE;
+	public static ShaderInstance UV_INTERIOR_SHADER;
+	public static RenderType UV_INTERIOR_RENDER_TYPE;
 	public static ShaderInstance IMAGINARY_PURPLE_PROJECTILE_SHADER;
 	public static RenderType IMAGINARY_PURPLE_PROJECTILE_RENDER_TYPE;
-	public static ShaderInstance VOID_RIFT_SHADER;
-	public static RenderType VOID_RIFT_RENDER_TYPE;
-	public static ShaderInstance VOID_RIBBON_SHADER;
-	public static RenderType VOID_RIBBON_RENDER_TYPE;
+	public static ShaderInstance UV_INK_SHADER;
+	public static RenderType UV_INK_RENDER_TYPE;
 	public static ShaderInstance INFORMATION_OVERLOAD_OVERLAY_SHADER;
 	public static RenderType INFORMATION_OVERLOAD_OVERLAY_RENDER_TYPE;
 	public static ShaderInstance FUGA_DOMAIN_EXPLOSION_SHADER;
@@ -188,29 +184,14 @@ public class JjkShaderManager {
 			e.printStackTrace();
 		}
 		try {
-			System.out.println("[JJK Strongest] Attempting to load Void Blackhole shader...");
-			event.registerShader(new ShaderInstance(event.getResourceProvider(), ResourceLocation.fromNamespaceAndPath("jjk_strongest", "void_blackhole"), DefaultVertexFormat.POSITION_TEX), shader -> {
-				VOID_BLACKHOLE_SHADER = shader;
-				VOID_BLACKHOLE_RENDER_TYPE = makeRenderType("void_blackhole", () -> VOID_BLACKHOLE_SHADER);
-				System.out.println("[JJK Strongest] ✓ Void Blackhole shader loaded successfully!");
+			event.registerShader(new ShaderInstance(event.getResourceProvider(), ResourceLocation.fromNamespaceAndPath("jjk_strongest", "uv_interior"), DefaultVertexFormat.POSITION_TEX), shader -> {
+				UV_INTERIOR_SHADER = shader;
+				UV_INTERIOR_RENDER_TYPE = makeDomainInteriorRenderType("uv_interior", () -> UV_INTERIOR_SHADER);
 			});
 		} catch (Exception e) {
-			VOID_BLACKHOLE_SHADER = null;
-			VOID_BLACKHOLE_RENDER_TYPE = null;
-			System.err.println("[JJK Strongest] ✗ Failed to load Void Blackhole shader");
-			e.printStackTrace();
-		}
-		try {
-			System.out.println("[JJK Strongest] Attempting to load Void Brush shader...");
-			event.registerShader(new ShaderInstance(event.getResourceProvider(), ResourceLocation.fromNamespaceAndPath("jjk_strongest", "void_brush"), DefaultVertexFormat.POSITION_TEX), shader -> {
-				VOID_BRUSH_SHADER = shader;
-				VOID_BRUSH_RENDER_TYPE = makeDomainShellRenderType("void_brush", () -> VOID_BRUSH_SHADER);
-				System.out.println("[JJK Strongest] ✓ Void Brush shader loaded successfully!");
-			});
-		} catch (Exception e) {
-			VOID_BRUSH_SHADER = null;
-			VOID_BRUSH_RENDER_TYPE = null;
-			System.err.println("[JJK Strongest] ✗ Failed to load Void Brush shader");
+			UV_INTERIOR_SHADER = null;
+			UV_INTERIOR_RENDER_TYPE = null;
+			System.err.println("[JJK Strongest] \u2717 Failed to load the domain interior shader");
 			e.printStackTrace();
 		}
 		try {
@@ -227,27 +208,14 @@ public class JjkShaderManager {
 			e.printStackTrace();
 		}
 		try {
-			System.out.println("[JJK Strongest] Attempting to load Void Rift shader...");
-			event.registerShader(new ShaderInstance(event.getResourceProvider(), ResourceLocation.fromNamespaceAndPath("jjk_strongest", "void_rift"), DefaultVertexFormat.POSITION_TEX), shader -> {
-				VOID_RIFT_SHADER = shader;
-				VOID_RIFT_RENDER_TYPE = makeRenderType("void_rift", () -> VOID_RIFT_SHADER);
-				System.out.println("[JJK Strongest] ✓ Void Rift shader loaded successfully!");
+			event.registerShader(new ShaderInstance(event.getResourceProvider(), ResourceLocation.fromNamespaceAndPath("jjk_strongest", "uv_ink"), DefaultVertexFormat.POSITION_TEX), shader -> {
+				UV_INK_SHADER = shader;
+				UV_INK_RENDER_TYPE = makeRenderType("uv_ink", () -> UV_INK_SHADER);
 			});
 		} catch (Exception e) {
-			VOID_RIFT_SHADER = null;
-			VOID_RIFT_RENDER_TYPE = null;
-			System.err.println("[JJK Strongest] ✗ Failed to load Void Rift shader");
-			e.printStackTrace();
-		}
-		try {
-			event.registerShader(new ShaderInstance(event.getResourceProvider(), ResourceLocation.fromNamespaceAndPath("jjk_strongest", "void_ribbon"), DefaultVertexFormat.POSITION_TEX), shader -> {
-				VOID_RIBBON_SHADER = shader;
-				VOID_RIBBON_RENDER_TYPE = makeRenderType("void_ribbon", () -> VOID_RIBBON_SHADER);
-			});
-		} catch (Exception e) {
-			VOID_RIBBON_SHADER = null;
-			VOID_RIBBON_RENDER_TYPE = null;
-			System.err.println("[JJK Strongest] ✗ Failed to load Void Ribbon shader");
+			UV_INK_SHADER = null;
+			UV_INK_RENDER_TYPE = null;
+			System.err.println("[JJK Strongest] \u2717 Failed to load the domain ink shader");
 			e.printStackTrace();
 		}
 		try {
@@ -428,90 +396,110 @@ public class JjkShaderManager {
 		return true;
 	}
 
-	public static boolean beginVoidBlackholeEffect(float timeSeconds, float intensity) {
-		if (VOID_BLACKHOLE_SHADER == null)
-			return false;
-		setUniformIfExistsVoidBlackhole("Time", timeSeconds);
-		setUniformIfExistsVoidBlackhole("Intensity", intensity);
-		return true;
-	}
+
+
 
 	/**
-	 * Camera-facing brush strokes drifting inside the shell.
+	 * The domain interior: shell, dome, floor and black hole, all from one shader on one
+	 * mesh.
 	 *
-	 * @param brushSeed per-domain seed, so two domains open side by side do not draw the
-	 *                  same strokes in the same places
-	 * @param alpha     global strength, faded with the domain's phase
-	 * @param fadeFar   distance at which a stroke has faded out entirely; the renderer
-	 *                  passes the sphere's diameter so nothing survives past the far wall
-	 */
-	public static boolean beginVoidRibbonEffect(float timeSeconds, float brushSeed, float alpha, float fadeFar) {
-		if (VOID_RIBBON_SHADER == null)
-			return false;
-		setUniformIfExistsVoidRibbon("Time", timeSeconds);
-		setUniformIfExistsVoidRibbon("BrushSeed", brushSeed);
-		setUniformIfExistsVoidRibbon("Alpha", alpha);
-		setUniformIfExistsVoidRibbon("FadeFar", fadeFar);
-		return true;
-	}
-
-	private static void setUniformIfExistsVoidRibbon(String name, float... values) {
-		var uniform = VOID_RIBBON_SHADER.getUniform(name);
-		if (uniform != null) {
-			if (values.length == 1)
-				uniform.set(values[0]);
-			else if (values.length == 2)
-				uniform.set(values[0], values[1]);
-			else if (values.length == 3)
-				uniform.set(values[0], values[1], values[2]);
-			else if (values.length == 4)
-				uniform.set(values[0], values[1], values[2], values[3]);
-		}
-	}
-
-	public static boolean beginVoidBrushEffect(float timeSeconds, float brushSeed, float intensity) {
-		return beginVoidBrushEffect(timeSeconds, brushSeed, intensity, 30.0f, 1.0f, 2.0f, 0.0f, 0.0f, 0.0f);
-	}
-
-	/**
-	 * @param radius    the domain's real radius, so the pattern keeps its apparent
-	 *                  feature size as the shell grows
-	 * @param progress  0..1 through the current phase
-	 * @param phase     {@code DomainPhase} ordinal, to change the look per stage
-	 * @param camX/Y/Z  camera position relative to the sphere centre. Without this the
-	 *                  interior is painted on the surface and looks identical wherever
-	 *                  you stand; with it, walking across the domain parallaxes.
-	 */
-	public static boolean beginVoidBrushEffect(float timeSeconds, float brushSeed, float intensity, float radius, float progress, float phase, float camX, float camY, float camZ) {
-		return beginVoidBrushEffect(timeSeconds, brushSeed, intensity, radius, progress, phase, camX, camY, camZ, 1.0f, -1);
-	}
-
-	/**
-	 * @param integrity    how much of the barrier is left overall, 0..1
+	 * <p>Reports any uniform the shader did not actually take, once. That is not
+	 * defensiveness for its own sake: {@link #setUniform} swallows a null lookup, so a name
+	 * that disagrees between the {@code .json} and the {@code .fsh} compiles cleanly, sets
+	 * nothing, and leaves you staring at a default-valued black hole with no error anywhere
+	 * to explain it.
+	 *
+	 * @param radius       the real radius; the shader multiplies the unit-sphere position
+	 *                     by it to get anything measured in blocks
+	 * @param camX/Y/Z     camera relative to the sphere centre, in blocks
+	 * @param floorY       floor plane relative to the centre
+	 * @param inside       1 when the camera is within the shell
+	 * @param integrity    whole-barrier integrity, 0..1
 	 * @param shellTexture GL id of the per-direction damage grid, or -1 if none yet
 	 */
-	public static boolean beginVoidBrushEffect(float timeSeconds, float brushSeed, float intensity, float radius, float progress, float phase, float camX, float camY, float camZ, float integrity,
-			int shellTexture) {
-		if (VOID_BRUSH_SHADER == null)
+	public static boolean beginUvInterior(float timeSeconds, float seed, float intensity, float radius, float progress, float phase, float camX, float camY, float camZ, float floorY, boolean inside,
+			float bhX, float bhY, float bhZ, float bhAngularRadius, float bhDistance, float axisX, float axisY, float axisZ, float discStrength, float integrity, int shellTexture) {
+		if (UV_INTERIOR_SHADER == null)
 			return false;
-		setUniformIfExistsVoidBrush("Time", timeSeconds);
-		setUniformIfExistsVoidBrush("BrushSeed", brushSeed);
-		setUniformIfExistsVoidBrush("Intensity", intensity);
-		setUniformIfExistsVoidBrush("Radius", radius);
-		setUniformIfExistsVoidBrush("Progress", progress);
-		setUniformIfExistsVoidBrush("Phase", phase);
-		setUniformIfExistsVoidBrush("CamOffset", camX, camY, camZ);
-		setUniformIfExistsVoidBrush("Integrity", integrity);
+		setUniform(UV_INTERIOR_SHADER, "Time", timeSeconds);
+		setUniform(UV_INTERIOR_SHADER, "BrushSeed", seed);
+		setUniform(UV_INTERIOR_SHADER, "Intensity", intensity);
+		setUniform(UV_INTERIOR_SHADER, "Radius", radius);
+		setUniform(UV_INTERIOR_SHADER, "Progress", progress);
+		setUniform(UV_INTERIOR_SHADER, "Phase", phase);
+		setUniform(UV_INTERIOR_SHADER, "CamOffset", camX, camY, camZ);
+		setUniform(UV_INTERIOR_SHADER, "FloorY", floorY);
+		setUniform(UV_INTERIOR_SHADER, "Inside", inside ? 1.0f : 0.0f);
+		setUniform(UV_INTERIOR_SHADER, "BhDir", bhX, bhY, bhZ);
+		setUniform(UV_INTERIOR_SHADER, "BhAng", bhAngularRadius, bhDistance);
+		setUniform(UV_INTERIOR_SHADER, "BhAxis", axisX, axisY, axisZ);
+		setUniform(UV_INTERIOR_SHADER, "DiscStrength", discStrength);
+		setUniform(UV_INTERIOR_SHADER, "Integrity", integrity);
 		// Without a grid the sampler reads black, which would mean "totally destroyed" —
 		// the exact opposite of the truth. Flag it so the shader ignores the sampler.
-		setUniformIfExistsVoidBrush("HasShell", shellTexture >= 0 ? 1.0f : 0.0f);
+		setUniform(UV_INTERIOR_SHADER, "HasShell", shellTexture >= 0 ? 1.0f : 0.0f);
 		if (shellTexture >= 0) {
 			try {
-				VOID_BRUSH_SHADER.setSampler("ShellSampler", shellTexture);
+				UV_INTERIOR_SHADER.setSampler("ShellSampler", shellTexture);
 			} catch (Exception ignored) {
 			}
 		}
+		reportMissingUniformsOnce(UV_INTERIOR_SHADER, "uv_interior", "Time", "BrushSeed", "Intensity", "Radius", "Progress", "Phase", "CamOffset", "FloorY", "Inside", "BhDir", "BhAng", "BhAxis",
+				"DiscStrength", "Integrity", "HasShell");
 		return true;
+	}
+
+	/** The ink splatter cards suspended in the volume. */
+	public static boolean beginUvInk(float timeSeconds, float seed, float alpha, float fadeFar) {
+		if (UV_INK_SHADER == null)
+			return false;
+		setUniform(UV_INK_SHADER, "Time", timeSeconds);
+		setUniform(UV_INK_SHADER, "BrushSeed", seed);
+		setUniform(UV_INK_SHADER, "Alpha", alpha);
+		setUniform(UV_INK_SHADER, "FadeFar", fadeFar);
+		reportMissingUniformsOnce(UV_INK_SHADER, "uv_ink", "Time", "BrushSeed", "Alpha", "FadeFar");
+		return true;
+	}
+
+	/**
+	 * One shared uniform setter, replacing fifteen copy-pasted ones that differed only in
+	 * which {@code ShaderInstance} they read.
+	 */
+	private static void setUniform(ShaderInstance shader, String name, float... values) {
+		if (shader == null)
+			return;
+		var uniform = shader.getUniform(name);
+		if (uniform == null)
+			return;
+		if (values.length == 1)
+			uniform.set(values[0]);
+		else if (values.length == 2)
+			uniform.set(values[0], values[1]);
+		else if (values.length == 3)
+			uniform.set(values[0], values[1], values[2]);
+		else if (values.length == 4)
+			uniform.set(values[0], values[1], values[2], values[3]);
+	}
+
+	private static final java.util.Set<String> REPORTED_UNIFORMS = new java.util.HashSet<>();
+
+	/**
+	 * Says once, in the log, which declared uniforms the linked shader does not have.
+	 *
+	 * <p>A name that disagrees between the json and the fsh, or one the driver optimised
+	 * away because nothing reads it, both come back null and both are silent. Without this
+	 * the only symptom is a feature that quietly does not work.
+	 */
+	private static void reportMissingUniformsOnce(ShaderInstance shader, String label, String... names) {
+		if (shader == null || !REPORTED_UNIFORMS.add(label))
+			return;
+		StringBuilder missing = new StringBuilder();
+		for (String name : names) {
+			if (shader.getUniform(name) == null)
+				missing.append(missing.length() == 0 ? "" : ", ").append(name);
+		}
+		if (missing.length() > 0)
+			System.err.println("[JJK Strongest] " + label + " is not taking these uniforms (name mismatch, or unused and optimised out): " + missing);
 	}
 
 	public static boolean beginImaginaryPurpleProjectileEffect(float timeSeconds, float intensity) {
@@ -522,13 +510,6 @@ public class JjkShaderManager {
 		return true;
 	}
 
-	public static boolean beginVoidRiftEffect(float timeSeconds, float intensity) {
-		if (VOID_RIFT_SHADER == null)
-			return false;
-		setUniformIfExistsVoidRift("Time", timeSeconds);
-		setUniformIfExistsVoidRift("Intensity", intensity);
-		return true;
-	}
 
 	public static boolean beginInformationOverloadOverlayEffect(float timeSeconds, float strength) {
 		return beginInformationOverloadOverlayEffect(timeSeconds, strength, 1.0f);
@@ -616,19 +597,6 @@ public class JjkShaderManager {
 		}
 	}
 
-	private static void setUniformIfExistsVoidRift(String name, float... values) {
-		var uniform = VOID_RIFT_SHADER.getUniform(name);
-		if (uniform != null) {
-			if (values.length == 1)
-				uniform.set(values[0]);
-			else if (values.length == 2)
-				uniform.set(values[0], values[1]);
-			else if (values.length == 3)
-				uniform.set(values[0], values[1], values[2]);
-			else if (values.length == 4)
-				uniform.set(values[0], values[1], values[2], values[3]);
-		}
-	}
 
 	private static void setUniformIfExistsImaginaryPurpleProjectile(String name, float... values) {
 		var uniform = IMAGINARY_PURPLE_PROJECTILE_SHADER.getUniform(name);
@@ -644,33 +612,7 @@ public class JjkShaderManager {
 		}
 	}
 
-	private static void setUniformIfExistsVoidBlackhole(String name, float... values) {
-		var uniform = VOID_BLACKHOLE_SHADER.getUniform(name);
-		if (uniform != null) {
-			if (values.length == 1)
-				uniform.set(values[0]);
-			else if (values.length == 2)
-				uniform.set(values[0], values[1]);
-			else if (values.length == 3)
-				uniform.set(values[0], values[1], values[2]);
-			else if (values.length == 4)
-				uniform.set(values[0], values[1], values[2], values[3]);
-		}
-	}
 
-	private static void setUniformIfExistsVoidBrush(String name, float... values) {
-		var uniform = VOID_BRUSH_SHADER.getUniform(name);
-		if (uniform != null) {
-			if (values.length == 1)
-				uniform.set(values[0]);
-			else if (values.length == 2)
-				uniform.set(values[0], values[1]);
-			else if (values.length == 3)
-				uniform.set(values[0], values[1], values[2]);
-			else if (values.length == 4)
-				uniform.set(values[0], values[1], values[2], values[3]);
-		}
-	}
 
 	private static void setUniformIfExistsImaginaryPurple(String name, float... values) {
 		var uniform = IMAGINARY_PURPLE_SHADER.getUniform(name);
@@ -724,8 +666,10 @@ public class JjkShaderManager {
 	 * ground and nothing above it. The fragment shader branches on {@code gl_FrontFacing}
 	 * instead, giving the interior one treatment and the outer shell another.
 	 */
-	private static RenderType makeDomainShellRenderType(String name, java.util.function.Supplier<ShaderInstance> shaderSup) {
-		return RenderType.create(name, DefaultVertexFormat.POSITION_TEX, VertexFormat.Mode.QUADS, 2048, false, false,
+	private static RenderType makeDomainInteriorRenderType(String name, java.util.function.Supplier<ShaderInstance> shaderSup) {
+		// 32 x 64 quads is 8192 vertices at 20 bytes each. Sized for that, or the
+		// BufferBuilder regrows its buffer every single frame.
+		return RenderType.create(name, DefaultVertexFormat.POSITION_TEX, VertexFormat.Mode.QUADS, 262144, false, false,
 				RenderType.CompositeState.builder().setShaderState(new RenderStateShard.ShaderStateShard(shaderSup)).setDepthTestState(new RenderStateShard.DepthTestStateShard("lequal", 515)).setCullState(new RenderStateShard.CullStateShard(false))
 						.setWriteMaskState(new RenderStateShard.WriteMaskStateShard(true, true)).setTransparencyState(new RenderStateShard.TransparencyStateShard("translucent_transparency", () -> {
 							com.mojang.blaze3d.systems.RenderSystem.enableBlend();

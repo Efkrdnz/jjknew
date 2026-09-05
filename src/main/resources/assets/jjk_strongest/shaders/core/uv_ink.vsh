@@ -7,9 +7,8 @@ uniform mat4 ProjMat;
 uniform mat4 ModelViewMat;
 
 out vec2 texCoord;
-// Distance from the eye to this vertex. The whole ribbon set is one draw call, so the
-// fragment stage cannot be told per-stroke how far away it is; taking it from the view
-// matrix costs nothing and is per-fragment accurate.
+// Distance from the eye. The whole card set is one draw call, so the fragment stage can
+// not be told per-card how far away it is; taking it from the view matrix costs nothing.
 out float viewDist;
 
 void main() {
