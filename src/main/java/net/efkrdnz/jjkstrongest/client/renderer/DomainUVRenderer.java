@@ -27,7 +27,6 @@ import net.efkrdnz.jjkstrongest.entity.DomainUVEntity;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.math.Axis;
 
 import java.util.List;
 
@@ -43,8 +42,9 @@ import java.util.List;
  * own back face — three bugs the billboard had, all structurally impossible now. The rift
  * disc is gone entirely; it was a different technique's iconography.
  *
- * <p>What is left is the shell mesh, the floor, and, when you are inside, the ink cards and
- * the reflections.
+ * <p>What is left is the shell mesh, the floor, and, when you are inside, the reflections.
+ * The ink cards that used to drift in the volume are gone too: twenty white splashes at ten
+ * blocks were the loudest thing saying "room" in a place that is meant to read as space.
  *
  * <p>The floor is real geometry: a disc at the plane, drawn with depth, over a ball the
  * carve has emptied down to bedrock and beyond. That is what makes a mirror possible. The
@@ -52,11 +52,11 @@ import java.util.List;
  * <ol>
  * <li><b>dome</b> — paints the lower hemisphere in ink over the pit walls, so nothing of the
  * world shows through the translucent floor;</li>
- * <li><b>mirrored entities and ink</b> — everything in the room drawn again, upside down
- * under the plane;</li>
+ * <li><b>mirrored entities</b> — everything in the room drawn again, upside down under the
+ * plane;</li>
  * <li><b>floor</b> — the sea, translucent, with depth: it dims the reflections under it and
  * hides anything that is actually down there;</li>
- * <li><b>ink</b>, and during a collapse the <b>shards</b>.</li>
+ * <li>during a collapse, the <b>shards</b>.</li>
  * </ol>
  */
 public class DomainUVRenderer extends MobRenderer<DomainUVEntity, Modelblank_entity<DomainUVEntity>> {
@@ -84,9 +84,6 @@ public class DomainUVRenderer extends MobRenderer<DomainUVEntity, Modelblank_ent
 	 */
 	private static final float FLOOR_LIFT = 0.02f;
 
-	/** Ink splatter cards drifting in the volume. Hard cap; they are real geometry. */
-	private static final int INK_COUNT = 20;
-
 	/** Reused every frame for the ripple uniform, so the floor allocates nothing. */
 	private static final float[] RIPPLE_SCRATCH = new float[RippleField.FLOATS];
 
@@ -97,9 +94,12 @@ public class DomainUVRenderer extends MobRenderer<DomainUVEntity, Modelblank_ent
 	 */
 	private static boolean mirrorDisabled;
 
-	/** Black hole placement, as fractions of the radius: centred, lifted into the dome. */
-	private static final double BH_HEIGHT = 0.35;
-	private static final double BH_RADIUS = 0.10;
+	/**
+	 * The black hole is at infinity: a direction and an angular size, nothing else. Ahead of
+	 * the caster (the entity's synced yaw) and a little up; the shadow alone spans 35 degrees.
+	 */
+	private static final float HOLE_ELEVATION_DEG = 20.0f;
+	private static final float SHADOW_RADIUS = 0.305f;
 
 	public DomainUVRenderer(EntityRendererProvider.Context context) {
 		super(context, new Modelblank_entity(context.bakeLayer(Modelblank_entity.LAYER_LOCATION)), 0f);
@@ -139,17 +139,12 @@ public class DomainUVRenderer extends MobRenderer<DomainUVEntity, Modelblank_ent
 		// Order matters here; the class comment says why.
 		renderInterior(entity, radius, partialTick, progress, camOffset, inside, poseStack, bufferSource);
 		if (inside) {
-			if (!collapsing) {
+			if (!collapsing)
 				renderMirroredEntities(entity, partialTick, poseStack, bufferSource, packedLight);
-				if (phase != DomainPhase.EXPANDING)
-					renderInk(entity, radius, partialTick, progress, phase, true, poseStack, bufferSource);
-			}
 			renderFloor(entity, radius, partialTick, progress, camOffset, poseStack, bufferSource);
 		}
 		if (collapsing)
 			renderShards(entity, radius, partialTick, progress, camOffset, poseStack, bufferSource);
-		if (inside && phase != DomainPhase.EXPANDING)
-			renderInk(entity, radius, partialTick, progress, phase, false, poseStack, bufferSource);
 	}
 
 	/**
@@ -329,18 +324,17 @@ public class DomainUVRenderer extends MobRenderer<DomainUVEntity, Modelblank_ent
 		float timeSeconds = (entity.tickCount + partialTick) / 20.0f;
 		int shellTexture = DomainShellTexture.upload(entity.shell());
 
-		// The hole sits on the sphere's axis. Its direction and apparent size are worked
-		// out here rather than per fragment: it costs a normalize and a length once instead
-		// of once per pixel, and it means the placement can be tuned without touching GLSL.
-		Vec3 hole = new Vec3(0.0, radius * BH_HEIGHT, 0.0);
-		Vec3 toHole = hole.subtract(camOffset);
-		double holeDistance = Math.max(0.001, toHole.length());
-		Vec3 holeDir = toHole.scale(1.0 / holeDistance);
-		double holeWorldRadius = radius * BH_RADIUS;
-		float holeAngle = (float) Math.atan2(holeWorldRadius, holeDistance);
-		// The disc plane precesses, so the domain never looks like a still image.
-		double spin = timeSeconds * 0.05;
-		Vec3 axis = new Vec3(Math.sin(spin) * 0.35, 1.0, Math.cos(spin) * 0.35).normalize();
+		// The hole is a direction, not a point: the same from every eye in the room, so it
+		// never parallaxes and reads as something impossibly far. Vanilla's own yaw/pitch to
+		// vector, so it lands exactly where the caster was looking.
+		Vec3 holeDir = Vec3.directionFromRotation(-HOLE_ELEVATION_DEG, entity.getHoleYaw());
+		float holeAngle = SHADOW_RADIUS;
+		// The disc is fixed, not precessing — a thing that size does not wobble on a timer.
+		// Nearly edge-on, tipped toward the viewer so the top of the disc shows over the
+		// shadow, and rolled a few degrees so it is not perfectly level.
+		Vec3 axis = rotateAbout(new Vec3(0.0, 1.0, 0.0).add(holeDir.scale(0.28)).normalize(), holeDir, Math.toRadians(8.0));
+		// Was the hole's distance; the hole has none now. Kept so the uniform layout stands.
+		double holeDistance = 0.0;
 
 		// The black hole is the one thing that should implode rather than fade: the disc goes
 		// first, then the horizon contracts to a point, and it is gone before the shards have
@@ -356,90 +350,17 @@ public class DomainUVRenderer extends MobRenderer<DomainUVEntity, Modelblank_ent
 				(float) axis.z, discStrength, entity.getShellIntegrity(), shellTexture, surface, ripples);
 	}
 
-	/**
-	 * Ink splatter suspended in the volume.
-	 *
-	 * <p>These are geometry rather than another shader layer for one reason: they have to
-	 * pass in front of and behind the people in the room. Nothing painted onto the shell
-	 * surface can do that, however much parallax you fake into it.
-	 *
-	 * <p>All twenty go out in one draw call. The card index rides in the V channel
-	 * ({@code v = id + sv * 0.5}) rather than in a uniform, so the shader can vary every
-	 * card without the renderer flushing a batch per card.
-	 */
-	private void renderInk(DomainUVEntity entity, float radius, float partialTick, float progress, DomainPhase phase, boolean mirror, PoseStack poseStack, MultiBufferSource bufferSource) {
-		if (JjkShaderManager.UV_INK_RENDER_TYPE == null)
-			return;
-		float timeSeconds = (entity.tickCount + partialTick) / 20.0f;
-		int seed = entity.getShellSeed();
-		double floorY = entity.getFloorOffset();
-		// Held back while the shell settles, so the volume fills after the walls arrive, and
-		// taken away early in a collapse so twenty white blots do not hang in open air. The
-		// reflected set is dimmer on top of what the sea's own alpha takes.
-		float alpha = mirror ? 0.55f : 0.9f;
-		if (phase == DomainPhase.SETTLING)
-			alpha *= progress;
-		else if (phase == DomainPhase.COLLAPSING)
-			alpha *= 1.0f - smoothstep(0.0f, 0.35f, progress);
-		if (alpha <= 0.01f)
-			return;
-		if (!JjkShaderManager.beginUvInk(timeSeconds, seed * 0.001f + 1.0f, alpha, radius * 2.0f))
-			return;
-
-		VertexConsumer vc = bufferSource.getBuffer(JjkShaderManager.UV_INK_RENDER_TYPE);
-		for (int i = 0; i < INK_COUNT; i++) {
-			float h1 = hash(seed, i, 0);
-			float h2 = hash(seed, i, 1);
-			float h3 = hash(seed, i, 2);
-			float h4 = hash(seed, i, 3);
-			float h5 = hash(seed, i, 4);
-			float h6 = hash(seed, i, 5);
-
-			// Uniform on the sphere of directions, then pulled well inside so no card ever
-			// reaches the wall it is supposed to be floating in front of.
-			double azimuth = h1 * Math.PI * 2.0 + timeSeconds * (0.008 + h6 * 0.016);
-			double polar = Math.acos(1.0 - 2.0 * h2);
-			double dist = radius * (0.20 + 0.55 * h3);
-			double sinPolar = Math.sin(polar);
-			double bob = Math.sin(timeSeconds * (0.12 + h6 * 0.18) + i) * radius * 0.05;
-
-			// Mostly small, a few large. A field of identically-sized blots reads as a
-			// pattern; the spread is what makes it read as depth.
-			float size = radius * (h4 < 0.8f ? 0.05f + 0.07f * h4 : 0.16f + 0.10f * h4);
-
-			double cardY = dist * Math.cos(polar) + bob;
-			if (mirror)
-				cardY = 2.0 * floorY - cardY;
-			poseStack.pushPose();
-			poseStack.translate(dist * sinPolar * Math.cos(azimuth), cardY, dist * sinPolar * Math.sin(azimuth));
-			poseStack.mulPose(this.entityRenderDispatcher.cameraOrientation());
-			poseStack.mulPose(Axis.ZP.rotationDegrees(h5 * 360.0f + timeSeconds * (h6 - 0.5f) * 4.0f));
-
-			Matrix4f m = poseStack.last().pose();
-			float half = size * 0.5f;
-			float v0 = i;
-			float v1 = i + 0.5f;
-			vc.addVertex(m, -half, -half, 0.0f).setUv(0.0f, v0);
-			vc.addVertex(m, -half, half, 0.0f).setUv(0.0f, v1);
-			vc.addVertex(m, half, half, 0.0f).setUv(1.0f, v1);
-			vc.addVertex(m, half, -half, 0.0f).setUv(1.0f, v0);
-			poseStack.popPose();
-		}
-		if (bufferSource instanceof MultiBufferSource.BufferSource bs)
-			bs.endBatch(JjkShaderManager.UV_INK_RENDER_TYPE);
+	/** Rodrigues' rotation of v about the unit axis k by angle radians. */
+	private static Vec3 rotateAbout(Vec3 v, Vec3 k, double angle) {
+		double c = Math.cos(angle);
+		double sn = Math.sin(angle);
+		return v.scale(c).add(k.cross(v).scale(sn)).add(k.scale(k.dot(v) * (1.0 - c)));
 	}
 
 	/** GLSL's smoothstep, for the collapse ramps. */
 	private static float smoothstep(float edge0, float edge1, float x) {
 		float t = Math.max(0.0f, Math.min(1.0f, (x - edge0) / (edge1 - edge0)));
 		return t * t * (3.0f - 2.0f * t);
-	}
-
-	/** Stable per-domain, per-card noise, so the cards do not reshuffle every frame. */
-	private static float hash(int seed, int index, int channel) {
-		int h = seed * 374761393 + index * 668265263 + channel * 1442695041;
-		h = (h ^ (h >>> 13)) * 1274126177;
-		return ((h ^ (h >>> 16)) & 0x7fffffff) / (float) 0x7fffffff;
 	}
 
 	/** Inward-wound unit sphere, generated once at class load. */

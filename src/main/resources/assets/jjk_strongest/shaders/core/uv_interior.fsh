@@ -27,13 +27,14 @@ const float PI = 3.14159265359;
 const int RIPPLES = 16;
 
 // ---- palette ---------------------------------------------------------------
-// Ink and bone carry every edge. Blue means depth and light; violet is the receding side of
-// the disc and nothing else. Brighter than the version before it — the room is a sea under a
-// lit horizon now, not a cave — but still a field of dark with hard white marks on it.
+// Deep space over a lit shore. Bone is stars, ring and crests; blue is the horizon, the
+// Milky Way and the disc's cool side; violet is the disc's receding side and nothing else.
+// Nothing white is painted on the sky any more — the paper blots went with the room they
+// implied.
 const vec3 INK      = vec3(0.008, 0.009, 0.014);
 const vec3 BONE     = vec3(0.92, 0.93, 0.96);
+const vec3 SPACE    = vec3(0.004, 0.005, 0.012);
 const vec3 SKY_LOW  = vec3(0.020, 0.028, 0.070);
-const vec3 SKY_HIGH = vec3(0.035, 0.055, 0.140);
 const vec3 SEA_DEEP = vec3(0.020, 0.028, 0.070);
 const vec3 ABYSS    = vec3(0.004, 0.005, 0.012);
 const vec3 PALEBLUE = vec3(0.52, 0.66, 0.90);
@@ -88,14 +89,6 @@ float fbm3(vec3 p) {
         amp *= 0.5;
     }
     return sum;
-}
-
-/** A stable direction per index, for the ink blot sites. */
-vec3 hashDir(float i, float seed) {
-    float a = hash11(i * 1.37 + seed) * 2.0 - 1.0;
-    float b = hash11(i * 2.91 + seed * 1.7 + 5.0) * PI * 2.0;
-    float r = sqrt(max(0.0, 1.0 - a * a));
-    return vec3(r * cos(b), a, r * sin(b));
 }
 
 // ---- barrier damage --------------------------------------------------------
@@ -168,147 +161,76 @@ float shatterMask(vec2 uv, float localDamage, float globalDamage) {
 }
 
 // ---- the black hole --------------------------------------------------------
+// The hole is at infinity: BhDir is a direction, BhAng.x the angular radius of its shadow,
+// BhAxis the normal of its disc. Nothing here depends on where you stand, which is what
+// makes a thirty-block room contain something the size of a sky.
+
+/** Disc extent, in units of tan(shadow radius): from just outside the ISCO to well past it. */
+const float DISC_INNER = 1.5;
+const float DISC_OUTER = 3.2;
 
 /**
- * How far a ray observed at this angle is bent around the hole.
- *
- * Einstein deflection is 2Rs/b, i.e. exactly 1/b to leading order, so the cheap 1/r warp
- * everyone uses is not an approximation of the shape — it is the shape. What it does not
- * give you is the photon ring or multiple images, so the ring is drawn explicitly below.
+ * How far a ray observed at this angle is bent around the hole. Leading-order deflection is
+ * 1/b, so the cheap warp is the shape; the constant sets how hard the ring pulls.
  */
 float deflection(float ang) {
-    return (1.6 * BhAng.x * BhAng.x) / max(ang, BhAng.x * 0.5);
-}
-
-// ---- sky layers ------------------------------------------------------------
-
-/**
- * L1: two star layers, bone-white, one slow twinkle. The threshold is a parameter because
- * the reflection is deliberately given more of them than the sky.
- */
-vec3 stars(vec3 d, float t, float threshold) {
-    float fine = noise3(d * 90.0 + BrushSeed);
-    float coarse = noise3(d * 38.0 - BrushSeed);
-    float twinkle = 0.75 + 0.25 * sin(t * 1.3 + fine * 40.0);
-    vec3 col = BONE * step(threshold, fine) * 0.55 * twinkle;
-    col += BONE * step(threshold - 0.013, coarse) * smoothstep(threshold - 0.013, 0.995, coarse) * 1.15;
-    return col;
+    return (1.9 * BhAng.x * BhAng.x) / max(ang, 0.7 * BhAng.x);
 }
 
 /**
- * L2: one tilted dust band.
+ * The accretion disc at a point on its plane, seen along a ray.
  *
- * The layer the old interior was missing entirely, and the one that creates depth. A
- * galactic plane gives the eye a horizon to read the volume against; isotropic noise at
- * five scales gives it nothing.
+ * @param Q     the hit point, with the hole at BhDir (unit distance)
+ * @param view  the direction the ray was travelling when it hit — bent for the far image
  */
-vec3 dustBand(vec3 d, float t) {
-    vec3 normal = normalize(vec3(sin(t * 0.013), 0.82, cos(t * 0.011)));
-    float band = exp(-abs(dot(d, normal)) * 3.5);
-    float grain = fbm3(d * 2.2 + vec3(t * 0.012, 0.0, -t * 0.009) + BrushSeed);
-    return mix(SKY_HIGH, PALEBLUE, 0.35) * band * grain * 0.54;
-}
-
-/**
- * L4: hard-edged ink blots, and small black flecks.
- *
- * The signature layer, and the whole reason this reads like the reference rather than
- * fog. Twelve discs would be twelve discs; displacing every edge by ONE shared warp field
- * turns them into twelve ragged islands that share a paper texture, which is what the
- * source images actually look like.
- */
-void inkBlots(vec3 d, float warp, out float blot, out float fleck) {
-    float wobble = (warp - 0.5) * 0.045;
-    blot = 0.0;
-    fleck = 0.0;
-    for (int i = 0; i < 12; i++) {
-        float fi = float(i);
-        vec3 site = hashDir(fi, BrushSeed);
-        float a = 1.0 - dot(d, site);
-        float rad = 0.010 + 0.055 * hash11(fi + 7.3);
-        blot = max(blot, smoothstep(rad + 0.004, rad - 0.004, a + wobble));
-    }
-    for (int i = 0; i < 8; i++) {
-        float fi = float(i) + 40.0;
-        // Biased toward the hole, so a cluster silhouettes against the photon ring.
-        vec3 site = normalize(hashDir(fi, BrushSeed) + BhDir * 1.4);
-        float a = 1.0 - dot(d, site);
-        float rad = 0.0025 + 0.010 * hash11(fi + 3.1);
-        fleck = max(fleck, smoothstep(rad + 0.002, rad - 0.002, a + wobble * 0.5));
-    }
-}
-
-/** L5: broad lens arcs swept around the hole's axis. Ties the field to the centre. */
-float lensArcs(float ang, float warp) {
-    float arcs = 0.0;
-    for (int i = 0; i < 3; i++) {
-        float r = BhAng.x * (3.5 + float(i) * 2.6);
-        arcs += exp(-pow((ang - r + (warp - 0.5) * 0.06) / (BhAng.x * 0.9), 2.0));
-    }
-    return arcs;
-}
-
-/**
- * The photon rings, the shadow's bright edge.
- *
- * The n=1 ring is the one everybody sees; it gets a chromatic fringe by being drawn at three
- * slightly different radii into the three channels, which is what light of three colours
- * bent by three slightly different amounts looks like. Inside it, a thinner and fainter n=2
- * ring — the second image of the sky — and outside, a soft halo.
- */
-vec3 photonRings(float ang) {
-    float r1 = BhAng.x * 1.05;
-    float w1 = BhAng.x * 0.10;
-    vec3 ring1 = vec3(exp(-pow((ang - r1 * 0.99) / w1, 2.0)), exp(-pow((ang - r1) / w1, 2.0)), exp(-pow((ang - r1 * 1.01) / w1, 2.0))) * 4.0;
-    float ring2 = exp(-pow((ang - BhAng.x * 1.015) / (BhAng.x * 0.035), 2.0)) * 1.6;
-    float halo = exp(-pow((ang - BhAng.x * 1.6) / (BhAng.x * 0.55), 2.0)) * 0.35;
-    ring1 += exp(-pow((ang - BhAng.x * 1.40) / (BhAng.x * 0.30), 2.0)) * 0.8;
-    return BONE * (ring1 + ring2) + PALEBLUE * halo;
-}
-
-/**
- * One image of the accretion disc, seen along a (bent) ray.
- *
- * @param L      the lensed direction the ray actually came from
- * @param ang    angle from the hole's centre, unbent
- * @param e1,e2  a basis in the disc plane, for the texture's azimuth
- */
-vec3 discImage(vec3 L, float ang, vec3 e1, vec3 e2, float t) {
-    float axial = dot(L, BhAxis);
-    // Thickness in proportion to the hole, so it stays a thin disc at any distance.
-    float thin = exp(-pow(axial / (BhAng.x * 0.33), 2.0));
-    float span = smoothstep(BhAng.x * 1.2, BhAng.x * 2.0, ang) * (1.0 - smoothstep(BhAng.x * 4.5, BhAng.x * 8.0, ang));
-    if (thin * span < 0.002)
+vec3 discShade(vec3 Q, vec3 view, float t) {
+    vec3 rel = Q - BhDir;
+    float r = length(rel);
+    float rs = tan(BhAng.x);
+    float rIn = DISC_INNER * rs;
+    float rOut = DISC_OUTER * rs;
+    if (r < rIn * 0.9 || r > rOut)
         return vec3(0.0);
+    vec3 radial = rel / max(r, 1e-5);
 
-    vec3 inPlane = L - BhAxis * axial;
-    float len = length(inPlane);
-    vec3 p = inPlane / max(len, 1e-5);
-    // Orbital velocity is axis x position. Its component toward the eye — along -BhDir — is
-    // the Doppler term: the side coming at you is beamed brighter and bluer, the side going
-    // away is dim and violet.
-    float doppler = -dot(cross(BhAxis, p), BhDir);
-    float beam = 1.0 + 0.9 * doppler;
-    vec3 hot = mix(VIOLET, mix(BONE, PALEBLUE, 0.35), 0.5 + 0.5 * doppler);
+    vec3 e1 = cross(BhAxis, BhDir);
+    if (dot(e1, e1) < 1e-6)
+        e1 = cross(BhAxis, vec3(1.0, 0.0, 0.0));
+    e1 = normalize(e1);
+    vec3 e2 = cross(BhAxis, e1);
+    float theta = atan(dot(radial, e2), dot(radial, e1));
+
+    float rn = r / rIn;
+    float bright = pow(1.0 / rn, 1.6);
+    float edges = smoothstep(rIn * 0.9, rIn * 1.15, r) * (1.0 - smoothstep(rOut * 0.8, rOut, r));
+    // Keplerian: the inner disc laps the outer. Periodic in theta by construction, so there
+    // is no seam where the angle wraps.
+    float rot = theta + t * 0.6 / pow(rn, 1.5);
+    float streak = 0.45 + 0.55 * fbm3(vec3(r / rs * 6.0 + t * 0.05, 2.5 * cos(rot), 2.5 * sin(rot)));
+    // Orbital velocity is axis x position; its component toward the eye is the Doppler
+    // term. Relativistic beaming goes as the cube, so one side is genuinely hot.
+    vec3 v = cross(BhAxis, radial);
+    float toward = dot(v, -view);
+    float beam = pow(clamp(1.0 + 0.6 * toward, 0.2, 2.0), 3.0);
+    float radialMix = clamp((r - rIn) / (rOut - rIn), 0.0, 1.0);
+    vec3 col = mix(vec3(1.0, 0.96, 0.90), vec3(0.75, 0.82, 1.0), smoothstep(0.0, 0.45, radialMix));
+    col = mix(col, vec3(0.30, 0.32, 0.70), smoothstep(0.35, 1.0, radialMix));
+    col = mix(col, VIOLET, clamp(-toward, 0.0, 1.0) * 0.5);
+    col = mix(col, vec3(1.0), clamp(toward, 0.0, 1.0) * 0.25);
     // Gravitational redshift: the inner edge, nearest the shadow, is the dimmest.
-    float redshift = smoothstep(1.2, 2.2, ang / BhAng.x);
-    // Differential rotation: the inner disc turns faster than the outer.
-    float az = atan(dot(p, e2), dot(p, e1));
-    float spin = t * 1.2 * BhAng.x / max(ang, BhAng.x);
-    float texture = 0.55 + 0.45 * fbm3(vec3(ang * 26.0, az * 3.0 - spin * 3.0, t * 0.35));
-    return hot * thin * span * texture * beam * redshift;
+    float redshift = smoothstep(rIn * 0.9, rIn * 1.4, r);
+    return col * bright * edges * streak * beam * redshift;
 }
 
 /**
  * Information streams: fine dotted filaments spiralling into the hole.
  *
- * The one layer that says what this domain is made of. Six log-spiral arms in the plane you
- * are looking across, each a string of flecks drifting inward — and, in the reflection,
- * outward.
+ * The one layer that says what this domain is made of. Six log-spiral arms around the
+ * giant, each a string of flecks drifting inward — and, in the reflection, outward.
  */
 float infoStreams(float ang, float phi, float t) {
     float u = ang / BhAng.x;
-    float window = smoothstep(1.4, 2.2, u) * (1.0 - smoothstep(9.0, 12.0, u));
+    float window = smoothstep(1.25, 1.5, u) * (1.0 - smoothstep(3.0, 3.5, u));
     if (window <= 0.0)
         return 0.0;
     float lu = log(u);
@@ -319,105 +241,150 @@ float infoStreams(float ang, float phi, float t) {
     return line * bead * window;
 }
 
+// ---- sky layers ------------------------------------------------------------
+
+/** Cube-map face and its uv for a direction, so a star grid can be laid on the sky. */
+vec2 faceUv(vec3 d, out float face) {
+    vec3 a = abs(d);
+    if (a.x >= a.y && a.x >= a.z) {
+        face = d.x > 0.0 ? 0.0 : 1.0;
+        return d.yz / a.x;
+    }
+    if (a.y >= a.z) {
+        face = d.y > 0.0 ? 2.0 : 3.0;
+        return d.xz / a.y;
+    }
+    face = d.z > 0.0 ? 4.0 : 5.0;
+    return d.xy / a.z;
+}
+
 /**
- * Everything that lives at infinity, evaluated on a possibly-bent ray.
+ * One layer of round stars.
  *
- * Split out because the floor reflects exactly this and nothing else — reflecting the
- * marched volume as well would double the cost of every floor fragment for something you
- * cannot see in a dark mirror anyway.
+ * A cell grid on each cube face, at most one star per cell at a hashed offset, drawn as a
+ * disc. Round points are most of what makes a sky read as space rather than as speckle; the
+ * old threshold-on-noise gave speckle. Stars keep off the cell edges so a face seam cannot
+ * cut one in half.
+ */
+vec3 starLayer(vec3 d, float cells, float seed, float t) {
+    float face;
+    vec2 uv = (faceUv(d, face) * 0.5 + 0.5) * cells;
+    vec2 cell = floor(uv);
+    vec2 f = uv - cell;
+    vec2 id = cell + face * 131.0 + seed;
+    float h = hash11(dot(id, vec2(12.9898, 78.233)) + seed);
+    if (h < 0.55)
+        return vec3(0.0);
+    vec2 pos = random2(id) * 0.7 + 0.15;
+    float mag = (h - 0.55) / 0.45;
+    float radius = 0.035 + 0.11 * mag * mag;
+    float star = smoothstep(radius, radius * 0.25, length(f - pos));
+    float twinkle = 0.85 + 0.15 * sin(t * (0.8 + 1.7 * h) + h * 40.0);
+    float pick = hash11(h * 91.7 + seed);
+    vec3 tint = pick < 0.6 ? BONE : (pick < 0.85 ? PALEBLUE : vec3(1.0, 0.86, 0.70));
+    return tint * star * (0.35 + 0.9 * mag) * twinkle;
+}
+
+/** The galaxy seen edge-on: a tilted band, grained, cut by dark dust lanes, thick with stars. */
+vec3 milkyWay(vec3 d, float t) {
+    vec3 normal = normalize(vec3(0.42, 0.78, -0.46));
+    float band = exp(-pow(dot(d, normal) * 3.2, 2.0));
+    if (band < 0.002)
+        return vec3(0.0);
+    float grain = fbm3(d * 3.0 + BrushSeed);
+    float lane = smoothstep(0.45, 0.60, fbm3(d * 6.0 + 4.7 + BrushSeed * 0.3));
+    vec3 col = mix(vec3(0.10, 0.13, 0.28), vec3(0.55, 0.60, 0.80), grain) * band * (1.0 - 0.75 * lane) * 0.5;
+    col += starLayer(d, 140.0, 7.0, t) * band * 0.8;
+    return col;
+}
+
+/** Two faint clouds, blue and violet, kept away from the hole so it stays clean. */
+vec3 nebulae(vec3 d, float ang) {
+    float away = smoothstep(2.0 * BhAng.x, 3.0 * BhAng.x, ang);
+    float a = smoothstep(0.50, 0.85, fbm3(d * 2.2 + BrushSeed + 3.1));
+    float b = smoothstep(0.52, 0.86, fbm3(d * 1.9 - BrushSeed + 9.4));
+    return (vec3(0.12, 0.08, 0.30) * a + vec3(0.05, 0.15, 0.30) * b) * 0.35 * away;
+}
+
+/**
+ * Everything that lives at infinity, evaluated for a view ray.
+ *
+ * The background is sampled on the ray as the hole bends it, so stars and galaxy stretch
+ * into a ring around the shadow on their own. The disc is a real thin disc at the hole's
+ * plane: the ray runs straight to its closest approach, bends there, and whatever it hits
+ * on the far side is the far image — the arcs over and under the shadow fall out of that.
+ * The near side of the disc is hit before the bend and is drawn last, over the shadow,
+ * because the front of the disc really does cross in front of the hole.
  *
  * @param mirror true when this is the sea's reflection. The reflection is given more than
- *               the sky has: denser stars, a brighter horizon, and information streams that
- *               flow the other way. Nothing else differs, so it reads as wrong rather than
- *               as broken — the water shows you more than the sky does.
+ *               the sky has: a third layer of stars, a brighter horizon, and information
+ *               streams that flow the other way. Nothing else differs, so it reads as wrong
+ *               rather than as broken — the water shows you more than the sky does.
  */
 vec3 skyAnalytic(vec3 d, float t, bool mirror) {
-    // L0: a lit sea-sky. Deep navy low, a shade lighter overhead, warmed toward the hole,
-    // and a horizon at eye level whatever the room's actual size — the thing that makes
-    // thirty blocks read as an endless shore.
-    vec3 col = mix(SKY_LOW, SKY_HIGH, smoothstep(-0.2, 0.9, d.y));
-    col += SKY_HIGH * 0.8 * pow(max(0.0, dot(d, BhDir)), 6.0);
-    float horizon = exp(-abs(d.y) * 9.0) * 0.55 + exp(-abs(d.y) * 2.5) * 0.12;
-    col += HORIZON * horizon * (mirror ? 1.25 : 1.0);
-
     float c = dot(d, BhDir);
     vec3 tangent = d - BhDir * c;
     float s = length(tangent);
     float ang = atan(s, c);   // two-argument: precision is worst exactly at the ring
     vec3 tangentDir = s > 1e-5 ? tangent / s : vec3(0.0);
+    vec3 bent = normalize(d + tangentDir * deflection(ang));
 
-    vec3 lensed = d;
-    if (s > 1e-5)
-        lensed = normalize(d + tangentDir * deflection(ang));
+    // L0: black overhead, a lift toward the horizon, and the horizon itself — the shore.
+    vec3 col = mix(SPACE, SKY_LOW, exp(-max(d.y, 0.0) * 4.0) * 0.6);
+    float horizon = exp(-abs(d.y) * 9.0) * 0.55 + exp(-abs(d.y) * 2.5) * 0.12;
+    col += HORIZON * horizon * (mirror ? 1.25 : 1.0);
 
-    // Stars pile up where the shadow is stretching them into a ring.
-    float einstein = 1.0 + 2.0 * exp(-pow((ang - 1.3 * BhAng.x) / (0.25 * BhAng.x), 2.0));
-    col += stars(lensed, t, mirror ? 0.978 : 0.984) * einstein;
-    col += dustBand(lensed, t);
-
-    // One shared warp field for both the blot edges and the arcs: it is what makes them
-    // look like they were drawn on the same paper, and it saves evaluating it twice.
-    float warp = fbm3(d * 5.5 + BrushSeed + t * 0.02);
-    float blot;
-    float fleck;
-    inkBlots(lensed, warp, blot, fleck);
-    col = mix(col, BONE, blot * 0.92);
-    col = mix(col, INK, fleck);
-
-    col += PALEBLUE * lensArcs(ang, warp) * 0.10;
+    // L1-L3: the deep field, on the bent ray.
+    col += starLayer(bent, 64.0, 1.0, t) * 0.9;
+    col += starLayer(bent, 20.0, 2.0, t) * 1.6;
+    if (mirror)
+        col += starLayer(bent, 44.0, 5.0, t) * 0.8;
+    col += milkyWay(bent, t);
+    col += nebulae(bent, ang);
 
     // A basis around the line of sight to the hole, for anything that needs an azimuth.
     vec3 ref = abs(BhDir.y) < 0.9 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
     vec3 e1 = normalize(cross(BhDir, ref));
     vec3 e2 = cross(BhDir, e1);
     float phi = atan(dot(tangentDir, e2), dot(tangentDir, e1));
-    col += BONE * 0.35 * infoStreams(ang, phi, mirror ? -t : t);
+    col += BONE * 0.25 * infoStreams(ang, phi, mirror ? -t : t);
 
-    // The hole itself, last, over everything it swallows.
+    // The shadow: everything at infinity is behind it. No gradient at the edge.
     float aa = fwidth(ang) + 1e-4;
-    col += photonRings(ang);
+    float shadow = smoothstep(BhAng.x - aa, BhAng.x + aa, ang);
+    col *= shadow;
 
     if (DiscStrength > 0.001) {
-        // The disc's own basis: d1 lies in the disc plane and across the line of sight.
-        vec3 d1 = cross(BhAxis, BhDir);
-        if (dot(d1, d1) < 1e-6)
-            d1 = cross(BhAxis, vec3(1.0, 0.0, 0.0));
-        d1 = normalize(d1);
-        vec3 d2 = cross(BhAxis, d1);
-        // The near image, on the lensed ray, and the far side of the disc bent over and
-        // under the shadow: the same disc seen along a ray thrown across the plane and bent
-        // harder. That second image is the pair of arcs the shape is known for.
-        vec3 disc = discImage(lensed, ang, d1, d2, t);
-        vec3 across = d - 2.0 * BhAxis * dot(tangent, BhAxis);
-        vec3 farside = normalize(across + tangentDir * deflection(ang) * 1.6);
-        disc += discImage(farside, ang, d1, d2, t) * 0.55 * smoothstep(BhAng.x * 1.05, BhAng.x * 1.6, ang);
-        col += disc * DiscStrength * 0.9;
+        // Far image: from the closest-approach point — the point on the VIEW ray nearest the
+        // hole, d*c, not a point on the hole's own axis — along the bent ray, onto the plane.
+        vec3 C = d * c;
+        float denomF = dot(bent, BhAxis);
+        if (abs(denomF) > 1e-4) {
+            float tf = dot(BhDir - C, BhAxis) / denomF;
+            if (tf > 0.0)
+                col += discShade(C + bent * tf, bent, t) * DiscStrength * shadow;
+        }
+        // A soft glow in the disc's plane, the only bloom there is without a post pass.
+        float planeBand = exp(-pow(dot(tangent, BhAxis) / (BhAng.x * 0.6), 2.0));
+        float planeWindow = smoothstep(BhAng.x, BhAng.x * 1.3, ang) * (1.0 - smoothstep(BhAng.x * 2.5, BhAng.x * 4.0, ang));
+        col += PALEBLUE * planeBand * planeWindow * 0.12 * DiscStrength;
     }
 
-    // The event horizon has no gradient in the reference and should not have one here.
-    col *= smoothstep(BhAng.x - aa, BhAng.x + aa, ang);
+    // The photon ring, hot and thin, with a glow falling off outside the shadow.
+    float ring = exp(-pow((ang - BhAng.x * 1.02) / (BhAng.x * 0.02), 2.0)) * 2.5;
+    float glow = exp(-max(ang - BhAng.x, 0.0) / (BhAng.x * 0.25)) * 0.35;
+    col += mix(BONE, PALEBLUE, 0.15) * (ring + glow) * shadow;
+
+    if (DiscStrength > 0.001) {
+        // Near image: the unbent ray meets the plane before closest approach.
+        float denomN = dot(d, BhAxis);
+        if (abs(denomN) > 1e-4) {
+            float tn = dot(BhDir, BhAxis) / denomN;
+            if (tn > 0.0 && tn < c)
+                col += discShade(d * tn, d, t) * DiscStrength;
+        }
+    }
     return col;
-}
-
-/** L3: the only marched layer. Three steps, thresholded hard so it has edges, not haze. */
-vec3 volume(vec3 d, float t, out float alpha) {
-    vec3 acc = vec3(0.0);
-    alpha = 0.0;
-    float scale = 30.0 / max(Radius, 1.0);
-    for (int i = 0; i < 3; i++) {
-        float fi = float(i);
-        vec3 p = d * (2.4 + fi * 0.85) * scale + BrushSeed;
-        p += vec3(t * 0.02, -t * 0.015, t * 0.018);
-        float density = fbm3(p * 1.15);
-        // Hard threshold: contrast is what reads as volume, not step count.
-        density = smoothstep(0.52, 0.78, density);
-        float w = exp(-fi * 0.42);
-        vec3 tint = mix(mix(INK, BONE, density), SKY_HIGH + PALEBLUE * 0.25, fi * 0.3);
-        float a = density * 0.30 * w;
-        acc += tint * a * (1.0 - alpha);
-        alpha += a * (1.0 - alpha);
-    }
-    return acc;
 }
 
 // ---- the sea ---------------------------------------------------------------
@@ -559,7 +526,7 @@ void main() {
     if (Inside < 0.5) {
         // The far hemisphere, while the camera is outside. It is about to be painted over
         // by the near one; running the whole interior for it is pure waste.
-        fragColor = vec4(INK * Intensity, 0.85 * phaseFade * (1.0 - hole));
+        fragColor = vec4(INK * Intensity, phaseFade * (1.0 - hole));
         return;
     }
 
@@ -571,11 +538,8 @@ void main() {
         return;
     }
 
+    // Solid. The wall used to sit at three-quarters alpha and the moon came through it.
     vec3 col = skyAnalytic(dir, t, false);
-    float volumeAlpha;
-    col += volume(dir, t, volumeAlpha);
     col += BONE * shatter * 0.45;
-
-    float alpha = clamp(0.72 + volumeAlpha * 0.28, 0.0, 1.0) * phaseFade * (1.0 - hole);
-    fragColor = vec4(col * Intensity, alpha);
+    fragColor = vec4(col * Intensity, (1.0 - hole) * phaseFade);
 }

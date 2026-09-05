@@ -1,6 +1,5 @@
 package net.efkrdnz.jjkstrongest.client;
 
-
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.api.distmarker.Dist;
 
@@ -58,8 +57,6 @@ public class JjkShaderManager {
 	public static RenderType UV_SHARDS_RENDER_TYPE;
 	public static ShaderInstance IMAGINARY_PURPLE_PROJECTILE_SHADER;
 	public static RenderType IMAGINARY_PURPLE_PROJECTILE_RENDER_TYPE;
-	public static ShaderInstance UV_INK_SHADER;
-	public static RenderType UV_INK_RENDER_TYPE;
 	public static ShaderInstance INFORMATION_OVERLOAD_OVERLAY_SHADER;
 	public static RenderType INFORMATION_OVERLOAD_OVERLAY_RENDER_TYPE;
 	public static ShaderInstance FUGA_DOMAIN_EXPLOSION_SHADER;
@@ -234,17 +231,6 @@ public class JjkShaderManager {
 			UV_SHARDS_SHADER = null;
 			UV_SHARDS_RENDER_TYPE = null;
 			System.err.println("[JJK Strongest] \u2717 Failed to load the domain shard shader");
-			e.printStackTrace();
-		}
-		try {
-			event.registerShader(new ShaderInstance(event.getResourceProvider(), ResourceLocation.fromNamespaceAndPath("jjk_strongest", "uv_ink"), DefaultVertexFormat.POSITION_TEX), shader -> {
-				UV_INK_SHADER = shader;
-				UV_INK_RENDER_TYPE = makeRenderType("uv_ink", () -> UV_INK_SHADER);
-			});
-		} catch (Exception e) {
-			UV_INK_SHADER = null;
-			UV_INK_RENDER_TYPE = null;
-			System.err.println("[JJK Strongest] \u2717 Failed to load the domain ink shader");
 			e.printStackTrace();
 		}
 		try {
@@ -427,7 +413,6 @@ public class JjkShaderManager {
 
 
 
-
 	/**
 	 * The domain interior: shell, dome, floor and black hole, all from one shader on one
 	 * mesh.
@@ -509,18 +494,6 @@ public class JjkShaderManager {
 		return true;
 	}
 
-	/** The ink splatter cards suspended in the volume. */
-	public static boolean beginUvInk(float timeSeconds, float seed, float alpha, float fadeFar) {
-		if (UV_INK_SHADER == null)
-			return false;
-		setUniform(UV_INK_SHADER, "Time", timeSeconds);
-		setUniform(UV_INK_SHADER, "BrushSeed", seed);
-		setUniform(UV_INK_SHADER, "Alpha", alpha);
-		setUniform(UV_INK_SHADER, "FadeFar", fadeFar);
-		reportMissingUniformsOnce(UV_INK_SHADER, "uv_ink", "Time", "BrushSeed", "Alpha", "FadeFar");
-		return true;
-	}
-
 	/**
 	 * One shared uniform setter, replacing fifteen copy-pasted ones that differed only in
 	 * which {@code ShaderInstance} they read.
@@ -590,7 +563,6 @@ public class JjkShaderManager {
 		setUniformIfExistsImaginaryPurpleProjectile("Intensity", intensity);
 		return true;
 	}
-
 
 	public static boolean beginInformationOverloadOverlayEffect(float timeSeconds, float strength) {
 		return beginInformationOverloadOverlayEffect(timeSeconds, strength, 1.0f);
@@ -678,7 +650,6 @@ public class JjkShaderManager {
 		}
 	}
 
-
 	private static void setUniformIfExistsImaginaryPurpleProjectile(String name, float... values) {
 		var uniform = IMAGINARY_PURPLE_PROJECTILE_SHADER.getUniform(name);
 		if (uniform != null) {
@@ -692,7 +663,6 @@ public class JjkShaderManager {
 				uniform.set(values[0], values[1], values[2], values[3]);
 		}
 	}
-
 
 
 	private static void setUniformIfExistsImaginaryPurple(String name, float... values) {

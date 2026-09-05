@@ -48,6 +48,8 @@ public class DomainExpansionStartProcedure {
 		domain.setPhase(DomainPhase.EXPANDING);
 		domain.setPhaseProgress(0.0f);
 		domain.setShellSeed(serverLevel.random.nextInt(100000));
+		// The black hole hangs ahead of whoever opened the domain, for as long as it stands.
+		domain.setHoleYaw(caster.getYRot());
 
 		// Server-side bookkeeping the client has no business knowing.
 		CompoundTag data = domain.getPersistentData();

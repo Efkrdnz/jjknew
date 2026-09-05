@@ -170,20 +170,29 @@ Deliberately not shared, and deliberately not in the definition.
   hard-thresholded volume steps, twelve ink blots whose rims are all displaced by one shared
   warp field, and pale-blue lens arcs.
 
-The black hole is analytic and lives in the view ray, which makes it a real point in the
-world: it parallaxes, cannot clip through the shell, and cannot show its own back face.
-Lensing is `1/r`, which is the leading term of Einstein deflection rather than an
-approximation of it; the photon ring that cannot produce is drawn explicitly.
+The black hole is at infinity: a direction (`BhDir`, from the caster's facing at cast,
+synced as `HOLE_YAW`), an angular radius (`BhAng.x`, 35 degrees across) and a fixed disc
+axis. Nothing about it depends on where you stand, so it never parallaxes — a thing the size
+of a sky inside a thirty-block room. Lensing is `1/r`, the leading term of Einstein
+deflection; the background is sampled on the bent ray so stars stretch into a ring on their
+own, and the accretion disc is a real thin-disc intersection — the ray runs to its closest
+approach, bends there, and what it hits on the far side is the arcs over and under the
+shadow. The near side of the disc is hit before the bend and drawn last, over the shadow.
 
-`uv_ink` draws twenty splatter cards as real geometry, because they have to pass in front of
-and behind the people in the room and nothing painted on the shell can do that.
+The floor is a disc at the plane, drawn with depth and translucent, over a ball the carve has
+emptied. It reflects the analytic sky and, because every entity in the room is drawn again
+mirrored under the plane before it, the room too. Footsteps ripple it (`RippleField`,
+`DomainFloorRipples`, the `RippleData` uniform array).
 
-**The one trap:** `localPos` is the *unit* sphere position and `CamOffset` is in blocks.
-Multiply by `Radius` before comparing them. Not doing that is what made the previous
-interior read as a flat painted texture from anywhere but dead centre.
+**The one trap:** the renderer bakes its PoseStack into the vertex on the CPU, and the entity
+dispatcher has already translated that stack to the domain's camera-relative position. So
+`Position` in these shaders is *not* the unit sphere: it is `entityCentre + surface point`,
+with `entityCentre = -CamOffset`. `uv_interior.vsh` adds `CamOffset` back and hands the
+fragment stage domain-local blocks; `uv_shards.vsh` does the same before its sphere maths.
+Treating `Position` as a unit vector is what once cost the interior all its parallax.
 
 **Key files:** `client/renderer/DomainUVRenderer`, `client/JjkShaderManager`,
-`shaders/core/uv_interior.*`, `shaders/core/uv_ink.*`,
+`shaders/core/uv_interior.*`, `shaders/core/uv_shards.*`, `client/DomainFloorRipples`,
 `client/renderer/DomainUVLinesClientRenderer`, `client/DomainAtmosphereRenderer`,
 `client/DomainLightmap`, `client/DomainInteriorParticles`, `client/DomainClashHudOverlay`
 

@@ -48,6 +48,12 @@ public class DomainUVEntity extends PathfinderMob implements DomainSource {
 	private static final EntityDataAccessor<Integer> PHASE = SynchedEntityData.defineId(DomainUVEntity.class, EntityDataSerializers.INT);
 	private static final EntityDataAccessor<Float> PHASE_PROGRESS = SynchedEntityData.defineId(DomainUVEntity.class, EntityDataSerializers.FLOAT);
 	private static final EntityDataAccessor<Float> FLOOR_OFFSET = SynchedEntityData.defineId(DomainUVEntity.class, EntityDataSerializers.FLOAT);
+	/**
+	 * Which way the black hole lies, as a yaw in degrees: the way the caster was facing when
+	 * the domain opened. The hole is at infinity, so this is all that places it, and it is
+	 * synced so everyone inside sees it in the same part of the sky.
+	 */
+	private static final EntityDataAccessor<Float> HOLE_YAW = SynchedEntityData.defineId(DomainUVEntity.class, EntityDataSerializers.FLOAT);
 	private static final EntityDataAccessor<Integer> SHELL_SEED = SynchedEntityData.defineId(DomainUVEntity.class, EntityDataSerializers.INT);
 	private static final EntityDataAccessor<Float> CLASH_HP = SynchedEntityData.defineId(DomainUVEntity.class, EntityDataSerializers.FLOAT);
 	private static final EntityDataAccessor<Boolean> CLASHING = SynchedEntityData.defineId(DomainUVEntity.class, EntityDataSerializers.BOOLEAN);
@@ -86,6 +92,7 @@ public class DomainUVEntity extends PathfinderMob implements DomainSource {
 		builder.define(PHASE, DomainPhase.EXPANDING.ordinal());
 		builder.define(PHASE_PROGRESS, 0.0f);
 		builder.define(FLOOR_OFFSET, DEFAULT_FLOOR_OFFSET);
+		builder.define(HOLE_YAW, 0.0f);
 		builder.define(SHELL_SEED, 0);
 		builder.define(CLASH_HP, 100.0f);
 		builder.define(CLASHING, false);
@@ -194,6 +201,14 @@ public class DomainUVEntity extends PathfinderMob implements DomainSource {
 
 	public void setFloorOffset(float offset) {
 		this.entityData.set(FLOOR_OFFSET, offset);
+	}
+
+	public float getHoleYaw() {
+		return this.entityData.get(HOLE_YAW);
+	}
+
+	public void setHoleYaw(float yawDegrees) {
+		this.entityData.set(HOLE_YAW, yawDegrees);
 	}
 
 	public int getShellSeed() {
@@ -306,6 +321,7 @@ public class DomainUVEntity extends PathfinderMob implements DomainSource {
 		compound.putInt("domainPhase", getPhase().ordinal());
 		compound.putFloat("phaseProgress", getPhaseProgress());
 		compound.putFloat("floorOffset", getFloorOffset());
+		compound.putFloat("holeYaw", getHoleYaw());
 		compound.putInt("shellSeed", getShellSeed());
 		compound.putFloat("clashHP", getClashHP());
 		compound.putString("ownerUUID", domainOwnerUUID());
@@ -326,6 +342,8 @@ public class DomainUVEntity extends PathfinderMob implements DomainSource {
 			setPhaseProgress(compound.getFloat("phaseProgress"));
 		if (compound.contains("floorOffset"))
 			setFloorOffset(compound.getFloat("floorOffset"));
+		if (compound.contains("holeYaw"))
+			setHoleYaw(compound.getFloat("holeYaw"));
 		if (compound.contains("shellSeed"))
 			setShellSeed(compound.getInt("shellSeed"));
 		if (compound.contains("ownerUUID"))
