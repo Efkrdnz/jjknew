@@ -17,3 +17,6 @@ addons/*/build/
 addons/*/.gradle/
 addons/*/run/
 tools/geometry-harness/build/
+
+# javac writes these when a command line gets too long for the shell
+javac.*.args
