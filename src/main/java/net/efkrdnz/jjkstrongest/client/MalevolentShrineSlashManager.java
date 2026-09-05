@@ -28,8 +28,8 @@ public class MalevolentShrineSlashManager {
 	public static final int STYLE_DISMANTLE = 1;
 	public static final int STYLE_STRIKE = 2;
 
-	/** Ticks a blade takes to draw itself tip to tip: very fast, not instant. A strike is instant. */
-	private static final float SWEEP_TICKS = 1.5f;
+	/** Ticks a blade takes to draw itself from origin to tip. A strike is instant. */
+	private static final float SWEEP_TICKS = 2.0f;
 
 	public static class DomainSlash {
 		/** The blade's CENTRE. Its origin is half a length back along the direction. */

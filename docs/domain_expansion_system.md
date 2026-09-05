@@ -201,12 +201,10 @@ the field red and dim.
 
 The cuts are `shrine_cleave`: one draw call for every live slash, with each slash's life,
 style, seed, jitter and sweep packed into the vertex `Color` bytes (the layout is documented
-at the top of the fragment shader, beside the renderer that writes it). A cut is a thin black
-interior with one hard crimson rim and a narrow red aura — nothing white — drawn tip to tip in
-about a tick and a half; the frame is copied to the scene texture once and nudged apart just
-outside the rim so the edge reads as an edge in the world. Each quad is a cylindrical billboard
-around the blade's axis, so a slash is never seen edge-on. The technique's own Dismantle keeps
-`dismantle_slash` untouched.
+at the top of the fragment shader, beside the renderer that writes it). The frame is copied
+to the scene texture once, and the shader shears it apart across the cut so the world visibly
+splits along the line. Each quad is a cylindrical billboard around the blade's axis, so a
+slash is never seen edge-on. The technique's own Dismantle keeps `dismantle_slash` untouched.
 
 **The trap this replaced:** the old renderer set the shader's per-slash uniforms for each
 slash and flushed them all in one batch, so every slash on screen wore the last one's style

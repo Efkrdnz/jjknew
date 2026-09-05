@@ -13,9 +13,9 @@ in vec2 vUv;
 in vec4 vParams;
 out vec4 fragColor;
 
-const vec3 BLACK   = vec3(0.015, 0.0, 0.0);
+const vec3 HOT     = vec3(1.0, 0.97, 0.92);
 const vec3 CRIMSON = vec3(0.85, 0.05, 0.03);
-const vec3 BLOOD   = vec3(0.55, 0.04, 0.02);
+const vec3 EMBER   = vec3(1.0, 0.30, 0.08);
 
 float hash21(vec2 p) {
     p = fract(p * vec2(123.34, 345.45));
@@ -24,14 +24,14 @@ float hash21(vec2 p) {
 }
 
 /**
- * One cut through the world: a thin black blade with a red rim.
+ * One cut through the world.
  *
  * The quad is a cylindrical billboard around the blade's axis, so v runs straight across
- * the cut on screen. The interior is black — a line of nothing where the world was — with
- * one hard crimson outline, a narrow red aura outside that, and a faint shear of the scene
- * right at the rim so the edge reads as a real edge. The blade draws itself tip to tip in
- * about a tick and a half, holds, and goes. Every edge is a step or a one-sided smoothstep;
- * nothing here is blurred on purpose, and nothing here is white.
+ * the cut on screen. Everything here is built on |v| against a handful of half-widths:
+ * a razor core that is never under a pixel, one hard crimson edge, a dark WOUND that
+ * shears the scene behind it so the world visibly splits along the line, and a brief
+ * aura. The core dies first; the wound lingers and fades. Every edge is a step or a
+ * one-sided smoothstep — nothing here is blurred on purpose.
  */
 void main() {
     float u = vUv.x;
@@ -47,56 +47,56 @@ void main() {
     float px = fwidth(v);
     vec2 grad = vec2(dFdx(v), dFdy(v));
 
-    // Timing: hold, then gone. The aura lets go a little before the blade does.
-    float bladeLife = 1.0 - smoothstep(0.55, 0.85, life);
-    float auraLife = 1.0 - smoothstep(0.40, 0.70, life);
+    // Timing. The core holds, then dies; the wound outlives it and fades to nothing.
+    float coreLife = 1.0 - smoothstep(0.50, 0.70, life);
+    float woundLife = 1.0 - smoothstep(0.55, 1.0, life);
     if (style > 1.5) {
         // A strike is over almost as soon as it lands.
-        bladeLife = 1.0 - smoothstep(0.30, 0.60, life);
-        auraLife = 1.0 - smoothstep(0.20, 0.50, life);
+        coreLife = 1.0 - smoothstep(0.30, 0.55, life);
+        woundLife = 1.0 - smoothstep(0.35, 0.85, life);
     }
 
     // Blade profile: thin at the origin, widest about two thirds along, a point at the tip.
     float profile = pow(smoothstep(0.0, 0.15, u), 0.5) * pow(1.0 - smoothstep(0.60, 1.0, u), 0.7);
 
-    // Sweep: the blade draws itself from the origin, with a brief red flare at the leading
-    // edge that is gone once the blade is complete.
+    // Sweep: the blade draws itself from the origin. A hot point rides the leading edge and
+    // is gone once the blade is complete.
     float drawn = 1.0 - smoothstep(sweep, sweep + 0.02, u);
     float tip = exp(-pow((u - sweep) * 40.0, 2.0)) * (1.0 - smoothstep(0.85, 1.0, sweep)) * profile;
 
     // Half-widths, in quad units (the quad's full height is the slash's width in blocks).
-    // Thin: the black interior is a few hundredths of the quad, never under a pixel.
-    float coreHalf = max(0.032 * profile, 0.9 * px);
+    float woundScale = style < 0.5 ? 2.0 : 1.0;
+    float coreHalf = max(0.06 * profile, 0.9 * px);
     if (style > 1.5)
-        coreHalf *= 1.2;
-    // Serration: step-sharp teeth on the rim, not jitter.
-    float tooth = max(hash21(vec2(floor(u * 90.0), seed * 97.0)) - 0.5, 0.0) * 0.03 * profile;
-    float rim = max(0.018 * profile, 0.9 * px) + tooth;
-    if (style < 0.5)
-        rim *= 1.6;   // a Cleave wears a heavier outline
-    float edgeHalf = coreHalf + rim;
-    float auraHalf = edgeHalf * 2.2;
+        coreHalf *= 1.3;
+    // Serration: step-sharp teeth along both edges, not jitter.
+    float tooth = (hash21(vec2(floor(u * 90.0), seed * 97.0)) - 0.5) * 0.05 * profile;
+    float edgeHalf = coreHalf * 2.2 + max(tooth, 0.0);
+    float woundHalf = (coreHalf * 3.5 + 0.12 * profile + tooth) * woundScale;
+    float auraHalf = woundHalf * 2.5;
 
     float d = abs(v);
     float core = step(d, coreHalf);
     float edge = step(d, edgeHalf) * (1.0 - core);
-    float aura = 1.0 - smoothstep(edgeHalf, auraHalf, d);
-    float rimZone = 1.0 - smoothstep(edgeHalf, edgeHalf * 1.6, d);
+    float wound = 1.0 - smoothstep(woundHalf * 0.85, woundHalf, d);   // sharp in, soft out
+    float aura = 1.0 - smoothstep(woundHalf, auraHalf, d);
 
-    // The world just outside the rim, nudged apart across the cut: a few pixels, enough
-    // for the edge to read as an edge in the world rather than a line drawn over it.
+    // The world behind the cut, sheared apart across it. The screen-space gradient of v
+    // points straight across the blade, whatever its orientation.
     vec2 perp = length(grad) > 1e-6 ? normalize(grad) : vec2(0.0, 1.0);
     vec2 suv = gl_FragCoord.xy / OutSize;
-    float shearPx = 3.0 * rimZone * bladeLife * sign(v);
-    vec3 col = texture(SceneSampler, clamp(suv + perp * shearPx / OutSize, 0.0, 1.0)).rgb;
+    float shearPx = 6.0 * wound * woundLife * sign(v);
+    vec3 scene = texture(SceneSampler, clamp(suv + perp * shearPx / OutSize, 0.0, 1.0)).rgb;
+    vec3 col = scene * (1.0 - 0.85 * wound * woundLife);
 
+    vec3 coreCol = style < 1.5 && style > 0.5 ? mix(HOT, CRIMSON, 0.35) : HOT;
     float flicker = 0.92 + 0.08 * sin(Time * 60.0 + seed * 40.0);
-    col += BLOOD * aura * 0.55 * auraLife * bright;
-    col = mix(col, CRIMSON * (0.85 + 0.35 * bright) * flicker, edge * bladeLife);
-    col = mix(col, BLACK, core * bladeLife);
-    col += CRIMSON * tip * 1.5 * bladeLife;
+    col = mix(col, CRIMSON, edge * coreLife);
+    col = mix(col, coreCol * bright * flicker, core * coreLife);
+    col += EMBER * aura * 0.35 * coreLife * bright;
+    col += HOT * tip * 2.0 * coreLife;
 
-    float alpha = (core + edge) * bladeLife + aura * 0.5 * auraLife + rimZone * 0.6 * bladeLife + tip * bladeLife;
+    float alpha = wound * woundLife + (core + edge) * coreLife + aura * 0.5 * coreLife + tip * coreLife;
     alpha = clamp(alpha, 0.0, 1.0) * drawn * step(0.001, profile);
     if (alpha < 0.003)
         discard;
