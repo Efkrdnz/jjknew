@@ -334,8 +334,17 @@ void main() {
     float phaseFade = 1.0;
     if (Phase < 0.5)
         phaseFade = smoothstep(0.0, 0.65, Progress);
-    else if (Phase > 2.5)
-        phaseFade = 1.0 - smoothstep(0.35, 1.0, Progress);
+    else if (Phase > 2.5) {
+        // Gone by 55%, while the shards are still in the air, so the back half of the
+        // collapse is real world seen through a cloud of glass.
+        phaseFade = 1.0 - smoothstep(0.05, 0.55, Progress);
+        // From the first collapse frame the shell is broken, so stop drawing it as a
+        // closed surface. Keeping the opaque outer face would fire the shard pass off
+        // inside a black sphere and you would see none of it. The interior, seen from
+        // within, still fades out on phaseFade above.
+        if (!gl_FrontFacing || Inside < 0.5)
+            discard;
+    }
 
     // THE fix. localPos is the unit sphere; CamOffset is in blocks. Subtracting them
     // without this made the view ray collapse toward -CamOffset as you walked off centre,

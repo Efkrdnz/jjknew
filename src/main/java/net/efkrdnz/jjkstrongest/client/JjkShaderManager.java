@@ -44,6 +44,16 @@ public class JjkShaderManager {
 	public static RenderType IMAGINARY_PURPLE_RENDER_TYPE;
 	public static ShaderInstance UV_INTERIOR_SHADER;
 	public static RenderType UV_INTERIOR_RENDER_TYPE;
+	/**
+	 * The same shader, colour only.
+	 *
+	 * <p>The interior writes depth, which is what makes it occlude the world behind it. A
+	 * dome fading out during a collapse must not do that — at alpha 0.3 it would still punch
+	 * an opaque hole in everything behind it.
+	 */
+	public static RenderType UV_INTERIOR_COLLAPSE_RENDER_TYPE;
+	public static ShaderInstance UV_SHARDS_SHADER;
+	public static RenderType UV_SHARDS_RENDER_TYPE;
 	public static ShaderInstance IMAGINARY_PURPLE_PROJECTILE_SHADER;
 	public static RenderType IMAGINARY_PURPLE_PROJECTILE_RENDER_TYPE;
 	public static ShaderInstance UV_INK_SHADER;
@@ -186,11 +196,13 @@ public class JjkShaderManager {
 		try {
 			event.registerShader(new ShaderInstance(event.getResourceProvider(), ResourceLocation.fromNamespaceAndPath("jjk_strongest", "uv_interior"), DefaultVertexFormat.POSITION_TEX), shader -> {
 				UV_INTERIOR_SHADER = shader;
-				UV_INTERIOR_RENDER_TYPE = makeDomainInteriorRenderType("uv_interior", () -> UV_INTERIOR_SHADER);
+				UV_INTERIOR_RENDER_TYPE = makeDomainSurfaceRenderType("uv_interior", () -> UV_INTERIOR_SHADER, true);
+				UV_INTERIOR_COLLAPSE_RENDER_TYPE = makeDomainSurfaceRenderType("uv_interior_collapse", () -> UV_INTERIOR_SHADER, false);
 			});
 		} catch (Exception e) {
 			UV_INTERIOR_SHADER = null;
 			UV_INTERIOR_RENDER_TYPE = null;
+			UV_INTERIOR_COLLAPSE_RENDER_TYPE = null;
 			System.err.println("[JJK Strongest] \u2717 Failed to load the domain interior shader");
 			e.printStackTrace();
 		}
@@ -205,6 +217,19 @@ public class JjkShaderManager {
 			IMAGINARY_PURPLE_PROJECTILE_SHADER = null;
 			IMAGINARY_PURPLE_PROJECTILE_RENDER_TYPE = null;
 			System.err.println("[JJK Strongest] ✗ Failed to load Imaginary Purple Projectile shader");
+			e.printStackTrace();
+		}
+		try {
+			event.registerShader(new ShaderInstance(event.getResourceProvider(), ResourceLocation.fromNamespaceAndPath("jjk_strongest", "uv_shards"), DefaultVertexFormat.POSITION_TEX), shader -> {
+				UV_SHARDS_SHADER = shader;
+				// Colour only. The pass is unsorted and every shard is fading, so depth
+				// writes would let a near piece permanently occlude a far one's fade.
+				UV_SHARDS_RENDER_TYPE = makeDomainSurfaceRenderType("uv_shards", () -> UV_SHARDS_SHADER, false);
+			});
+		} catch (Exception e) {
+			UV_SHARDS_SHADER = null;
+			UV_SHARDS_RENDER_TYPE = null;
+			System.err.println("[JJK Strongest] \u2717 Failed to load the domain shard shader");
 			e.printStackTrace();
 		}
 		try {
@@ -449,6 +474,31 @@ public class JjkShaderManager {
 		return true;
 	}
 
+	/** The broken shell, mid-collapse. */
+	public static boolean beginUvShards(float timeSeconds, float seed, float intensity, float radius, float progress, float collapseSeconds, float breakX, float breakY, float breakZ, float camX,
+			float camY, float camZ, float integrity, int shellTexture) {
+		if (UV_SHARDS_SHADER == null)
+			return false;
+		setUniform(UV_SHARDS_SHADER, "Time", timeSeconds);
+		setUniform(UV_SHARDS_SHADER, "BrushSeed", seed);
+		setUniform(UV_SHARDS_SHADER, "Intensity", intensity);
+		setUniform(UV_SHARDS_SHADER, "Radius", radius);
+		setUniform(UV_SHARDS_SHADER, "Progress", progress);
+		setUniform(UV_SHARDS_SHADER, "CollapseSeconds", collapseSeconds);
+		setUniform(UV_SHARDS_SHADER, "BreakDir", breakX, breakY, breakZ);
+		setUniform(UV_SHARDS_SHADER, "CamOffset", camX, camY, camZ);
+		setUniform(UV_SHARDS_SHADER, "Integrity", integrity);
+		setUniform(UV_SHARDS_SHADER, "HasShell", shellTexture >= 0 ? 1.0f : 0.0f);
+		if (shellTexture >= 0) {
+			try {
+				UV_SHARDS_SHADER.setSampler("ShellSampler", shellTexture);
+			} catch (Exception ignored) {
+			}
+		}
+		reportMissingUniformsOnce(UV_SHARDS_SHADER, "uv_shards", "Time", "BrushSeed", "Intensity", "Radius", "Progress", "CollapseSeconds", "BreakDir", "CamOffset", "Integrity", "HasShell");
+		return true;
+	}
+
 	/** The ink splatter cards suspended in the volume. */
 	public static boolean beginUvInk(float timeSeconds, float seed, float alpha, float fadeFar) {
 		if (UV_INK_SHADER == null)
@@ -666,12 +716,12 @@ public class JjkShaderManager {
 	 * ground and nothing above it. The fragment shader branches on {@code gl_FrontFacing}
 	 * instead, giving the interior one treatment and the outer shell another.
 	 */
-	private static RenderType makeDomainInteriorRenderType(String name, java.util.function.Supplier<ShaderInstance> shaderSup) {
+	private static RenderType makeDomainSurfaceRenderType(String name, java.util.function.Supplier<ShaderInstance> shaderSup, boolean writeDepth) {
 		// 32 x 64 quads is 8192 vertices at 20 bytes each. Sized for that, or the
 		// BufferBuilder regrows its buffer every single frame.
 		return RenderType.create(name, DefaultVertexFormat.POSITION_TEX, VertexFormat.Mode.QUADS, 262144, false, false,
 				RenderType.CompositeState.builder().setShaderState(new RenderStateShard.ShaderStateShard(shaderSup)).setDepthTestState(new RenderStateShard.DepthTestStateShard("lequal", 515)).setCullState(new RenderStateShard.CullStateShard(false))
-						.setWriteMaskState(new RenderStateShard.WriteMaskStateShard(true, true)).setTransparencyState(new RenderStateShard.TransparencyStateShard("translucent_transparency", () -> {
+						.setWriteMaskState(new RenderStateShard.WriteMaskStateShard(true, writeDepth)).setTransparencyState(new RenderStateShard.TransparencyStateShard("translucent_transparency", () -> {
 							com.mojang.blaze3d.systems.RenderSystem.enableBlend();
 							com.mojang.blaze3d.systems.RenderSystem.blendFuncSeparate(org.lwjgl.opengl.GL11.GL_SRC_ALPHA, org.lwjgl.opengl.GL11.GL_ONE_MINUS_SRC_ALPHA, org.lwjgl.opengl.GL11.GL_ONE, org.lwjgl.opengl.GL11.GL_ONE_MINUS_SRC_ALPHA);
 						}, () -> {

@@ -3,6 +3,7 @@ package net.efkrdnz.jjkstrongest.client.renderer;
 import org.joml.Matrix4f;
 
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
@@ -13,6 +14,7 @@ import net.efkrdnz.jjkstrongest.client.DomainShellTexture;
 import net.efkrdnz.jjkstrongest.client.JjkShaderManager;
 import net.efkrdnz.jjkstrongest.client.model.Modelblank_entity;
 import net.efkrdnz.jjkstrongest.domain.DomainPhase;
+import net.efkrdnz.jjkstrongest.domain.DomainShell;
 import net.efkrdnz.jjkstrongest.entity.DomainUVEntity;
 
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -72,16 +74,84 @@ public class DomainUVRenderer extends MobRenderer<DomainUVEntity, Modelblank_ent
 		if (radius <= 0.01f)
 			return;
 
+		DomainPhase phase = entity.getPhase();
+		float progress = entity.getPhaseProgress();
+		if (phase == DomainPhase.COLLAPSING) {
+			// The phase is synced once a tick and its clock finishes long before the entity
+			// does — it sits pinned at exactly 1.0 while the terrain restore catches up,
+			// which routinely runs for seconds. Drawing anything then would leave a field of
+			// glass hanging motionless in the air over ground that has already come back.
+			progress = Math.min(1.0f, progress + partialTick / Math.max(1, entity.definition().collapseTicks()));
+			if (progress >= 1.0f)
+				return;
+		}
+
 		Vec3 camOffset = this.entityRenderDispatcher.camera.getPosition().subtract(entity.getPosition(partialTick));
 		boolean inside = camOffset.lengthSqr() < (radius * radius);
 
-		renderInterior(entity, radius, partialTick, camOffset, inside, poseStack, bufferSource);
-		if (inside && (entity.getPhase() == DomainPhase.ACTIVE || entity.getPhase() == DomainPhase.SETTLING))
-			renderInk(entity, radius, partialTick, poseStack, bufferSource);
+		renderInterior(entity, radius, partialTick, progress, camOffset, inside, poseStack, bufferSource);
+		if (phase == DomainPhase.COLLAPSING)
+			renderShards(entity, radius, partialTick, progress, camOffset, poseStack, bufferSource);
+		if (inside && phase != DomainPhase.EXPANDING)
+			renderInk(entity, radius, partialTick, progress, phase, poseStack, bufferSource);
 	}
 
-	private void renderInterior(DomainUVEntity entity, float radius, float partialTick, Vec3 camOffset, boolean inside, PoseStack poseStack, MultiBufferSource bufferSource) {
-		if (JjkShaderManager.UV_INTERIOR_RENDER_TYPE == null)
+	/**
+	 * The shell, broken.
+	 *
+	 * <p>The same mesh the wall was drawn with, so at the moment it breaks the pieces are
+	 * exactly the wall that was there a frame earlier — which is the one thing a shatter has
+	 * to get right, and the reason this is not a separate set of scattered cards. Every quad
+	 * carries its own <em>centre</em> uv here rather than its corner, because that is the only
+	 * value all four corners of a quad agree on: it is what lets the vertex shader work out
+	 * which shard a vertex belongs to and tear the sphere along shard boundaries instead of
+	 * along quad boundaries.
+	 *
+	 * <p>All the motion — the stagger, the outward burst, gravity, the tumble — happens in
+	 * the vertex shader. Doing it here would mean uploading a transform per shard every frame
+	 * and reimplementing the shader's clustering in Java so the two agreed on which vertices
+	 * move together.
+	 */
+	private void renderShards(DomainUVEntity entity, float radius, float partialTick, float progress, Vec3 camOffset, PoseStack poseStack, MultiBufferSource bufferSource) {
+		if (JjkShaderManager.UV_SHARDS_RENDER_TYPE == null)
+			return;
+		float timeSeconds = (entity.tickCount + partialTick) / 20.0f;
+		int shellTexture = DomainShellTexture.upload(entity.shell());
+		DomainShell shell = entity.shell();
+		Vec3 breakDir = shell == null ? new Vec3(0.0, 1.0, 0.0) : shell.weakestDirection();
+
+		if (!JjkShaderManager.beginUvShards(timeSeconds, entity.getShellSeed() * 0.001f + 1.0f, 0.9f, radius, progress, entity.definition().collapseTicks() / 20.0f, (float) breakDir.x,
+				(float) breakDir.y, (float) breakDir.z, (float) camOffset.x, (float) camOffset.y, (float) camOffset.z, entity.getShellIntegrity(), shellTexture))
+			return;
+
+		// Deliberately NOT scaled by radius: the vertex shader applies it itself, so that the
+		// gravity and burst terms stay in blocks instead of being multiplied by the model
+		// matrix along with everything else.
+		poseStack.pushPose();
+		VertexConsumer vc = bufferSource.getBuffer(JjkShaderManager.UV_SHARDS_RENDER_TYPE);
+		Matrix4f matrix = poseStack.last().pose();
+		for (int i = 0; i < UNIT_SPHERE.length; i += 5) {
+			int quad = i / 20;
+			int lat = quad / LON_SEGMENTS;
+			int lon = quad % LON_SEGMENTS;
+			// The +0.5 is what makes this unambiguous: a corner uv sits exactly on an integer
+			// boundary once scaled, so flooring it could land on either neighbouring quad.
+			float centreU = (lon + 0.5f) / LON_SEGMENTS;
+			float centreV = (lat + 0.5f) / LAT_SEGMENTS;
+			vc.addVertex(matrix, UNIT_SPHERE[i], UNIT_SPHERE[i + 1], UNIT_SPHERE[i + 2]).setUv(centreU, centreV);
+		}
+		poseStack.popPose();
+		if (bufferSource instanceof MultiBufferSource.BufferSource bs)
+			bs.endBatch(JjkShaderManager.UV_SHARDS_RENDER_TYPE);
+	}
+
+	private void renderInterior(DomainUVEntity entity, float radius, float partialTick, float progress, Vec3 camOffset, boolean inside, PoseStack poseStack, MultiBufferSource bufferSource) {
+		boolean collapsing = entity.getPhase() == DomainPhase.COLLAPSING;
+		// Colour only while collapsing. The ordinary interior writes depth — that is what
+		// makes it hide the world outside — and a dome fading to nothing must not, or it
+		// punches an opaque hole in everything behind it right up until it disappears.
+		RenderType renderType = collapsing ? JjkShaderManager.UV_INTERIOR_COLLAPSE_RENDER_TYPE : JjkShaderManager.UV_INTERIOR_RENDER_TYPE;
+		if (renderType == null)
 			return;
 
 		float timeSeconds = (entity.tickCount + partialTick) / 20.0f;
@@ -100,22 +170,31 @@ public class DomainUVRenderer extends MobRenderer<DomainUVEntity, Modelblank_ent
 		double spin = timeSeconds * 0.05;
 		Vec3 axis = new Vec3(Math.sin(spin) * 0.35, 1.0, Math.cos(spin) * 0.35).normalize();
 
-		if (!JjkShaderManager.beginUvInterior(timeSeconds, entity.getShellSeed() * 0.001f + 1.0f, 0.9f, radius, entity.getPhaseProgress(), entity.getPhase().ordinal(), (float) camOffset.x,
+		// The black hole is the one thing that should implode rather than fade: the disc goes
+		// first, then the horizon contracts to a point, and it is gone before the shards have
+		// spread far enough to see through.
+		float discStrength = 1.0f;
+		if (collapsing) {
+			holeAngle *= 1.0f - smoothstep(0.10f, 0.55f, progress);
+			discStrength = 1.0f - smoothstep(0.0f, 0.30f, progress);
+		}
+
+		if (!JjkShaderManager.beginUvInterior(timeSeconds, entity.getShellSeed() * 0.001f + 1.0f, 0.9f, radius, progress, entity.getPhase().ordinal(), (float) camOffset.x,
 				(float) camOffset.y, (float) camOffset.z, entity.getFloorOffset(), inside, (float) holeDir.x, (float) holeDir.y, (float) holeDir.z, holeAngle, (float) holeDistance, (float) axis.x,
-				(float) axis.y, (float) axis.z, 1.0f, entity.getShellIntegrity(), shellTexture))
+				(float) axis.y, (float) axis.z, discStrength, entity.getShellIntegrity(), shellTexture))
 			return;
 
 		poseStack.pushPose();
 		poseStack.scale(radius, radius, radius);
 
-		VertexConsumer vc = bufferSource.getBuffer(JjkShaderManager.UV_INTERIOR_RENDER_TYPE);
+		VertexConsumer vc = bufferSource.getBuffer(renderType);
 		Matrix4f matrix = poseStack.last().pose();
 		for (int i = 0; i < UNIT_SPHERE.length; i += 5)
 			vc.addVertex(matrix, UNIT_SPHERE[i], UNIT_SPHERE[i + 1], UNIT_SPHERE[i + 2]).setUv(UNIT_SPHERE[i + 3], UNIT_SPHERE[i + 4]);
 
 		poseStack.popPose();
 		if (bufferSource instanceof MultiBufferSource.BufferSource bs)
-			bs.endBatch(JjkShaderManager.UV_INTERIOR_RENDER_TYPE);
+			bs.endBatch(renderType);
 	}
 
 	/**
@@ -129,13 +208,18 @@ public class DomainUVRenderer extends MobRenderer<DomainUVEntity, Modelblank_ent
 	 * ({@code v = id + sv * 0.5}) rather than in a uniform, so the shader can vary every
 	 * card without the renderer flushing a batch per card.
 	 */
-	private void renderInk(DomainUVEntity entity, float radius, float partialTick, PoseStack poseStack, MultiBufferSource bufferSource) {
+	private void renderInk(DomainUVEntity entity, float radius, float partialTick, float progress, DomainPhase phase, PoseStack poseStack, MultiBufferSource bufferSource) {
 		if (JjkShaderManager.UV_INK_RENDER_TYPE == null)
 			return;
 		float timeSeconds = (entity.tickCount + partialTick) / 20.0f;
 		int seed = entity.getShellSeed();
-		// Held back while the shell settles, so the volume fills after the walls arrive.
-		float alpha = entity.getPhase() == DomainPhase.SETTLING ? 0.9f * entity.getPhaseProgress() : 0.9f;
+		// Held back while the shell settles, so the volume fills after the walls arrive, and
+		// taken away early in a collapse so twenty white blots do not hang in open air.
+		float alpha = 0.9f;
+		if (phase == DomainPhase.SETTLING)
+			alpha *= progress;
+		else if (phase == DomainPhase.COLLAPSING)
+			alpha *= 1.0f - smoothstep(0.0f, 0.35f, progress);
 		if (alpha <= 0.01f)
 			return;
 		if (!JjkShaderManager.beginUvInk(timeSeconds, seed * 0.001f + 1.0f, alpha, radius * 2.0f))
@@ -179,6 +263,12 @@ public class DomainUVRenderer extends MobRenderer<DomainUVEntity, Modelblank_ent
 		}
 		if (bufferSource instanceof MultiBufferSource.BufferSource bs)
 			bs.endBatch(JjkShaderManager.UV_INK_RENDER_TYPE);
+	}
+
+	/** GLSL's smoothstep, for the collapse ramps. */
+	private static float smoothstep(float edge0, float edge1, float x) {
+		float t = Math.max(0.0f, Math.min(1.0f, (x - edge0) / (edge1 - edge0)));
+		return t * t * (3.0f - 2.0f * t);
 	}
 
 	/** Stable per-domain, per-card noise, so the cards do not reshuffle every frame. */

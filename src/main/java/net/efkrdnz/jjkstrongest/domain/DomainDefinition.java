@@ -30,7 +30,8 @@ import javax.annotation.Nullable;
  *                       ignored by open domains, which have no interior to stand in
  * @param expansionTicks ticks spent growing to full size
  * @param settleTicks    ticks at full size before the domain turns hostile
- * @param collapseTicks  ticks spent shrinking while the world goes back
+ * @param collapseTicks  ticks the shell spends breaking up while the world goes back;
+ *                       the radius holds at full size so the shards fly from the wall
  * @param durationTicks  ticks the domain stays hostile once settled
  * @param maxLifetimeTicks a hard stop, whatever else is going on
  * @param shell          how the surface holds and fails; null for an open domain

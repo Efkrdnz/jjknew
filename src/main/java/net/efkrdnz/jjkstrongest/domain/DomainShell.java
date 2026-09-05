@@ -278,6 +278,25 @@ public final class DomainShell {
 		return openTicks[cellFor(dx, dy, dz)] > 0;
 	}
 
+	/**
+	 * The direction of the weakest point on the shell.
+	 *
+	 * <p>Where the barrier gave way, so the collapse can break from there outward rather
+	 * than everywhere at once. Falls back to straight up on an untouched shell, which is
+	 * what a domain that simply ran out of time deserves.
+	 */
+	public Vec3 weakestDirection() {
+		int worst = -1;
+		float lowest = FULL;
+		for (int i = 0; i < CELLS; i++) {
+			if (integrity[i] < lowest) {
+				lowest = integrity[i];
+				worst = i;
+			}
+		}
+		return worst < 0 || lowest >= FULL ? new Vec3(0.0, 1.0, 0.0) : directionOf(worst);
+	}
+
 	/** How long this cell has left as a hole. For debug readouts. */
 	public int openTicksAt(int cell) {
 		return openTicks[Math.floorMod(cell, CELLS)];
