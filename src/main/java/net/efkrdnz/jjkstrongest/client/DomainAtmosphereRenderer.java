@@ -97,8 +97,10 @@ public final class DomainAtmosphereRenderer {
 			return;
 		// Blended toward whatever the sky was going to be, so the colour lets go on the same
 		// beat as the distance rather than popping back at the end of the collapse.
-		event.setRed(event.getRed() + (0.03f - event.getRed()) * hold);
-		event.setGreen(event.getGreen() + (0.04f - event.getGreen()) * hold);
-		event.setBlue(event.getBlue() + (0.11f - event.getBlue()) * hold);
+		// The interior's own horizon colour, so the fog between you and the far wall is the
+		// same light the wall is painted in.
+		event.setRed(event.getRed() + (0.06f - event.getRed()) * hold);
+		event.setGreen(event.getGreen() + (0.09f - event.getGreen()) * hold);
+		event.setBlue(event.getBlue() + (0.20f - event.getBlue()) * hold);
 	}
 }

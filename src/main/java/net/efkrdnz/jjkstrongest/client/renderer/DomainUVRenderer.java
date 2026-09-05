@@ -1,25 +1,35 @@
 package net.efkrdnz.jjkstrongest.client.renderer;
 
 import org.joml.Matrix4f;
+import org.lwjgl.opengl.GL11;
 
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.culling.Frustum;
+import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
 
+import net.efkrdnz.jjkstrongest.client.DomainFloorRipples;
 import net.efkrdnz.jjkstrongest.client.DomainShellTexture;
 import net.efkrdnz.jjkstrongest.client.JjkShaderManager;
 import net.efkrdnz.jjkstrongest.client.model.Modelblank_entity;
 import net.efkrdnz.jjkstrongest.domain.DomainPhase;
 import net.efkrdnz.jjkstrongest.domain.DomainShell;
+import net.efkrdnz.jjkstrongest.domain.DomainSource;
+import net.efkrdnz.jjkstrongest.domain.DomainSphere;
+import net.efkrdnz.jjkstrongest.domain.RippleField;
 import net.efkrdnz.jjkstrongest.entity.DomainUVEntity;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
+
+import java.util.List;
 
 /**
  * Draws Unlimited Void: one shader, on one mesh, in one draw.
@@ -33,7 +43,21 @@ import com.mojang.math.Axis;
  * own back face — three bugs the billboard had, all structurally impossible now. The rift
  * disc is gone entirely; it was a different technique's iconography.
  *
- * <p>What is left is the shell mesh and, when you are inside it, the ink cards.
+ * <p>What is left is the shell mesh, the floor, and, when you are inside, the ink cards and
+ * the reflections.
+ *
+ * <p>The floor is real geometry: a disc at the plane, drawn with depth, over a ball the
+ * carve has emptied down to bedrock and beyond. That is what makes a mirror possible. The
+ * order of the passes is the whole trick and is worth stating once:
+ * <ol>
+ * <li><b>dome</b> — paints the lower hemisphere in ink over the pit walls, so nothing of the
+ * world shows through the translucent floor;</li>
+ * <li><b>mirrored entities and ink</b> — everything in the room drawn again, upside down
+ * under the plane;</li>
+ * <li><b>floor</b> — the sea, translucent, with depth: it dims the reflections under it and
+ * hides anything that is actually down there;</li>
+ * <li><b>ink</b>, and during a collapse the <b>shards</b>.</li>
+ * </ol>
  */
 public class DomainUVRenderer extends MobRenderer<DomainUVEntity, Modelblank_entity<DomainUVEntity>> {
 
@@ -48,8 +72,30 @@ public class DomainUVRenderer extends MobRenderer<DomainUVEntity, Modelblank_ent
 	/** Unit sphere, wound inward, as (x, y, z, u, v) per vertex. */
 	private static final float[] UNIT_SPHERE = buildUnitSphere();
 
+	/** The floor disc: a fan of this many wedges, in this many rings, on the unit circle. */
+	private static final int DISC_SEGMENTS = 64;
+	private static final int DISC_RINGS = 4;
+	/** Unit disc, as (x, z, u, v) per vertex, wound to face upward. */
+	private static final float[] UNIT_DISC = buildUnitDisc();
+	/**
+	 * The disc sits this far above the plane. The plane is the top of the block the caster
+	 * stood on, and for the first ticks of the carve those blocks are still there; coplanar
+	 * with them the sea would z-fight the grass.
+	 */
+	private static final float FLOOR_LIFT = 0.02f;
+
 	/** Ink splatter cards drifting in the volume. Hard cap; they are real geometry. */
 	private static final int INK_COUNT = 20;
+
+	/** Reused every frame for the ripple uniform, so the floor allocates nothing. */
+	private static final float[] RIPPLE_SCRATCH = new float[RippleField.FLOATS];
+
+	/**
+	 * Set the first time the mirror pass throws. Re-entering the entity dispatcher from
+	 * inside a renderer is not something vanilla does, so a renderer somewhere that cannot
+	 * cope is a real possibility; when one turns up the reflection goes, not the game.
+	 */
+	private static boolean mirrorDisabled;
 
 	/** Black hole placement, as fractions of the radius: centred, lifted into the dome. */
 	private static final double BH_HEIGHT = 0.35;
@@ -88,12 +134,116 @@ public class DomainUVRenderer extends MobRenderer<DomainUVEntity, Modelblank_ent
 
 		Vec3 camOffset = this.entityRenderDispatcher.camera.getPosition().subtract(entity.getPosition(partialTick));
 		boolean inside = camOffset.lengthSqr() < (radius * radius);
+		boolean collapsing = phase == DomainPhase.COLLAPSING;
 
+		// Order matters here; the class comment says why.
 		renderInterior(entity, radius, partialTick, progress, camOffset, inside, poseStack, bufferSource);
-		if (phase == DomainPhase.COLLAPSING)
+		if (inside) {
+			if (!collapsing) {
+				renderMirroredEntities(entity, partialTick, poseStack, bufferSource, packedLight);
+				if (phase != DomainPhase.EXPANDING)
+					renderInk(entity, radius, partialTick, progress, phase, true, poseStack, bufferSource);
+			}
+			renderFloor(entity, radius, partialTick, progress, camOffset, poseStack, bufferSource);
+		}
+		if (collapsing)
 			renderShards(entity, radius, partialTick, progress, camOffset, poseStack, bufferSource);
 		if (inside && phase != DomainPhase.EXPANDING)
-			renderInk(entity, radius, partialTick, progress, phase, poseStack, bufferSource);
+			renderInk(entity, radius, partialTick, progress, phase, false, poseStack, bufferSource);
+	}
+
+	/**
+	 * The sea.
+	 *
+	 * <p>A disc where the floor plane cuts the sphere, drawn with depth so it hides the pit
+	 * and is hidden by whatever stands on it, and translucent so the reflections drawn a
+	 * moment earlier show through it, dimmed. Everything about how it looks is in the
+	 * shader's floor path; this only puts the geometry where the plane is and hands over the
+	 * ripples.
+	 */
+	private void renderFloor(DomainUVEntity entity, float radius, float partialTick, float progress, Vec3 camOffset, PoseStack poseStack, MultiBufferSource bufferSource) {
+		boolean collapsing = entity.getPhase() == DomainPhase.COLLAPSING;
+		// While the shell breaks the floor fades, and a fading surface must not write depth
+		// or it hides the terrain coming back up through it.
+		RenderType renderType = collapsing ? JjkShaderManager.UV_INTERIOR_COLLAPSE_RENDER_TYPE : JjkShaderManager.UV_FLOOR_RENDER_TYPE;
+		if (renderType == null)
+			return;
+		float floorY = entity.getFloorOffset();
+		float discSq = radius * radius - floorY * floorY;
+		if (discSq <= 0.01f)
+			return;
+		float discR = (float) Math.sqrt(discSq);
+
+		float[] ripples = null;
+		RippleField field = DomainFloorRipples.ripplesFor(entity.getUUID());
+		if (field != null && field.pack(RIPPLE_SCRATCH, entity.tickCount) > 0)
+			ripples = RIPPLE_SCRATCH;
+
+		if (!beginInteriorUniforms(entity, radius, partialTick, progress, camOffset, true, 1.0f, ripples))
+			return;
+
+		poseStack.pushPose();
+		VertexConsumer vc = bufferSource.getBuffer(renderType);
+		Matrix4f matrix = poseStack.last().pose();
+		float y = floorY + FLOOR_LIFT;
+		for (int i = 0; i < UNIT_DISC.length; i += 4)
+			vc.addVertex(matrix, UNIT_DISC[i] * discR, y, UNIT_DISC[i + 1] * discR).setUv(UNIT_DISC[i + 2], UNIT_DISC[i + 3]);
+		poseStack.popPose();
+		if (bufferSource instanceof MultiBufferSource.BufferSource bs)
+			bs.endBatch(renderType);
+	}
+
+	/**
+	 * Everything in the room, drawn again upside down under the plane.
+	 *
+	 * <p>A mirror is a transform with a negative determinant, which turns every triangle
+	 * inside out; with back-face culling on, vanilla's entity render types would then draw
+	 * the insides of the models. So the pending batches are flushed, the winding convention
+	 * is flipped for the duration of ours, and flipped back. Vanilla never touches
+	 * {@code glFrontFace}, so CCW is the right thing to restore.
+	 *
+	 * <p>A fresh {@link PoseStack} rather than the caller's: if a renderer throws halfway
+	 * through, the caller's stack is left exactly as it was found, whatever depth the
+	 * dispatcher had pushed to.
+	 *
+	 * <p>The local player is included on purpose. In first person you do not see yourself,
+	 * but you should see yourself in the water.
+	 */
+	private void renderMirroredEntities(DomainUVEntity entity, float partialTick, PoseStack poseStack, MultiBufferSource bufferSource, int packedLight) {
+		if (mirrorDisabled || !(bufferSource instanceof MultiBufferSource.BufferSource bs))
+			return;
+		DomainSphere sphere = entity.sphere();
+		if (!sphere.isUsable())
+			return;
+		List<Entity> room = entity.level().getEntities(entity, sphere.bounds(), e -> !(e instanceof DomainSource) && !e.isSpectator() && !e.isInvisible() && sphere.contains(e.position()));
+		if (room.isEmpty())
+			return;
+
+		EntityRenderDispatcher dispatcher = this.entityRenderDispatcher;
+		Vec3 origin = entity.getPosition(partialTick);
+		double floorY = entity.getFloorOffset();
+		PoseStack mirror = new PoseStack();
+		mirror.mulPose(poseStack.last().pose());
+		mirror.translate(0.0, 2.0 * floorY, 0.0);
+		mirror.scale(1.0f, -1.0f, 1.0f);
+
+		try {
+			bs.endBatch();
+			dispatcher.setRenderShadow(false);
+			GL11.glFrontFace(GL11.GL_CW);
+			for (Entity other : room) {
+				Vec3 rel = other.getPosition(partialTick).subtract(origin);
+				float yaw = Mth.lerp(partialTick, other.yRotO, other.getYRot());
+				dispatcher.render(other, rel.x, rel.y, rel.z, yaw, partialTick, mirror, bufferSource, packedLight);
+			}
+			bs.endBatch();
+		} catch (Exception broken) {
+			mirrorDisabled = true;
+			System.err.println("[JJK Strongest] the Void's floor has stopped reflecting entities: a renderer could not be run mirrored. " + broken);
+		} finally {
+			GL11.glFrontFace(GL11.GL_CCW);
+			dispatcher.setRenderShadow(true);
+		}
 	}
 
 	/**
@@ -153,7 +303,29 @@ public class DomainUVRenderer extends MobRenderer<DomainUVEntity, Modelblank_ent
 		RenderType renderType = collapsing ? JjkShaderManager.UV_INTERIOR_COLLAPSE_RENDER_TYPE : JjkShaderManager.UV_INTERIOR_RENDER_TYPE;
 		if (renderType == null)
 			return;
+		if (!beginInteriorUniforms(entity, radius, partialTick, progress, camOffset, inside, 0.0f, null))
+			return;
 
+		poseStack.pushPose();
+		poseStack.scale(radius, radius, radius);
+
+		VertexConsumer vc = bufferSource.getBuffer(renderType);
+		Matrix4f matrix = poseStack.last().pose();
+		for (int i = 0; i < UNIT_SPHERE.length; i += 5)
+			vc.addVertex(matrix, UNIT_SPHERE[i], UNIT_SPHERE[i + 1], UNIT_SPHERE[i + 2]).setUv(UNIT_SPHERE[i + 3], UNIT_SPHERE[i + 4]);
+
+		poseStack.popPose();
+		if (bufferSource instanceof MultiBufferSource.BufferSource bs)
+			bs.endBatch(renderType);
+	}
+
+	/**
+	 * The uniforms the dome and the floor share — everything about the room except which
+	 * surface is being drawn. The black hole's placement is worked out here once per pass
+	 * rather than per fragment.
+	 */
+	private boolean beginInteriorUniforms(DomainUVEntity entity, float radius, float partialTick, float progress, Vec3 camOffset, boolean inside, float surface, float[] ripples) {
+		boolean collapsing = entity.getPhase() == DomainPhase.COLLAPSING;
 		float timeSeconds = (entity.tickCount + partialTick) / 20.0f;
 		int shellTexture = DomainShellTexture.upload(entity.shell());
 
@@ -179,22 +351,9 @@ public class DomainUVRenderer extends MobRenderer<DomainUVEntity, Modelblank_ent
 			discStrength = 1.0f - smoothstep(0.0f, 0.30f, progress);
 		}
 
-		if (!JjkShaderManager.beginUvInterior(timeSeconds, entity.getShellSeed() * 0.001f + 1.0f, 0.9f, radius, progress, entity.getPhase().ordinal(), (float) camOffset.x,
-				(float) camOffset.y, (float) camOffset.z, entity.getFloorOffset(), inside, (float) holeDir.x, (float) holeDir.y, (float) holeDir.z, holeAngle, (float) holeDistance, (float) axis.x,
-				(float) axis.y, (float) axis.z, discStrength, entity.getShellIntegrity(), shellTexture))
-			return;
-
-		poseStack.pushPose();
-		poseStack.scale(radius, radius, radius);
-
-		VertexConsumer vc = bufferSource.getBuffer(renderType);
-		Matrix4f matrix = poseStack.last().pose();
-		for (int i = 0; i < UNIT_SPHERE.length; i += 5)
-			vc.addVertex(matrix, UNIT_SPHERE[i], UNIT_SPHERE[i + 1], UNIT_SPHERE[i + 2]).setUv(UNIT_SPHERE[i + 3], UNIT_SPHERE[i + 4]);
-
-		poseStack.popPose();
-		if (bufferSource instanceof MultiBufferSource.BufferSource bs)
-			bs.endBatch(renderType);
+		return JjkShaderManager.beginUvInterior(timeSeconds, entity.getShellSeed() * 0.001f + 1.0f, 0.9f, radius, progress, entity.getPhase().ordinal(), (float) camOffset.x, (float) camOffset.y,
+				(float) camOffset.z, entity.getFloorOffset(), inside, (float) holeDir.x, (float) holeDir.y, (float) holeDir.z, holeAngle, (float) holeDistance, (float) axis.x, (float) axis.y,
+				(float) axis.z, discStrength, entity.getShellIntegrity(), shellTexture, surface, ripples);
 	}
 
 	/**
@@ -208,14 +367,16 @@ public class DomainUVRenderer extends MobRenderer<DomainUVEntity, Modelblank_ent
 	 * ({@code v = id + sv * 0.5}) rather than in a uniform, so the shader can vary every
 	 * card without the renderer flushing a batch per card.
 	 */
-	private void renderInk(DomainUVEntity entity, float radius, float partialTick, float progress, DomainPhase phase, PoseStack poseStack, MultiBufferSource bufferSource) {
+	private void renderInk(DomainUVEntity entity, float radius, float partialTick, float progress, DomainPhase phase, boolean mirror, PoseStack poseStack, MultiBufferSource bufferSource) {
 		if (JjkShaderManager.UV_INK_RENDER_TYPE == null)
 			return;
 		float timeSeconds = (entity.tickCount + partialTick) / 20.0f;
 		int seed = entity.getShellSeed();
+		double floorY = entity.getFloorOffset();
 		// Held back while the shell settles, so the volume fills after the walls arrive, and
-		// taken away early in a collapse so twenty white blots do not hang in open air.
-		float alpha = 0.9f;
+		// taken away early in a collapse so twenty white blots do not hang in open air. The
+		// reflected set is dimmer on top of what the sea's own alpha takes.
+		float alpha = mirror ? 0.55f : 0.9f;
 		if (phase == DomainPhase.SETTLING)
 			alpha *= progress;
 		else if (phase == DomainPhase.COLLAPSING)
@@ -246,8 +407,11 @@ public class DomainUVRenderer extends MobRenderer<DomainUVEntity, Modelblank_ent
 			// pattern; the spread is what makes it read as depth.
 			float size = radius * (h4 < 0.8f ? 0.05f + 0.07f * h4 : 0.16f + 0.10f * h4);
 
+			double cardY = dist * Math.cos(polar) + bob;
+			if (mirror)
+				cardY = 2.0 * floorY - cardY;
 			poseStack.pushPose();
-			poseStack.translate(dist * sinPolar * Math.cos(azimuth), dist * Math.cos(polar) + bob, dist * sinPolar * Math.sin(azimuth));
+			poseStack.translate(dist * sinPolar * Math.cos(azimuth), cardY, dist * sinPolar * Math.sin(azimuth));
 			poseStack.mulPose(this.entityRenderDispatcher.cameraOrientation());
 			poseStack.mulPose(Axis.ZP.rotationDegrees(h5 * 360.0f + timeSeconds * (h6 - 0.5f) * 4.0f));
 
@@ -304,6 +468,39 @@ public class DomainUVRenderer extends MobRenderer<DomainUVEntity, Modelblank_ent
 			}
 		}
 		return data;
+	}
+
+	/**
+	 * Upward-facing unit disc as quads, generated once at class load. Rings rather than one
+	 * fan, so the triangles near the middle are not a hundred blocks long — the fragment
+	 * stage reads the interpolated position, and a long thin triangle interpolates badly.
+	 */
+	private static float[] buildUnitDisc() {
+		float[] data = new float[DISC_RINGS * DISC_SEGMENTS * 4 * 4];
+		int i = 0;
+		for (int ring = 0; ring < DISC_RINGS; ring++) {
+			float r1 = ring / (float) DISC_RINGS;
+			float r2 = (ring + 1) / (float) DISC_RINGS;
+			for (int seg = 0; seg < DISC_SEGMENTS; seg++) {
+				double a1 = (seg / (double) DISC_SEGMENTS) * Math.PI * 2.0;
+				double a2 = ((seg + 1) / (double) DISC_SEGMENTS) * Math.PI * 2.0;
+				i = putDisc(data, i, r1, a1);
+				i = putDisc(data, i, r1, a2);
+				i = putDisc(data, i, r2, a2);
+				i = putDisc(data, i, r2, a1);
+			}
+		}
+		return data;
+	}
+
+	private static int putDisc(float[] data, int i, float r, double angle) {
+		float x = (float) (Math.cos(angle) * r);
+		float z = (float) (Math.sin(angle) * r);
+		data[i++] = x;
+		data[i++] = z;
+		data[i++] = x;
+		data[i++] = z;
+		return i;
 	}
 
 	private static int put(float[] data, int i, float theta, float phi, float u, float v) {

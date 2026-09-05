@@ -15,22 +15,30 @@ uniform vec3  BhDir;          // unit camera -> black hole
 uniform vec2  BhAng;          // (angular radius, distance)
 uniform vec3  BhAxis;         // accretion disc normal
 uniform float DiscStrength;   // 0 takes the disc away entirely
+uniform float Surface;        // 0 the dome, 1 the floor disc
+uniform float RippleData[64]; // 16 x (dx, dz, birth seconds, strength), see RippleField
 uniform sampler2D ShellSampler; // 32x16 per-direction integrity, matching DomainShell
 
 in vec2 texCoord;
-in vec3 localPos;
+in vec3 localPos;   // domain-local, in blocks — the true point on whichever surface this is
 out vec4 fragColor;
 
 const float PI = 3.14159265359;
+const int RIPPLES = 16;
 
 // ---- palette ---------------------------------------------------------------
-// Ink and bone carry every edge. Blue and violet mean depth and proximity to the hole,
-// nothing else. The references are near-black fields with hard white ink blots and broad
-// pale-blue lens arcs, which is a completely different thing from a coloured nebula.
+// Ink and bone carry every edge. Blue means depth and light; violet is the receding side of
+// the disc and nothing else. Brighter than the version before it — the room is a sea under a
+// lit horizon now, not a cave — but still a field of dark with hard white marks on it.
 const vec3 INK      = vec3(0.008, 0.009, 0.014);
 const vec3 BONE     = vec3(0.92, 0.93, 0.96);
-const vec3 NAVY     = vec3(0.010, 0.016, 0.052);
+const vec3 SKY_LOW  = vec3(0.020, 0.028, 0.070);
+const vec3 SKY_HIGH = vec3(0.035, 0.055, 0.140);
+const vec3 SEA_DEEP = vec3(0.020, 0.028, 0.070);
+const vec3 ABYSS    = vec3(0.004, 0.005, 0.012);
 const vec3 PALEBLUE = vec3(0.52, 0.66, 0.90);
+const vec3 HORIZON  = vec3(0.62, 0.74, 0.95);
+const vec3 VIOLET   = vec3(0.45, 0.35, 0.80);
 
 // ---- noise -----------------------------------------------------------------
 
@@ -174,13 +182,16 @@ float deflection(float ang) {
 
 // ---- sky layers ------------------------------------------------------------
 
-/** L1: two star layers, bone-white, one slow twinkle. */
-vec3 stars(vec3 d, float t) {
+/**
+ * L1: two star layers, bone-white, one slow twinkle. The threshold is a parameter because
+ * the reflection is deliberately given more of them than the sky.
+ */
+vec3 stars(vec3 d, float t, float threshold) {
     float fine = noise3(d * 90.0 + BrushSeed);
     float coarse = noise3(d * 38.0 - BrushSeed);
     float twinkle = 0.75 + 0.25 * sin(t * 1.3 + fine * 40.0);
-    vec3 col = BONE * step(0.988, fine) * 0.55 * twinkle;
-    col += BONE * step(0.975, coarse) * smoothstep(0.975, 0.995, coarse) * 1.15;
+    vec3 col = BONE * step(threshold, fine) * 0.55 * twinkle;
+    col += BONE * step(threshold - 0.013, coarse) * smoothstep(threshold - 0.013, 0.995, coarse) * 1.15;
     return col;
 }
 
@@ -195,7 +206,7 @@ vec3 dustBand(vec3 d, float t) {
     vec3 normal = normalize(vec3(sin(t * 0.013), 0.82, cos(t * 0.011)));
     float band = exp(-abs(dot(d, normal)) * 3.5);
     float grain = fbm3(d * 2.2 + vec3(t * 0.012, 0.0, -t * 0.009) + BrushSeed);
-    return mix(NAVY, PALEBLUE, 0.35) * band * grain * 0.34;
+    return mix(SKY_HIGH, PALEBLUE, 0.35) * band * grain * 0.54;
 }
 
 /**
@@ -238,27 +249,110 @@ float lensArcs(float ang, float warp) {
 }
 
 /**
+ * The photon rings, the shadow's bright edge.
+ *
+ * The n=1 ring is the one everybody sees; it gets a chromatic fringe by being drawn at three
+ * slightly different radii into the three channels, which is what light of three colours
+ * bent by three slightly different amounts looks like. Inside it, a thinner and fainter n=2
+ * ring — the second image of the sky — and outside, a soft halo.
+ */
+vec3 photonRings(float ang) {
+    float r1 = BhAng.x * 1.05;
+    float w1 = BhAng.x * 0.10;
+    vec3 ring1 = vec3(exp(-pow((ang - r1 * 0.99) / w1, 2.0)), exp(-pow((ang - r1) / w1, 2.0)), exp(-pow((ang - r1 * 1.01) / w1, 2.0))) * 4.0;
+    float ring2 = exp(-pow((ang - BhAng.x * 1.015) / (BhAng.x * 0.035), 2.0)) * 1.6;
+    float halo = exp(-pow((ang - BhAng.x * 1.6) / (BhAng.x * 0.55), 2.0)) * 0.35;
+    ring1 += exp(-pow((ang - BhAng.x * 1.40) / (BhAng.x * 0.30), 2.0)) * 0.8;
+    return BONE * (ring1 + ring2) + PALEBLUE * halo;
+}
+
+/**
+ * One image of the accretion disc, seen along a (bent) ray.
+ *
+ * @param L      the lensed direction the ray actually came from
+ * @param ang    angle from the hole's centre, unbent
+ * @param e1,e2  a basis in the disc plane, for the texture's azimuth
+ */
+vec3 discImage(vec3 L, float ang, vec3 e1, vec3 e2, float t) {
+    float axial = dot(L, BhAxis);
+    // Thickness in proportion to the hole, so it stays a thin disc at any distance.
+    float thin = exp(-pow(axial / (BhAng.x * 0.33), 2.0));
+    float span = smoothstep(BhAng.x * 1.2, BhAng.x * 2.0, ang) * (1.0 - smoothstep(BhAng.x * 4.5, BhAng.x * 8.0, ang));
+    if (thin * span < 0.002)
+        return vec3(0.0);
+
+    vec3 inPlane = L - BhAxis * axial;
+    float len = length(inPlane);
+    vec3 p = inPlane / max(len, 1e-5);
+    // Orbital velocity is axis x position. Its component toward the eye — along -BhDir — is
+    // the Doppler term: the side coming at you is beamed brighter and bluer, the side going
+    // away is dim and violet.
+    float doppler = -dot(cross(BhAxis, p), BhDir);
+    float beam = 1.0 + 0.9 * doppler;
+    vec3 hot = mix(VIOLET, mix(BONE, PALEBLUE, 0.35), 0.5 + 0.5 * doppler);
+    // Gravitational redshift: the inner edge, nearest the shadow, is the dimmest.
+    float redshift = smoothstep(1.2, 2.2, ang / BhAng.x);
+    // Differential rotation: the inner disc turns faster than the outer.
+    float az = atan(dot(p, e2), dot(p, e1));
+    float spin = t * 1.2 * BhAng.x / max(ang, BhAng.x);
+    float texture = 0.55 + 0.45 * fbm3(vec3(ang * 26.0, az * 3.0 - spin * 3.0, t * 0.35));
+    return hot * thin * span * texture * beam * redshift;
+}
+
+/**
+ * Information streams: fine dotted filaments spiralling into the hole.
+ *
+ * The one layer that says what this domain is made of. Six log-spiral arms in the plane you
+ * are looking across, each a string of flecks drifting inward — and, in the reflection,
+ * outward.
+ */
+float infoStreams(float ang, float phi, float t) {
+    float u = ang / BhAng.x;
+    float window = smoothstep(1.4, 2.2, u) * (1.0 - smoothstep(9.0, 12.0, u));
+    if (window <= 0.0)
+        return 0.0;
+    float lu = log(u);
+    float s = fract(phi * 6.0 / (2.0 * PI) + lu * 2.4 - t * 0.05);
+    float line = 1.0 - smoothstep(0.0, 0.05, min(s, 1.0 - s));
+    float along = lu * 30.0 + t * 1.5;
+    float bead = smoothstep(0.30, 0.48, abs(fract(along) - 0.5));
+    return line * bead * window;
+}
+
+/**
  * Everything that lives at infinity, evaluated on a possibly-bent ray.
  *
  * Split out because the floor reflects exactly this and nothing else — reflecting the
  * marched volume as well would double the cost of every floor fragment for something you
  * cannot see in a dark mirror anyway.
+ *
+ * @param mirror true when this is the sea's reflection. The reflection is given more than
+ *               the sky has: denser stars, a brighter horizon, and information streams that
+ *               flow the other way. Nothing else differs, so it reads as wrong rather than
+ *               as broken — the water shows you more than the sky does.
  */
-vec3 skyAnalytic(vec3 d, float t) {
-    // L0: near-black at the horizon, deep navy overhead, warmed toward the hole.
-    vec3 col = mix(INK, NAVY, smoothstep(-0.25, 0.85, d.y));
-    col += NAVY * 0.6 * pow(max(0.0, dot(d, BhDir)), 6.0);
+vec3 skyAnalytic(vec3 d, float t, bool mirror) {
+    // L0: a lit sea-sky. Deep navy low, a shade lighter overhead, warmed toward the hole,
+    // and a horizon at eye level whatever the room's actual size — the thing that makes
+    // thirty blocks read as an endless shore.
+    vec3 col = mix(SKY_LOW, SKY_HIGH, smoothstep(-0.2, 0.9, d.y));
+    col += SKY_HIGH * 0.8 * pow(max(0.0, dot(d, BhDir)), 6.0);
+    float horizon = exp(-abs(d.y) * 9.0) * 0.55 + exp(-abs(d.y) * 2.5) * 0.12;
+    col += HORIZON * horizon * (mirror ? 1.25 : 1.0);
 
     float c = dot(d, BhDir);
     vec3 tangent = d - BhDir * c;
     float s = length(tangent);
     float ang = atan(s, c);   // two-argument: precision is worst exactly at the ring
+    vec3 tangentDir = s > 1e-5 ? tangent / s : vec3(0.0);
 
     vec3 lensed = d;
     if (s > 1e-5)
-        lensed = normalize(d + (tangent / s) * deflection(ang));
+        lensed = normalize(d + tangentDir * deflection(ang));
 
-    col += stars(lensed, t);
+    // Stars pile up where the shadow is stretching them into a ring.
+    float einstein = 1.0 + 2.0 * exp(-pow((ang - 1.3 * BhAng.x) / (0.25 * BhAng.x), 2.0));
+    col += stars(lensed, t, mirror ? 0.978 : 0.984) * einstein;
     col += dustBand(lensed, t);
 
     // One shared warp field for both the blot edges and the arcs: it is what makes them
@@ -272,20 +366,32 @@ vec3 skyAnalytic(vec3 d, float t) {
 
     col += PALEBLUE * lensArcs(ang, warp) * 0.10;
 
+    // A basis around the line of sight to the hole, for anything that needs an azimuth.
+    vec3 ref = abs(BhDir.y) < 0.9 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
+    vec3 e1 = normalize(cross(BhDir, ref));
+    vec3 e2 = cross(BhDir, e1);
+    float phi = atan(dot(tangentDir, e2), dot(tangentDir, e1));
+    col += BONE * 0.35 * infoStreams(ang, phi, mirror ? -t : t);
+
     // The hole itself, last, over everything it swallows.
     float aa = fwidth(ang) + 1e-4;
-    float ring = exp(-pow((ang - BhAng.x * 1.05) / (BhAng.x * 0.10), 2.0)) * 4.0;
-    ring += exp(-pow((ang - BhAng.x * 1.40) / (BhAng.x * 0.30), 2.0)) * 0.8;
-    col += BONE * ring;
+    col += photonRings(ang);
 
     if (DiscStrength > 0.001) {
-        // A thin disc in the plane through the hole, brightened on the approaching side.
-        float axial = dot(d, BhAxis);
-        float disc = exp(-pow(axial / 0.055, 2.0));
-        float span = smoothstep(BhAng.x * 1.2, BhAng.x * 2.0, ang) * (1.0 - smoothstep(BhAng.x * 4.5, BhAng.x * 8.0, ang));
-        float texture = 0.55 + 0.45 * fbm3(vec3(ang * 26.0, atan(axial, s) * 3.0, t * 0.35));
-        vec3 hot = mix(BONE, PALEBLUE, smoothstep(BhAng.x * 2.0, BhAng.x * 7.0, ang));
-        col += hot * disc * span * texture * DiscStrength * 0.9;
+        // The disc's own basis: d1 lies in the disc plane and across the line of sight.
+        vec3 d1 = cross(BhAxis, BhDir);
+        if (dot(d1, d1) < 1e-6)
+            d1 = cross(BhAxis, vec3(1.0, 0.0, 0.0));
+        d1 = normalize(d1);
+        vec3 d2 = cross(BhAxis, d1);
+        // The near image, on the lensed ray, and the far side of the disc bent over and
+        // under the shadow: the same disc seen along a ray thrown across the plane and bent
+        // harder. That second image is the pair of arcs the shape is known for.
+        vec3 disc = discImage(lensed, ang, d1, d2, t);
+        vec3 across = d - 2.0 * BhAxis * dot(tangent, BhAxis);
+        vec3 farside = normalize(across + tangentDir * deflection(ang) * 1.6);
+        disc += discImage(farside, ang, d1, d2, t) * 0.55 * smoothstep(BhAng.x * 1.05, BhAng.x * 1.6, ang);
+        col += disc * DiscStrength * 0.9;
     }
 
     // The event horizon has no gradient in the reference and should not have one here.
@@ -306,7 +412,7 @@ vec3 volume(vec3 d, float t, out float alpha) {
         // Hard threshold: contrast is what reads as volume, not step count.
         density = smoothstep(0.52, 0.78, density);
         float w = exp(-fi * 0.42);
-        vec3 tint = mix(mix(INK, BONE, density), NAVY + PALEBLUE * 0.25, fi * 0.3);
+        vec3 tint = mix(mix(INK, BONE, density), SKY_HIGH + PALEBLUE * 0.25, fi * 0.3);
         float a = density * 0.30 * w;
         acc += tint * a * (1.0 - alpha);
         alpha += a * (1.0 - alpha);
@@ -314,10 +420,108 @@ vec3 volume(vec3 d, float t, out float alpha) {
     return acc;
 }
 
+// ---- the sea ---------------------------------------------------------------
+
+/**
+ * Height of the water at a point on the floor, from the footstep rings.
+ *
+ * Each ripple is a damped sine travelling outward at a walking pace, gone within a few
+ * seconds. {@code crest} is the wavefront itself, for the one bright line the floor draws.
+ * Sixteen slots, most of them empty most of the time, and the empty ones cost a compare.
+ */
+float rippleHeight(vec2 p, float t, out float crest) {
+    float h = 0.0;
+    crest = 0.0;
+    for (int i = 0; i < RIPPLES; i++) {
+        float strength = RippleData[i * 4 + 3];
+        if (strength <= 0.0)
+            continue;
+        float age = t - RippleData[i * 4 + 2];
+        if (age <= 0.0)
+            continue;
+        vec2 c = vec2(RippleData[i * 4], RippleData[i * 4 + 1]);
+        float r = length(p - c);
+        float front = age * 2.6;
+        float amp = strength * 0.06 * exp(-age * 0.9) * smoothstep(0.0, 0.4, age);
+        float dr = r - front;
+        h += amp * sin(dr * 6.0) * exp(-abs(dr) * 1.2);
+        crest = max(crest, amp * exp(-dr * dr * 9.0));
+    }
+    return h;
+}
+
+/**
+ * The floor: black lacquer that is mostly a mirror.
+ *
+ * It reflects the sky — and, drawn a moment before it, the room — and nothing on it is hard
+ * white except the crests of the rings you make walking on it. It is translucent, so the
+ * mirrored entities beneath show through in proportion to how flat you are looking at it,
+ * which is how a wet surface actually behaves. Because what is under it is the abyss, the
+ * colour is divided back out by the alpha; otherwise the most reflective angles would be
+ * the dimmest.
+ */
+vec4 shadeFloor(vec3 hit, float t, float phaseFade) {
+    vec3 toHit = hit - CamOffset;
+    float dist = length(toHit);
+    vec3 dir = toHit / max(dist, 1e-4);
+
+    float crest;
+    float h = rippleHeight(hit.xz, t, crest);
+    float unusedX;
+    float unusedZ;
+    float hx = rippleHeight(hit.xz + vec2(0.05, 0.0), t, unusedX);
+    float hz = rippleHeight(hit.xz + vec2(0.0, 0.05), t, unusedZ);
+    vec3 n = normalize(vec3(-(hx - h) / 0.05, 1.0, -(hz - h) / 0.05));
+
+    vec3 m = reflect(dir, n);
+    m.y = max(m.y, 0.02);   // a wave never shows you what is under the horizon
+    vec3 refl = skyAnalytic(normalize(m), t, true);
+
+    float facing = abs(dot(dir, n));
+    float fresnel = mix(0.18, 0.85, pow(1.0 - facing, 4.0));
+    vec3 col = SEA_DEEP + refl * fresnel;
+    col += BONE * crest * 6.0;
+
+    // The shore: the last stretch of sea dissolves into the horizon's light, so the disc
+    // and the dome meet in brightness rather than along a line.
+    float discR = sqrt(max(Radius * Radius - FloorY * FloorY, 1.0));
+    float edge = smoothstep(0.92, 1.0, length(hit.xz) / discR);
+    col = mix(col, HORIZON * 0.9, edge);
+
+    float reflectivity = mix(0.30, 0.72, pow(1.0 - abs(dir.y), 3.0));
+    float alpha = mix(1.0 - reflectivity, 1.0, edge);
+    return vec4(col / max(alpha, 0.25) * Intensity, alpha * phaseFade);
+}
+
 // ---- main ------------------------------------------------------------------
 
 void main() {
     float t = Time;
+
+    // Fade the whole thing in as the shell opens and out as it goes.
+    float phaseFade = 1.0;
+    if (Phase < 0.5)
+        phaseFade = smoothstep(0.0, 0.65, Progress);
+    else if (Phase > 2.5) {
+        // Gone by 55%, while the shards are still in the air, so the back half of the
+        // collapse is real world seen through a cloud of glass.
+        phaseFade = 1.0 - smoothstep(0.05, 0.55, Progress);
+    }
+
+    // The floor disc, before anything that assumes it is on the sphere. It has no shell
+    // damage — the barrier is the dome — and no facing test: it fades with the phase and
+    // is otherwise always drawn, whichever way its triangles happen to face.
+    if (Surface > 0.5) {
+        fragColor = shadeFloor(localPos, t, phaseFade);
+        return;
+    }
+
+    // From the first collapse frame the shell is broken, so stop drawing it as a closed
+    // surface. Keeping the opaque outer face would fire the shard pass off inside a black
+    // sphere and you would see none of it. The interior, seen from within, still fades out
+    // on phaseFade above.
+    if (Phase > 2.5 && (!gl_FrontFacing || Inside < 0.5))
+        discard;
 
     // The damage grid is keyed on the mesh's own equirectangular UV, not on the view ray:
     // the cracks belong where the barrier was hit, not wherever you happen to be looking.
@@ -330,30 +534,14 @@ void main() {
         shatter = shatterMask(texCoord, localDamage, globalDamage);
     float hole = smoothstep(0.12, 0.0, cellIntegrity) * HasShell;
 
-    // Fade the whole thing in as the shell opens and out as it goes.
-    float phaseFade = 1.0;
-    if (Phase < 0.5)
-        phaseFade = smoothstep(0.0, 0.65, Progress);
-    else if (Phase > 2.5) {
-        // Gone by 55%, while the shards are still in the air, so the back half of the
-        // collapse is real world seen through a cloud of glass.
-        phaseFade = 1.0 - smoothstep(0.05, 0.55, Progress);
-        // From the first collapse frame the shell is broken, so stop drawing it as a
-        // closed surface. Keeping the opaque outer face would fire the shard pass off
-        // inside a black sphere and you would see none of it. The interior, seen from
-        // within, still fades out on phaseFade above.
-        if (!gl_FrontFacing || Inside < 0.5)
-            discard;
-    }
-
-    // THE fix. localPos is the unit sphere; CamOffset is in blocks. Subtracting them
-    // without this made the view ray collapse toward -CamOffset as you walked off centre,
-    // so the interior stopped varying across the screen and read as a flat texture.
-    vec3 surf = localPos * Radius;
+    // Domain-local blocks, straight from the vertex stage. The version before this treated
+    // localPos as a unit vector and scaled it by Radius, which made every view ray a ray
+    // from the sphere's centre rather than from the eye: no parallax.
+    vec3 surf = localPos;
 
     if (!gl_FrontFacing) {
         // Seen from outside: an all but opaque black sphere with white shatter on it.
-        vec3 outward = normalize(localPos);
+        vec3 outward = normalize(surf);
         vec3 toEye = normalize(CamOffset - surf);
         float rim = pow(1.0 - abs(dot(outward, toEye)), 3.5);
         vec3 outer = mix(vec3(0.004, 0.004, 0.012), vec3(0.16, 0.22, 0.38), rim);
@@ -375,37 +563,15 @@ void main() {
         return;
     }
 
-    // The floor, as a real ray-plane intersection rather than a hemisphere test. Splitting
-    // on localPos.y would be wrong: the band of sphere between FloorY and the equator is
-    // reachable by rays that never cross the plane, and those have to show wall.
-    float tPlane = (FloorY - CamOffset.y) / dir.y;
-    if (CamOffset.y > FloorY && dir.y < 0.0 && tPlane > 0.0 && tPlane < tSphere) {
-        vec3 mirrored = vec3(dir.x, -dir.y, dir.z);
-        // Black lacquer: it reflects what is at infinity and nothing else.
-        vec3 reflected = skyAnalytic(mirrored, t);
-        // Near-matte underfoot, mirror-bright toward the horizon. This is what makes a
-        // flat plane read as a surface rather than a hole in the world.
-        float fresnel = mix(0.06, 0.55, pow(1.0 - abs(dir.y), 5.0));
-        vec3 col = INK * 0.9 + reflected * fresnel;
-
-        // Faint rings, for parallax reference, so walking feels like walking.
-        vec3 hit = CamOffset + dir * tPlane;
-        float rings = abs(fract(length(hit.xz) * 0.25) - 0.5);
-        float ringFade = 1.0 - smoothstep(0.0, Radius, length(hit.xz));
-        col += PALEBLUE * smoothstep(0.48, 0.5, rings) * 0.06 * ringFade;
-
-        // Never evaluate fract() on an enormous coordinate at the horizon; drivers differ.
-        col *= smoothstep(0.0, 0.02, -dir.y);
-        // Seal the join with the dome.
-        col = mix(col, INK, smoothstep(0.0, 1.0, tPlane / (Radius * 2.0)));
-        // A breached floor cell is opaque black with white edges, not a window to the sky.
-        col = mix(col, vec3(0.0), hole);
-        col += BONE * shatter * 0.5;
-        fragColor = vec4(col * Intensity, phaseFade);
+    // Under the plane there is only the abyss: it is what the sea is translucent over, and
+    // the pit walls behind it must never show. Skipping the sky here is also most of what
+    // the floor pass costs, given back.
+    if (surf.y < FloorY) {
+        fragColor = vec4(ABYSS * Intensity, phaseFade);
         return;
     }
 
-    vec3 col = skyAnalytic(dir, t);
+    vec3 col = skyAnalytic(dir, t, false);
     float volumeAlpha;
     col += volume(dir, t, volumeAlpha);
     col += BONE * shatter * 0.45;

@@ -45,13 +45,13 @@ import net.efkrdnz.jjkstrongest.procedures.SetupDimensionProcedure;
 public final class DomainLightmap {
 
 	/** Brightness the interior never falls below, at full strength. */
-	private static final float AMBIENT = 0.58f;
+	private static final float AMBIENT = 0.70f;
 	/** Cold cast on that floor: a touch under on red, a touch over on blue. */
 	private static final float TINT_R = 0.88f;
 	private static final float TINT_G = 0.93f;
 	private static final float TINT_B = 1.06f;
 	/** How far the rest of the ramp is pulled toward neutral at full strength. */
-	private static final float COOL = 0.30f;
+	private static final float COOL = 0.36f;
 	/** Per-tick approach, so walking through the shell is a fade rather than a switch. */
 	private static final float EASE = 0.18f;
 

@@ -52,6 +52,8 @@ public class JjkShaderManager {
 	 * an opaque hole in everything behind it.
 	 */
 	public static RenderType UV_INTERIOR_COLLAPSE_RENDER_TYPE;
+	/** The sea: same shader as the dome, with Surface = 1. Writes depth, so it hides the pit. */
+	public static RenderType UV_FLOOR_RENDER_TYPE;
 	public static ShaderInstance UV_SHARDS_SHADER;
 	public static RenderType UV_SHARDS_RENDER_TYPE;
 	public static ShaderInstance IMAGINARY_PURPLE_PROJECTILE_SHADER;
@@ -198,11 +200,13 @@ public class JjkShaderManager {
 				UV_INTERIOR_SHADER = shader;
 				UV_INTERIOR_RENDER_TYPE = makeDomainSurfaceRenderType("uv_interior", () -> UV_INTERIOR_SHADER, true);
 				UV_INTERIOR_COLLAPSE_RENDER_TYPE = makeDomainSurfaceRenderType("uv_interior_collapse", () -> UV_INTERIOR_SHADER, false);
+				UV_FLOOR_RENDER_TYPE = makeDomainSurfaceRenderType("uv_floor", () -> UV_INTERIOR_SHADER, true);
 			});
 		} catch (Exception e) {
 			UV_INTERIOR_SHADER = null;
 			UV_INTERIOR_RENDER_TYPE = null;
 			UV_INTERIOR_COLLAPSE_RENDER_TYPE = null;
+			UV_FLOOR_RENDER_TYPE = null;
 			System.err.println("[JJK Strongest] \u2717 Failed to load the domain interior shader");
 			e.printStackTrace();
 		}
@@ -441,11 +445,17 @@ public class JjkShaderManager {
 	 * @param inside       1 when the camera is within the shell
 	 * @param integrity    whole-barrier integrity, 0..1
 	 * @param shellTexture GL id of the per-direction damage grid, or -1 if none yet
+	 * @param surface      0 for the dome, 1 for the floor disc — one shader, two surfaces
+	 * @param ripples      {@link net.efkrdnz.jjkstrongest.domain.RippleField#FLOATS} floats of
+	 *                     packed ripples for the floor, or null for a still sea
 	 */
 	public static boolean beginUvInterior(float timeSeconds, float seed, float intensity, float radius, float progress, float phase, float camX, float camY, float camZ, float floorY, boolean inside,
-			float bhX, float bhY, float bhZ, float bhAngularRadius, float bhDistance, float axisX, float axisY, float axisZ, float discStrength, float integrity, int shellTexture) {
+			float bhX, float bhY, float bhZ, float bhAngularRadius, float bhDistance, float axisX, float axisY, float axisZ, float discStrength, float integrity, int shellTexture, float surface,
+			float[] ripples) {
 		if (UV_INTERIOR_SHADER == null)
 			return false;
+		setUniform(UV_INTERIOR_SHADER, "Surface", surface);
+		setUniformArray(UV_INTERIOR_SHADER, "RippleData", ripples == null ? NO_RIPPLES : ripples);
 		setUniform(UV_INTERIOR_SHADER, "Time", timeSeconds);
 		setUniform(UV_INTERIOR_SHADER, "BrushSeed", seed);
 		setUniform(UV_INTERIOR_SHADER, "Intensity", intensity);
@@ -470,7 +480,7 @@ public class JjkShaderManager {
 			}
 		}
 		reportMissingUniformsOnce(UV_INTERIOR_SHADER, "uv_interior", "Time", "BrushSeed", "Intensity", "Radius", "Progress", "Phase", "CamOffset", "FloorY", "Inside", "BhDir", "BhAng", "BhAxis",
-				"DiscStrength", "Integrity", "HasShell");
+				"DiscStrength", "Integrity", "HasShell", "Surface", "RippleData");
 		return true;
 	}
 
@@ -529,6 +539,27 @@ public class JjkShaderManager {
 			uniform.set(values[0], values[1], values[2]);
 		else if (values.length == 4)
 			uniform.set(values[0], values[1], values[2], values[3]);
+	}
+
+	/** A still sea: every slot zero strength. Shared, never written. */
+	private static final float[] NO_RIPPLES = new float[net.efkrdnz.jjkstrongest.domain.RippleField.FLOATS];
+
+	/**
+	 * Uploads a whole float array to a {@code uniform float Name[N]}.
+	 *
+	 * <p>Vanilla's json declares these as type float with a count above four; the parser
+	 * accepts a single default value for the lot, and the uniform uploads with
+	 * {@code glUniform1fv} over its whole buffer, which is exactly what a GLSL float array
+	 * wants. {@code Uniform#set(float[])} refuses an array shorter than the count, so the
+	 * caller's array is the contract.
+	 */
+	private static void setUniformArray(ShaderInstance shader, String name, float[] values) {
+		if (shader == null)
+			return;
+		var uniform = shader.getUniform(name);
+		if (uniform == null)
+			return;
+		uniform.set(values);
 	}
 
 	private static final java.util.Set<String> REPORTED_UNIFORMS = new java.util.HashSet<>();

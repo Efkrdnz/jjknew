@@ -94,6 +94,15 @@ public class DomainUVEntityTickProcedure {
 		int tick = data.getInt("expansionTick") + 1;
 		data.putInt("expansionTick", tick);
 
+		// The carve takes the ground under everything in the ball, so anything standing
+		// below the plane when the domain opens has to be put on it first, once. Done here
+		// against the full-size sphere rather than the growing shell: the carve is going to
+		// reach that far whatever the wall is doing this tick.
+		if (!data.getBoolean("lifted")) {
+			liftOntoFloor(level, domain, fullSphere(domain), 0.0);
+			data.putBoolean("lifted", true);
+		}
+
 		float progress = Math.min(1.0f, (float) tick / def(domain).expansionTicks());
 		// ease-out so the shell slams outward and settles, rather than crawling
 		float eased = 1.0f - (1.0f - progress) * (1.0f - progress);
@@ -114,6 +123,11 @@ public class DomainUVEntityTickProcedure {
 		// The pull keeps things from loitering against the shell whether or not a rival
 		// domain is pressing on it; everything else pauses for the duration of a clash.
 		pullEntities(level, sphere);
+		// Twice a second, anything that got under the plane anyway — an arrow, a dropped
+		// item, a noclip player who dropped in — comes back up. The collision floor only
+		// catches things crossing it, deliberately; this is what covers the rest.
+		if (domain.tickCount % 10 == 0)
+			liftOntoFloor(level, domain, sphere, 0.5);
 		if (clashing)
 			return;
 
@@ -229,6 +243,30 @@ public class DomainUVEntityTickProcedure {
 			return caster.position().distanceToSqr(domain.position()) > reach * reach;
 		} catch (IllegalArgumentException malformedUUID) {
 			return true;
+		}
+	}
+
+	/** The domain at the size it is going to be, whatever the shell is doing right now. */
+	private static DomainSphere fullSphere(DomainUVEntity domain) {
+		return new DomainSphere(domain.position(), domain.getTargetRadius(), domain.getY() + domain.getFloorOffset(), domain.getPhase(), domain.getPhaseProgress());
+	}
+
+	/**
+	 * Puts everything inside the ball and more than {@code slack} under the floor plane onto
+	 * the plane. Other domains are left where they are — a Shrine overlapping this Void is
+	 * not a thing that fell in.
+	 */
+	private static void liftOntoFloor(ServerLevel level, DomainUVEntity domain, DomainSphere sphere, double slack) {
+		if (!sphere.isUsable())
+			return;
+		double floorY = sphere.floorY();
+		for (Entity entity : level.getEntities(domain, sphere.bounds(), e -> !(e instanceof net.efkrdnz.jjkstrongest.domain.DomainSource))) {
+			Vec3 pos = entity.position();
+			if (pos.y >= floorY - slack || !sphere.withinRadius(pos.x, pos.y, pos.z))
+				continue;
+			entity.teleportTo(pos.x, floorY, pos.z);
+			entity.setDeltaMovement(entity.getDeltaMovement().x, 0.0, entity.getDeltaMovement().z);
+			entity.resetFallDistance();
 		}
 	}
 

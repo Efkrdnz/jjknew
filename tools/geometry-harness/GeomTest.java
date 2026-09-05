@@ -286,6 +286,36 @@ public class GeomTest {
         check("far apart does not intersect",
               !DomainIntersect.intersects(uv, DomainSphere.openField(new Vec3(500,0,0), 100)), "reported touching");
 
+        System.out.println("\nRippleField (the footstep ring buffer)");
+        RippleField ripples = new RippleField();
+        float[] packed = new float[RippleField.FLOATS];
+        check("a fresh field packs to nothing live", ripples.pack(packed, 100) == 0, "live " + ripples.pack(packed, 100));
+        ripples.emit(3.0, -4.0, 100, 0.5f);
+        check("one ripple is live on its own tick", ripples.pack(packed, 100) == 1, "live " + ripples.liveCount(100));
+        check("...packed at slot 0 as dx, dz, birth seconds, strength",
+              near(packed[0], 3.0, 1e-6) && near(packed[1], -4.0, 1e-6) && near(packed[2], 5.0, 1e-6) && near(packed[3], 0.5, 1e-6),
+              packed[0] + "," + packed[1] + "," + packed[2] + "," + packed[3]);
+        check("a ripple born in the future packs with zero strength",
+              ripples.pack(packed, 99) == 0 && packed[3] == 0.0f, "strength " + packed[3]);
+        check("still live at the end of its lifetime", ripples.liveCount(100 + RippleField.LIFETIME_TICKS) == 1, "dead early");
+        check("gone one tick after it", ripples.liveCount(101 + RippleField.LIFETIME_TICKS) == 0, "still live");
+        ripples.prune(101 + RippleField.LIFETIME_TICKS);
+        check("prune clears the slot for good", ripples.liveCount(100) == 0, "came back");
+
+        RippleField ring = new RippleField();
+        for (int i = 0; i < RippleField.CAPACITY; i++) ring.emit(i, 0, 200, 1.0f);
+        check("sixteen fill the ring", ring.liveCount(200) == RippleField.CAPACITY, "live " + ring.liveCount(200));
+        ring.emit(99, 0, 201, 1.0f);
+        ring.pack(packed, 201);
+        check("the seventeenth evicts the oldest, not the newest",
+              ring.liveCount(201) == RippleField.CAPACITY && near(packed[0], 99.0, 1e-6) && near(packed[4], 1.0, 1e-6),
+              "slot0 dx=" + packed[0] + " slot1 dx=" + packed[4]);
+        ring.emit(0, 0, 201, 0.0f);
+        check("a zero-strength emit is ignored rather than taking a slot", near(packed[4], 1.0, 1e-6) && ring.liveCount(201) == RippleField.CAPACITY, "slot taken");
+        boolean threw = false;
+        try { ring.pack(new float[8], 201); } catch (IllegalArgumentException e) { threw = true; }
+        check("a short buffer is refused, not silently truncated", threw, "no exception");
+
         System.out.println("\n" + pass + " passed, " + fail + " failed");
         if (fail > 0) System.exit(1);
     }

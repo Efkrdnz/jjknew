@@ -21,11 +21,12 @@ import java.util.UUID;
  * budget per tick, one horizontal layer at a time. Blocks that are already air cost
  * nothing and are never recorded.
  *
- * <p>Only the dome is cleared — the sphere above its floor plane. The lower hemisphere is
- * left exactly as it was, and it is what you stand on. Clearing the whole ball instead put
- * a thirty-block pit under an invisible collision plane, which is a long fall for anything
- * that ends up one hair below it, and it was half the work again for a volume nobody was
- * ever meant to see.
+ * <p>The whole ball is cleared, the half below the floor plane included. It used to stop at
+ * the plane so the ground you stood on stayed real, and that was the wrong call: a domain
+ * that replaces the world cannot have grass and bedrock for a floor, and a mirror floor
+ * needs nothing under it to reflect. The pit that leaves under the collision plane is dealt
+ * with where it belongs — the phase machine lifts anything below the plane onto it at cast
+ * and rescues anything that falls in later — rather than by keeping the terrain around.
  *
  * <p>Blocks are written with {@code UPDATE_CLIENTS} only. Neighbour notification on
  * this many changes would set off gravity and redstone cascades across the whole
@@ -58,14 +59,11 @@ public final class DomainCarve {
 			return true;
 
 		BlockPos center = BlockPos.containing(sphere.center().x, sphere.center().y, sphere.center().z);
-		// Stop at the floor plane. Hollowing the lower hemisphere as well was what put a
-		// thirty-block pit under an invisible floor, and it was half the work for something
-		// nobody was ever meant to see: the ground below the plane is what you stand on.
-		int bottomY = Math.max((int) Math.floor(sphere.center().y - radius), (int) Math.floor(sphere.floorY()));
-		int topY = (int) Math.ceil(sphere.center().y + radius);
+		// The whole ball, floor to crown. Below the world there is nothing to take; getBlockState
+		// answers void air there, but the loop should not be spending its budget asking.
+		int bottomY = Math.max((int) Math.floor(sphere.center().y - radius), level.getMinBuildHeight());
+		int topY = Math.min((int) Math.ceil(sphere.center().y + radius), level.getMaxBuildHeight() - 1);
 
-		// Clamped, so a domain that was mid-carve when the floor changed underneath it does
-		// not resume below the plane.
 		int cursor = data.contains("carveY") ? Math.max(data.getInt("carveY"), bottomY) : bottomY;
 		DomainSavedData storage = DomainSavedData.get(level);
 		DomainSavedData.CarveRecord record = storage.record(domain.getUUID());
