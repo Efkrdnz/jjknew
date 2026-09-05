@@ -4,8 +4,6 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.phys.Vec3;
@@ -115,8 +113,6 @@ public class DomainUVEntityTickProcedure {
 		// The pull keeps things from loitering against the shell whether or not a rival
 		// domain is pressing on it; everything else pauses for the duration of a clash.
 		pullEntities(level, sphere);
-		if (data.getInt("domainAbsoluteTicks") % 20 == 0)
-			lightInterior(level, sphere);
 		if (clashing)
 			return;
 
@@ -226,23 +222,6 @@ public class DomainUVEntityTickProcedure {
 			return caster.position().distanceToSqr(domain.position()) > reach * reach;
 		} catch (IllegalArgumentException malformedUUID) {
 			return true;
-		}
-	}
-
-	/**
-	 * Keeps the inside of the domain visible.
-	 *
-	 * <p>The barrier blocks this replaced were {@code lightLevel(s -> 15)}, so they lit
-	 * the whole interior. A carved-out air pocket is at sky-light zero, which would
-	 * leave every entity in there rendering as a silhouette.
-	 */
-	private static void lightInterior(ServerLevel level, DomainSphere sphere) {
-		if (!sphere.isUsable())
-			return;
-		for (LivingEntity target : level.getEntitiesOfClass(LivingEntity.class, sphere.bounds(), e -> true)) {
-			if (!sphere.contains(target.getX(), target.getY(), target.getZ()))
-				continue;
-			target.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, 60, 0, true, false, false));
 		}
 	}
 
