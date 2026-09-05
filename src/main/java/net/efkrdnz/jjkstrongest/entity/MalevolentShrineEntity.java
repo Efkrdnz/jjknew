@@ -24,7 +24,7 @@ import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 
-import net.efkrdnz.jjkstrongest.domain.DomainBarrierKind;
+import net.efkrdnz.jjkstrongest.domain.DomainDefinition;
 import net.efkrdnz.jjkstrongest.domain.DomainSource;
 import net.efkrdnz.jjkstrongest.domain.DomainSphere;
 import net.efkrdnz.jjkstrongest.init.JjkStrongestModEntities;
@@ -52,7 +52,13 @@ public class MalevolentShrineEntity extends PathfinderMob implements DomainSourc
 	}
 
 	/** How far the shrine's slashes and damage reach. Matches its tick procedure's radius. */
-	public static final double FIELD_RADIUS = 100.0;
+	public static final double FIELD_RADIUS = DomainDefinition.MALEVOLENT_SHRINE.radius();
+
+	@Override
+	public DomainDefinition definition() {
+		// OPEN, and with no shell profile: the shrine covers ground, it does not enclose it.
+		return DomainDefinition.MALEVOLENT_SHRINE;
+	}
 
 	@Override
 	public DomainSphere volume() {
@@ -60,9 +66,8 @@ public class MalevolentShrineEntity extends PathfinderMob implements DomainSourc
 	}
 
 	@Override
-	public DomainBarrierKind barrierKind() {
-		// No shell: the shrine covers ground, it does not enclose it.
-		return DomainBarrierKind.OPEN;
+	public String domainOwnerUUID() {
+		return this.getPersistentData().getString("ownerUUID");
 	}
 
 	public float getClashHP() {

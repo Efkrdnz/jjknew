@@ -12,13 +12,15 @@ import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.phys.AABB;
 
 import net.efkrdnz.jjkstrongest.domain.DomainPhase;
+import net.efkrdnz.jjkstrongest.domain.DomainDefinition;
 import net.efkrdnz.jjkstrongest.entity.DomainUVEntity;
 
 public class DomainExpansionStartProcedure {
 
-	private static final float RADIUS = DomainUVEntity.DEFAULT_RADIUS;
+	private static final DomainDefinition DEFINITION = DomainDefinition.UNLIMITED_VOID;
+	private static final float RADIUS = DEFINITION.radius();
 	private static final double CAPTURE_RADIUS = 35.0;
-	private static final int DURATION_TICKS = 600;
+	private static final int DURATION_TICKS = DEFINITION.durationTicks();
 
 	public static void execute(LevelAccessor world, double x, double y, double z, Entity caster, int domainType) {
 		if (!(world instanceof ServerLevel serverLevel) || caster == null)
@@ -32,7 +34,7 @@ public class DomainExpansionStartProcedure {
 		// Shape: synced, so the client renders and collides against the same sphere.
 		domain.setShellRadius(0.0f);
 		domain.setTargetRadius(RADIUS);
-		domain.setFloorOffset(DomainUVEntity.DEFAULT_FLOOR_OFFSET);
+		domain.setFloorOffset(DEFINITION.floorOffset());
 		domain.setPhase(DomainPhase.EXPANDING);
 		domain.setPhaseProgress(0.0f);
 		domain.setShellSeed(serverLevel.random.nextInt(100000));

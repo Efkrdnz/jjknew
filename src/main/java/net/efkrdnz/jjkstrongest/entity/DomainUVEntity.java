@@ -29,7 +29,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 
-import net.efkrdnz.jjkstrongest.domain.DomainBarrierKind;
+import net.efkrdnz.jjkstrongest.domain.DomainDefinition;
 import net.efkrdnz.jjkstrongest.domain.DomainPhase;
 import net.efkrdnz.jjkstrongest.domain.DomainShell;
 import net.efkrdnz.jjkstrongest.domain.DomainSource;
@@ -58,8 +58,8 @@ public class DomainUVEntity extends PathfinderMob implements DomainSource {
 
 	private DomainShell shell;
 
-	public static final float DEFAULT_RADIUS = 30.0f;
-	public static final float DEFAULT_FLOOR_OFFSET = -1.0f;
+	public static final float DEFAULT_RADIUS = DomainDefinition.UNLIMITED_VOID.radius();
+	public static final float DEFAULT_FLOOR_OFFSET = DomainDefinition.UNLIMITED_VOID.floorOffset();
 
 	public DomainUVEntity(EntityType<DomainUVEntity> type, Level world) {
 		super(type, world);
@@ -99,8 +99,19 @@ public class DomainUVEntity extends PathfinderMob implements DomainSource {
 	}
 
 	@Override
-	public DomainBarrierKind barrierKind() {
-		return DomainBarrierKind.CLOSED;
+	public DomainDefinition definition() {
+		return DomainDefinition.UNLIMITED_VOID;
+	}
+
+	@Override
+	public String domainOwnerUUID() {
+		return this.getPersistentData().getString("ownerUUID");
+	}
+
+	/** The synced target, not the definition's figure: this is what the shell is growing to. */
+	@Override
+	public double fullRadius() {
+		return getTargetRadius();
 	}
 
 	/**
@@ -114,7 +125,7 @@ public class DomainUVEntity extends PathfinderMob implements DomainSource {
 	@Override
 	public DomainShell shell() {
 		if (this.shell == null)
-			this.shell = new DomainShell();
+			this.shell = new DomainShell(definition().shell());
 		return this.shell;
 	}
 
@@ -292,7 +303,7 @@ public class DomainUVEntity extends PathfinderMob implements DomainSource {
 		if (compound.contains("clashHP"))
 			setClashHP(compound.getFloat("clashHP"));
 		if (compound.contains("shell")) {
-			DomainShell restored = new DomainShell();
+			DomainShell restored = new DomainShell(definition().shell());
 			restored.load(compound.getCompound("shell"));
 			this.shell = restored;
 		}

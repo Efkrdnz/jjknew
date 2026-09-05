@@ -5,11 +5,13 @@ import org.joml.Matrix4f;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.RenderGuiEvent;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffectInstance;
 
 import net.efkrdnz.jjkstrongest.init.JjkStrongestModMobEffects;
@@ -28,12 +30,37 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
  *
  * <p>The shader this draws was already written, registered and complete; nothing had ever
  * fetched its render type.
+ *
+ * <p>The ramp is held here rather than read off the effect's remaining duration. The
+ * domain reapplies its sure-hit on a cadence, so the duration jumps back to full every
+ * time round — anything inferring "how long has this been running" from it sees zero
+ * forever and never fades in at all.
  */
 @EventBusSubscriber(modid = "jjk_strongest", value = Dist.CLIENT)
 public class InformationOverloadOverlayRenderer {
 
 	/** Ticks of ramp at each end, so it neither pops in nor cuts out. */
 	private static final float FADE_TICKS = 12.0f;
+
+	private static float fade;
+	private static float previousFade;
+	/** Kept from the last tick the effect was held, so the fade-out does not change strength. */
+	private static int amplifier;
+
+	@SubscribeEvent
+	public static void onClientTick(ClientTickEvent.Post event) {
+		previousFade = fade;
+		Minecraft mc = Minecraft.getInstance();
+		LocalPlayer player = mc.player;
+		MobEffectInstance overload = player == null || player.isSpectator() ? null : player.getEffect(JjkStrongestModMobEffects.INFORMATION_OVERLOAD);
+		float step = 1.0f / FADE_TICKS;
+		if (overload != null) {
+			amplifier = overload.getAmplifier();
+			fade = Math.min(1.0f, fade + step);
+		} else {
+			fade = Math.max(0.0f, fade - step);
+		}
+	}
 
 	@SubscribeEvent
 	public static void onRenderGui(RenderGuiEvent.Pre event) {
@@ -44,26 +71,14 @@ public class InformationOverloadOverlayRenderer {
 		if (player == null || player.isSpectator())
 			return;
 
-		MobEffectInstance overload = player.getEffect(JjkStrongestModMobEffects.INFORMATION_OVERLOAD);
-		if (overload == null)
-			return;
-
 		float partial = event.getPartialTick().getGameTimeDeltaPartialTick(false);
-		float remaining = overload.getDuration() - partial;
-		if (remaining <= 0.0f)
+		float shown = Mth.lerp(partial, previousFade, fade);
+		if (shown <= 0.01f)
 			return;
 
-		// Ramp up over the first few ticks of the effect and back down over its last few.
-		// Duration is not exposed as a total, so the rise is inferred from how long it has
-		// been running rather than how long it has left.
-		float elapsed = Math.max(0.0f, 200.0f - remaining);
-		float fade = Math.min(1.0f, Math.min(elapsed, remaining) / FADE_TICKS);
-		if (fade <= 0.01f)
-			return;
-
-		float strength = Math.min(1.0f, 0.85f + overload.getAmplifier() * 0.15f);
+		float strength = Math.min(1.0f, 0.85f + amplifier * 0.15f);
 		float timeSeconds = (player.tickCount + partial) / 20.0f;
-		if (!JjkShaderManager.beginInformationOverloadOverlayEffect(timeSeconds, strength, fade))
+		if (!JjkShaderManager.beginInformationOverloadOverlayEffect(timeSeconds, strength, shown))
 			return;
 
 		PoseStack poseStack = event.getGuiGraphics().pose();

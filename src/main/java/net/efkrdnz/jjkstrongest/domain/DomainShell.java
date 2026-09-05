@@ -29,18 +29,16 @@ public final class DomainShell {
 	public static final int CELLS = LON_CELLS * LAT_CELLS;
 	public static final float FULL = 255.0f;
 
-	/** Ticks a cell must go undamaged before it starts healing. */
-	private static final int REGEN_HOLD_TICKS = 60;
-	/** Points per tick a resting cell recovers — far slower than sustained pressure. */
-	private static final float REGEN_PER_TICK = 0.75f;
-
 	private final float[] integrity = new float[CELLS];
 	private final short[] hold = new short[CELLS];
+	/** How this particular barrier heals and how well it shrugs off rival pressure. */
+	private final DomainShellProfile profile;
 	private int version;
 	private int breaches;
 	private boolean dirty = true;
 
-	public DomainShell() {
+	public DomainShell(DomainShellProfile profile) {
+		this.profile = profile;
 		Arrays.fill(integrity, FULL);
 	}
 
@@ -89,10 +87,11 @@ public final class DomainShell {
 	 * purely from impacts would eat the top of the dome and never touch the bottom.
 	 */
 	public void applyPressure(float perCell) {
-		if (perCell <= 0.0f)
+		float resisted = perCell / Math.max(0.01f, profile.pressureResistance());
+		if (resisted <= 0.0f)
 			return;
 		for (int i = 0; i < CELLS; i++)
-			hurt(i, perCell);
+			hurt(i, resisted);
 		dirty = true;
 	}
 
@@ -130,7 +129,7 @@ public final class DomainShell {
 			return;
 		float after = Math.max(0.0f, before - amount);
 		integrity[cell] = after;
-		hold[cell] = REGEN_HOLD_TICKS;
+		hold[cell] = (short) profile.regenHoldTicks();
 		if (after <= 0.0f)
 			breaches++;
 	}
@@ -146,7 +145,7 @@ public final class DomainShell {
 			if (integrity[i] >= FULL)
 				continue;
 			boolean wasBreached = integrity[i] <= 0.0f;
-			integrity[i] = Math.min(FULL, integrity[i] + REGEN_PER_TICK);
+			integrity[i] = Math.min(FULL, integrity[i] + profile.regenPerTick());
 			if (wasBreached && integrity[i] > 0.0f)
 				breaches--;
 			changed = true;
@@ -168,10 +167,6 @@ public final class DomainShell {
 	/** How many cells have been driven to zero — each one is a hole. */
 	public int breachCount() {
 		return breaches;
-	}
-
-	public boolean hasBreach() {
-		return breaches > 0;
 	}
 
 	/** True once every cell is gone: the shell shatters as a piece. */

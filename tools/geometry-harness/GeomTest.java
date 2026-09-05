@@ -3,6 +3,11 @@ import net.minecraft.world.phys.Vec3;
 import java.util.Random;
 
 public class GeomTest {
+    // Unlimited Void's own barrier settings, transcribed from DomainDefinition. Not
+    // imported from it: DomainDefinition pulls in Minecraft's registries, which is exactly
+    // what this harness exists to run without.
+    static final DomainShellProfile VOID_SHELL = new DomainShellProfile(60, 0.75f, 1.0f);
+
     static int pass = 0, fail = 0;
     static void check(String name, boolean ok, String detail) {
         if (ok) { pass++; System.out.println("  PASS  " + name); }
@@ -85,17 +90,17 @@ public class GeomTest {
         check("-Y is the bottom band", DomainShell.cellFor(0,-1,0) / 32 == 15, "lat=" + (DomainShell.cellFor(0,-1,0)/32));
 
         System.out.println("\nTwo failure shapes from one grid");
-        DomainShell pressed = new DomainShell();
+        DomainShell pressed = new DomainShell(VOID_SHELL);
         int ticks = 0;
         while (!pressed.isShattered() && ticks < 5000) { pressed.applyPressure(DomainShell.FULL / 440f); ticks++; }
         check("even pressure shatters the whole shell", pressed.isShattered(), "not shattered after " + ticks);
         check("...in roughly the intended ~440 ticks", ticks >= 400 && ticks <= 480, "took " + ticks);
 
-        DomainShell punched = new DomainShell();
+        DomainShell punched = new DomainShell(VOID_SHELL);
         Vec3 spot = new Vec3(1, 0.3, 0.2).normalize();
         int punches = 0;
-        while (!punched.hasBreach() && punches < 500) { punched.applyStrike(spot, 26.0f, 2); punches++; }
-        check("concentrated strikes open a hole", punched.hasBreach(), "no breach after " + punches);
+        while (punched.breachCount() == 0 && punches < 500) { punched.applyStrike(spot, 26.0f, 2); punches++; }
+        check("concentrated strikes open a hole", punched.breachCount() > 0, "no breach after " + punches);
         check("...in roughly ten hits", punches >= 6 && punches <= 16, "took " + punches);
         check("...while the shell overall is still healthy",
               punched.totalIntegrity() > 0.9f, "integrity=" + punched.totalIntegrity());
@@ -136,7 +141,7 @@ public class GeomTest {
         check("outside, into the wall: inward motion removed", near(barging.x, 0, 1e-6), "x=" + barging.x);
 
         // a breach is a way through, from either side
-        DomainShell holed = new DomainShell();
+        DomainShell holed = new DomainShell(VOID_SHELL);
         Vec3 through = new Vec3(1,0,0);
         for (int i = 0; i < 60 && !holed.isOpenTowards(through.x, through.y, through.z); i++)
             holed.applyStrike(through, 26.0f, 2);

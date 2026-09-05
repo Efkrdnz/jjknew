@@ -44,7 +44,7 @@ public final class DomainBarrierStrike {
 		Vec3 eye = player.getEyePosition(1.0f);
 		Vec3 look = player.getLookAngle();
 
-		for (net.efkrdnz.jjkstrongest.entity.DomainUVEntity domain : DomainRegistry.voidsIn(level)) {
+		for (DomainSource domain : DomainRegistry.closedIn(level)) {
 			if (!domain.isAlive())
 				continue;
 			DomainSphere sphere = domain.volume();

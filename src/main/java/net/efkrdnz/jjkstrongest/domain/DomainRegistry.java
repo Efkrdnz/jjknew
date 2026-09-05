@@ -6,7 +6,6 @@ import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 import net.neoforged.neoforge.event.entity.EntityLeaveLevelEvent;
 import net.neoforged.neoforge.event.level.LevelEvent;
 
-import net.minecraft.world.entity.Entity;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 
@@ -37,15 +36,30 @@ import java.util.WeakHashMap;
 @EventBusSubscriber(modid = "jjk_strongest")
 public final class DomainRegistry {
 
-	private static final Map<Level, List<DomainUVEntity>> VOIDS = Collections.synchronizedMap(new WeakHashMap<>());
-	private static final Map<Level, List<MalevolentShrineEntity>> SHRINES = Collections.synchronizedMap(new WeakHashMap<>());
+	/**
+	 * Every live domain in each level, whatever technique it came from.
+	 *
+	 * <p>This used to be two maps — one of {@code DomainUVEntity}, one of
+	 * {@code MalevolentShrineEntity} — with a parallel query for each. That shape grew a
+	 * branch, a map and a pair of accessors per new domain; a third technique meant
+	 * editing this file. One list keyed on {@link DomainSource} does not: an entity that
+	 * implements the interface registers itself, and {@link #closedIn} and {@link #openIn}
+	 * answer the questions the engine actually asks.
+	 *
+	 * <p>Keyed on the {@link Level} instance rather than its dimension key, because the
+	 * client and the integrated server each have their own {@code Level} object for the
+	 * same dimension and their domains must not be mixed together. Entries are weak so a
+	 * level that gets unloaded does not pin its entities in memory.
+	 */
+	private static final Map<Level, List<DomainSource>> DOMAINS = Collections.synchronizedMap(new WeakHashMap<>());
 
 	/**
-	 * Number of live Unlimited Void domains across every level.
+	 * Number of live closed domains across every level.
 	 *
 	 * <p>Read once per entity movement by the collision hook, so it is deliberately a
 	 * plain volatile field: when nobody has a domain open — which is nearly always —
-	 * the whole hook costs one field read and a branch.
+	 * the whole hook costs one field read and a branch. Open domains are not counted:
+	 * they have no barrier, so they never take part in collision.
 	 */
 	public static volatile int activeCount = 0;
 
@@ -54,40 +68,26 @@ public final class DomainRegistry {
 
 	@SubscribeEvent
 	public static void onJoin(EntityJoinLevelEvent event) {
-		Entity entity = event.getEntity();
-		if (entity instanceof DomainUVEntity domain) {
-			synchronized (VOIDS) {
-				List<DomainUVEntity> list = VOIDS.computeIfAbsent(event.getLevel(), l -> new ArrayList<>(2));
-				if (!list.contains(domain))
-					list.add(domain);
-			}
-			recount();
-		} else if (entity instanceof MalevolentShrineEntity shrine) {
-			synchronized (SHRINES) {
-				List<MalevolentShrineEntity> list = SHRINES.computeIfAbsent(event.getLevel(), l -> new ArrayList<>(2));
-				if (!list.contains(shrine))
-					list.add(shrine);
-			}
+		if (!(event.getEntity() instanceof DomainSource source))
+			return;
+		synchronized (DOMAINS) {
+			List<DomainSource> list = DOMAINS.computeIfAbsent(event.getLevel(), l -> new ArrayList<>(2));
+			if (!list.contains(source))
+				list.add(source);
 		}
+		recount();
 	}
 
 	@SubscribeEvent
 	public static void onLeave(EntityLeaveLevelEvent event) {
-		Entity entity = event.getEntity();
-		if (entity instanceof DomainUVEntity domain) {
-			synchronized (VOIDS) {
-				List<DomainUVEntity> list = VOIDS.get(event.getLevel());
-				if (list != null)
-					list.remove(domain);
-			}
-			recount();
-		} else if (entity instanceof MalevolentShrineEntity shrine) {
-			synchronized (SHRINES) {
-				List<MalevolentShrineEntity> list = SHRINES.get(event.getLevel());
-				if (list != null)
-					list.remove(shrine);
-			}
+		if (!(event.getEntity() instanceof DomainSource source))
+			return;
+		synchronized (DOMAINS) {
+			List<DomainSource> list = DOMAINS.get(event.getLevel());
+			if (list != null)
+				list.remove(source);
 		}
+		recount();
 	}
 
 	/**
@@ -102,43 +102,87 @@ public final class DomainRegistry {
 
 	private static void recount() {
 		int total = 0;
-		synchronized (VOIDS) {
-			for (List<DomainUVEntity> list : VOIDS.values())
-				total += list.size();
+		synchronized (DOMAINS) {
+			for (List<DomainSource> list : DOMAINS.values()) {
+				for (DomainSource source : list) {
+					if (source.isClosed())
+						total++;
+				}
+			}
 		}
 		activeCount = total;
 	}
 
 	// ---- queries -------------------------------------------------------------
 
-	/** Live Unlimited Void domains in this level. Returns a snapshot safe to iterate. */
+	/** Every live domain in this level. Returns a snapshot safe to iterate. */
+	public static List<DomainSource> domainsIn(Level level) {
+		synchronized (DOMAINS) {
+			List<DomainSource> list = DOMAINS.get(level);
+			if (list == null || list.isEmpty())
+				return Collections.emptyList();
+			return new ArrayList<>(list);
+		}
+	}
+
+	/** The domains in this level with a barrier: the ones you can be inside of. */
+	public static List<DomainSource> closedIn(Level level) {
+		return filter(level, true);
+	}
+
+	/** The domains in this level with no surface: the ones that only cover ground. */
+	public static List<DomainSource> openIn(Level level) {
+		return filter(level, false);
+	}
+
+	private static List<DomainSource> filter(Level level, boolean closed) {
+		List<DomainSource> all = domainsIn(level);
+		if (all.isEmpty())
+			return Collections.emptyList();
+		List<DomainSource> out = new ArrayList<>(all.size());
+		for (DomainSource source : all) {
+			if (source.isClosed() == closed)
+				out.add(source);
+		}
+		return out;
+	}
+
+	/**
+	 * Live Unlimited Void domains in this level.
+	 *
+	 * <p>A typed view over the one list, for the code that genuinely needs the concrete
+	 * entity — the renderer, the fog, the phase machine. Engine code that only needs "a
+	 * domain with a barrier" should ask {@link #closedIn} instead.
+	 */
 	public static List<DomainUVEntity> voidsIn(Level level) {
-		synchronized (VOIDS) {
-			List<DomainUVEntity> list = VOIDS.get(level);
-			if (list == null || list.isEmpty())
-				return Collections.emptyList();
-			return new ArrayList<>(list);
-		}
+		return typed(level, DomainUVEntity.class);
 	}
 
-	/** Live Malevolent Shrines in this level. Returns a snapshot safe to iterate. */
+	/** Live Malevolent Shrines in this level. As {@link #voidsIn}, for the open domain. */
 	public static List<MalevolentShrineEntity> shrinesIn(Level level) {
-		synchronized (SHRINES) {
-			List<MalevolentShrineEntity> list = SHRINES.get(level);
-			if (list == null || list.isEmpty())
-				return Collections.emptyList();
-			return new ArrayList<>(list);
-		}
+		return typed(level, MalevolentShrineEntity.class);
 	}
 
-	/** The sphere of the first domain whose interior contains this point, or null. */
+	private static <T extends DomainSource> List<T> typed(Level level, Class<T> type) {
+		List<DomainSource> all = domainsIn(level);
+		if (all.isEmpty())
+			return Collections.emptyList();
+		List<T> out = new ArrayList<>(all.size());
+		for (DomainSource source : all) {
+			if (type.isInstance(source))
+				out.add(type.cast(source));
+		}
+		return out;
+	}
+
+	/** The sphere of the first barriered domain whose interior contains this point, or null. */
 	public static DomainSphere sphereAt(Level level, double x, double y, double z) {
 		if (activeCount == 0)
 			return null;
-		for (DomainUVEntity domain : voidsIn(level)) {
-			if (!domain.isAlive())
+		for (DomainSource source : closedIn(level)) {
+			if (!source.isAlive())
 				continue;
-			DomainSphere sphere = domain.sphere();
+			DomainSphere sphere = source.volume();
 			if (sphere.isUsable() && sphere.contains(x, y, z))
 				return sphere;
 		}
@@ -146,7 +190,7 @@ public final class DomainRegistry {
 	}
 
 	/**
-	 * Whether a point sits inside any Unlimited Void barrier.
+	 * Whether a point sits inside any closed domain's barrier.
 	 *
 	 * <p>Replaces two hand-rolled copies of this test that each did their own world scan,
 	 * one of them re-running for every slash candidate the shrine considered.
@@ -155,14 +199,19 @@ public final class DomainRegistry {
 		return sphereAt(level, x, y, z) != null;
 	}
 
-	public static DomainUVEntity voidByOwner(Level level, String ownerUUID) {
+	/** The domain of either kind cast by this player, or null. */
+	public static DomainSource byOwner(Level level, String ownerUUID) {
 		if (ownerUUID == null || ownerUUID.isEmpty())
 			return null;
-		for (DomainUVEntity domain : voidsIn(level)) {
-			if (domain.isAlive() && ownerUUID.equals(domain.getPersistentData().getString("ownerUUID")))
-				return domain;
+		for (DomainSource source : domainsIn(level)) {
+			if (source.isAlive() && ownerUUID.equals(source.domainOwnerUUID()))
+				return source;
 		}
 		return null;
+	}
+
+	public static DomainUVEntity voidByOwner(Level level, String ownerUUID) {
+		return ownerOf(voidsIn(level), ownerUUID);
 	}
 
 	public static DomainUVEntity voidByOwner(Level level, UUID ownerUUID) {
@@ -170,21 +219,30 @@ public final class DomainRegistry {
 	}
 
 	public static MalevolentShrineEntity shrineByOwner(Level level, String ownerUUID) {
+		return ownerOf(shrinesIn(level), ownerUUID);
+	}
+
+	/**
+	 * Searches a typed list rather than filtering {@link #byOwner}'s result, so a player
+	 * who somehow held both kinds at once would still be found by either query rather than
+	 * by whichever the one list happened to hold first.
+	 */
+	private static <T extends DomainSource> T ownerOf(List<T> candidates, String ownerUUID) {
 		if (ownerUUID == null || ownerUUID.isEmpty())
 			return null;
-		for (MalevolentShrineEntity shrine : shrinesIn(level)) {
-			if (shrine.isAlive() && ownerUUID.equals(shrine.getPersistentData().getString("ownerUUID")))
-				return shrine;
+		for (T source : candidates) {
+			if (source.isAlive() && ownerUUID.equals(source.domainOwnerUUID()))
+				return source;
 		}
 		return null;
 	}
 
 	/** Whether this entity already has a domain of either kind open. */
 	public static boolean hasDomain(Level level, String ownerUUID) {
-		return voidByOwner(level, ownerUUID) != null || shrineByOwner(level, ownerUUID) != null;
+		return byOwner(level, ownerUUID) != null;
 	}
 
-	/** The nearest live domain to a point, whatever its phase. Used by the renderer and fog. */
+	/** The nearest live Void to a point, whatever its phase. Used by the renderer and fog. */
 	public static DomainUVEntity nearestVoid(Level level, double x, double y, double z, double maxDistance) {
 		DomainUVEntity best = null;
 		double bestSq = maxDistance * maxDistance;

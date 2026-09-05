@@ -45,10 +45,10 @@ public final class DomainProjectileContainment {
 		if (entity.level().isClientSide())
 			return;
 
-		for (var domain : DomainRegistry.voidsIn(entity.level())) {
+		for (DomainSource domain : DomainRegistry.closedIn(entity.level())) {
 			if (!domain.isAlive())
 				continue;
-			DomainSphere sphere = domain.sphere();
+			DomainSphere sphere = domain.volume();
 			if (!sphere.isUsable() || !sphere.phase().isSealed())
 				continue;
 

@@ -9,6 +9,7 @@ import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.phys.Vec3;
 
 import net.efkrdnz.jjkstrongest.domain.DomainCarve;
+import net.efkrdnz.jjkstrongest.domain.DomainDefinition;
 import net.efkrdnz.jjkstrongest.domain.DomainPhase;
 import net.efkrdnz.jjkstrongest.domain.DomainShell;
 import net.efkrdnz.jjkstrongest.domain.DomainSphere;
@@ -28,15 +29,15 @@ import java.util.UUID;
  */
 public class DomainUVEntityTickProcedure {
 
-	private static final int ABSOLUTE_MAX_LIFETIME = 1200;
-	/** Ticks spent growing to full size. */
-	private static final int EXPANSION_TICKS = 40;
-	/** Ticks at full size before the domain turns hostile. */
-	private static final int SETTLE_TICKS = 40;
-	/** Ticks spent shrinking while the terrain goes back. */
-	private static final int COLLAPSE_TICKS = 20;
-	/** Grace between a barrier being holed and the domain giving out. */
-	private static final int DESTABILISE_TICKS = 80;
+	/**
+	 * Every timing this machine runs on now comes from the domain being ticked, not from
+	 * constants private to this file. That is what makes the phase machine reusable: a
+	 * second technique is a {@link DomainDefinition} and a renderer, not a second copy of
+	 * everything below.
+	 */
+	private static DomainDefinition def(DomainUVEntity domain) {
+		return domain.definition();
+	}
 
 	public static void execute(LevelAccessor world, Entity entity) {
 		if (!(entity instanceof DomainUVEntity domain) || !(world instanceof ServerLevel level))
@@ -61,7 +62,7 @@ public class DomainUVEntityTickProcedure {
 		DomainPhase phase = domain.getPhase();
 
 		if (phase != DomainPhase.COLLAPSING) {
-			if (absoluteTicks >= ABSOLUTE_MAX_LIFETIME || shouldCollapseDueToCaster(level, domain)) {
+			if (absoluteTicks >= def(domain).maxLifetimeTicks() || shouldCollapseDueToCaster(level, domain)) {
 				beginCollapse(domain);
 				phase = DomainPhase.COLLAPSING;
 			}
@@ -83,7 +84,7 @@ public class DomainUVEntityTickProcedure {
 
 		switch (phase) {
 			case EXPANDING -> tickExpanding(level, domain, data);
-			case SETTLING -> DomainUVPostLinesPhaseProcedure.execute(level, domain, SETTLE_TICKS);
+			case SETTLING -> DomainUVPostLinesPhaseProcedure.execute(level, domain, def(domain).settleTicks());
 			case ACTIVE -> tickActive(level, domain, data, clashing);
 			case COLLAPSING -> tickCollapsing(level, domain, data);
 		}
@@ -93,7 +94,7 @@ public class DomainUVEntityTickProcedure {
 		int tick = data.getInt("expansionTick") + 1;
 		data.putInt("expansionTick", tick);
 
-		float progress = Math.min(1.0f, (float) tick / EXPANSION_TICKS);
+		float progress = Math.min(1.0f, (float) tick / def(domain).expansionTicks());
 		// ease-out so the shell slams outward and settles, rather than crawling
 		float eased = 1.0f - (1.0f - progress) * (1.0f - progress);
 		domain.setShellRadius(domain.getTargetRadius() * eased);
@@ -128,7 +129,7 @@ public class DomainUVEntityTickProcedure {
 		int tick = data.getInt("collapseTick") + 1;
 		data.putInt("collapseTick", tick);
 
-		float progress = Math.min(1.0f, (float) tick / COLLAPSE_TICKS);
+		float progress = Math.min(1.0f, (float) tick / def(domain).collapseTicks());
 		domain.setPhaseProgress(progress);
 		domain.setShellRadius(domain.getTargetRadius() * (1.0f - progress));
 
@@ -186,8 +187,8 @@ public class DomainUVEntityTickProcedure {
 		if (shell.isShattered() || shell.totalIntegrity() <= 0.0f)
 			return false;
 
-		if (shell.hasBreach()) {
-			int left = data.contains("destabiliseTicks") ? data.getInt("destabiliseTicks") : DESTABILISE_TICKS;
+		if (shell.breachCount() > def(domain).collapse().breachThreshold()) {
+			int left = data.contains("destabiliseTicks") ? data.getInt("destabiliseTicks") : def(domain).collapse().destabiliseTicks();
 			// more holes, less time
 			left -= Math.max(1, shell.breachCount());
 			data.putInt("destabiliseTicks", left);

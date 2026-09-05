@@ -9,8 +9,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
-import net.efkrdnz.jjkstrongest.entity.DomainUVEntity;
-
 import java.util.List;
 
 /**
@@ -53,22 +51,25 @@ public final class DomainCollision {
 		Level level = entity.level();
 		if (level == null)
 			return movement;
-		List<DomainUVEntity> domains = DomainRegistry.voidsIn(level);
+		// Closed domains only, and asked for as such: an open domain has no surface, so
+		// there is nothing here for it to collide with. Nothing in this file needs to know
+		// which technique the barrier came from.
+		List<DomainSource> domains = DomainRegistry.closedIn(level);
 		if (domains.isEmpty())
 			return movement;
 
 		Vec3 result = movement;
-		for (DomainUVEntity domain : domains) {
+		for (DomainSource domain : domains) {
 			if (!domain.isAlive())
 				continue;
-			DomainSphere sphere = domain.sphere();
+			DomainSphere sphere = domain.volume();
 			if (!sphere.isUsable())
 				continue;
 			// A collapsing shell cannot hold anyone — it is shrinking to nothing — but the
 			// floor has to stay until the carve is back, or everyone inside drops into the
 			// hole the domain just spent its life digging.
 			if (sphere.phase() == DomainPhase.COLLAPSING) {
-				result = sphere.clampFloorWithin(entity.position(), result, domain.getTargetRadius());
+				result = sphere.clampFloorWithin(entity.position(), result, domain.fullRadius());
 				continue;
 			}
 			// Only a shell at full size is solid. While it is still growing the radius

@@ -13,8 +13,8 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
 import net.efkrdnz.jjkstrongest.domain.DomainRegistry;
+import net.efkrdnz.jjkstrongest.domain.DomainSource;
 import net.efkrdnz.jjkstrongest.domain.DomainSphere;
-import net.efkrdnz.jjkstrongest.entity.DomainUVEntity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -71,7 +71,7 @@ public class MalevolentShrineTickBlockBreakingProcedure {
 		// Every closed barrier in the level, resolved once. Testing per block against the
 		// registry would repeat this lookup tens of thousands of times a pass.
 		List<DomainSphere> barriers = new ArrayList<>();
-		for (DomainUVEntity domain : DomainRegistry.voidsIn(level)) {
+		for (DomainSource domain : DomainRegistry.closedIn(level)) {
 			if (!domain.isAlive())
 				continue;
 			DomainSphere sphere = domain.volume();
