@@ -6,7 +6,7 @@ public class GeomTest {
     // Unlimited Void's own barrier settings, transcribed from DomainDefinition. Not
     // imported from it: DomainDefinition pulls in Minecraft's registries, which is exactly
     // what this harness exists to run without.
-    static final DomainShellProfile VOID_SHELL = new DomainShellProfile(60, 0.75f, 1.0f);
+    static final DomainShellProfile VOID_SHELL = new DomainShellProfile(140, 1.5f, 1.0f, 140);
 
     static int pass = 0, fail = 0;
     static void check(String name, boolean ok, String detail) {
@@ -197,6 +197,58 @@ public class GeomTest {
                    -1.0 - aHairUnder, 1e-9), "not caught");
         check("but a block under it is genuinely outside",
               !room.contains(0, -2.0, 0), "contains() said inside below the floor");
+
+        System.out.println("\nholes (a hole and a crack are two different clocks)");
+        DomainShell punchedShell = new DomainShell(VOID_SHELL);
+        Vec3 spotH = new Vec3(1, 0, 0);
+        int swings = 0;
+        while (!punchedShell.isOpenTowards(spotH.x, spotH.y, spotH.z) && swings < 500) {
+            punchedShell.applyStrike(spotH, 26.0f, 2);
+            swings++;
+        }
+        check("ten or so clean swings open a hole", punchedShell.isOpenTowards(spotH.x, spotH.y, spotH.z) && swings <= 12, "took " + swings + " swings");
+        check("...and it counts as one breach", punchedShell.breachCount() == 1, "breaches=" + punchedShell.breachCount());
+
+        // 140 ticks is seven seconds. This is the number the whole request turns on: the old
+        // build sealed the hole on the FIRST regen tick, sixty ticks in, while it still
+        // looked wide open.
+        for (int t = 0; t < 139; t++) punchedShell.tickRegen();
+        check("still open at 139 ticks", punchedShell.isOpenTowards(spotH.x, spotH.y, spotH.z), "closed early");
+        punchedShell.tickRegen();
+        check("closed on the 140th", !punchedShell.isOpenTowards(spotH.x, spotH.y, spotH.z), "still open");
+        check("and the breach is no longer counted", punchedShell.breachCount() == 0, "breaches=" + punchedShell.breachCount());
+
+        // The crack outlives the hole and heals on its own slower clock.
+        int cellH = DomainShell.cellFor(spotH);
+        check("the crack is still visible after the hole shuts",
+              punchedShell.integrityAt(cellH) < DomainShell.FULL * 0.5f, "integrity " + punchedShell.integrityAt(cellH));
+        for (int t = 0; t < 400; t++) punchedShell.tickRegen();
+        check("...and eventually heals away entirely",
+              near(punchedShell.integrityAt(cellH), DomainShell.FULL, 1e-3), "integrity " + punchedShell.integrityAt(cellH));
+
+        // Hitting an open hole has to hold it open. Before, hurt() returned early on a dead
+        // cell and swinging into a gap did nothing at all.
+        DomainShell heldShell = new DomainShell(VOID_SHELL);
+        while (!heldShell.isOpenTowards(spotH.x, spotH.y, spotH.z)) heldShell.applyStrike(spotH, 26.0f, 2);
+        for (int t = 0; t < 100; t++) heldShell.tickRegen();
+        heldShell.applyStrike(spotH, 26.0f, 2);
+        for (int t = 0; t < 100; t++) heldShell.tickRegen();
+        check("hitting an open hole keeps it open past its original clock",
+              heldShell.isOpenTowards(spotH.x, spotH.y, spotH.z), "it closed anyway");
+
+        // Zero on the wire means open, so the client can predict collision without the
+        // packet carrying a second array.
+        DomainShell wire = new DomainShell(VOID_SHELL);
+        while (!wire.isOpenTowards(spotH.x, spotH.y, spotH.z)) wire.applyStrike(spotH, 26.0f, 2);
+        byte[] snap = wire.snapshot();
+        DomainShell far = new DomainShell(VOID_SHELL);
+        far.applyCells(snap);
+        check("a hole survives the round trip to a client",
+              far.isOpenTowards(spotH.x, spotH.y, spotH.z), "client thinks it is closed");
+        check("and a merely cracked cell does not read as one",
+              (snap[DomainShell.cellFor(new Vec3(-1, 0, 0))] & 0xFF) != 0, "an untouched cell serialised as open");
+        check("client breach count matches", far.breachCount() == wire.breachCount(),
+              far.breachCount() + " vs " + wire.breachCount());
 
         System.out.println("\napplyFacePressure (two barriers meeting)");
         // directionOf must be the exact inverse of cellFor, or a clash wears down a face

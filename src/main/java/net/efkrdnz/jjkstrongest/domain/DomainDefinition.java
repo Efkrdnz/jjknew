@@ -42,10 +42,17 @@ public record DomainDefinition(String id, DomainBarrierKind barrierKind, float r
 		int maxLifetimeTicks, @Nullable DomainShellProfile shell, CollapseRules collapse, @Nullable SureHit sureHit) {
 
 	/**
-	 * @param breachThreshold  holes tolerated before the grace clock starts
-	 * @param destabiliseTicks grace between the barrier being holed and the domain failing
+	 * When a damaged barrier stops being able to hold.
+	 *
+	 * <p>{@code breachThreshold} is a <em>fraction of the shell</em>, not a count. It used to
+	 * be a count, and it was zero, so a single hole started the clock and a player with a
+	 * sword could end a domain by standing outside it and swinging. A hole is damage; only
+	 * losing most of the surface is structural failure.
+	 *
+	 * @param breachThreshold  fraction of the shell that may be open at once, 0..1
+	 * @param destabiliseTicks grace between crossing that and the domain giving out
 	 */
-	public record CollapseRules(int breachThreshold, int destabiliseTicks) {
+	public record CollapseRules(float breachThreshold, int destabiliseTicks) {
 	}
 
 	/**
@@ -74,8 +81,8 @@ public record DomainDefinition(String id, DomainBarrierKind barrierKind, float r
 	 * {@link DomainShell}, and the sure-hit's effect and level inline in the argument list
 	 * of the procedure that applies it.
 	 */
-	public static final DomainDefinition UNLIMITED_VOID = new DomainDefinition("unlimited_void", DomainBarrierKind.CLOSED, 30.0f, -1.0f, 40, 40, 20, 600, 1200,
-			new DomainShellProfile(60, 0.75f, 1.0f), new CollapseRules(0, 80), new SureHit(JjkStrongestModMobEffects.INFORMATION_OVERLOAD, 1, 200, 20));
+	public static final DomainDefinition UNLIMITED_VOID = new DomainDefinition("unlimited_void", DomainBarrierKind.CLOSED, 30.0f, -1.0f, 40, 40, 50, 600, 1200,
+			new DomainShellProfile(140, 1.5f, 1.0f, 140), new CollapseRules(0.6f, 80), new SureHit(JjkStrongestModMobEffects.INFORMATION_OVERLOAD, 1, 200, 20));
 
 	/**
 	 * Malevolent Shrine.
@@ -85,5 +92,5 @@ public record DomainDefinition(String id, DomainBarrierKind barrierKind, float r
 	 * which are their own system. What it does share is the shape of a life: it opens, it
 	 * settles, it runs, it closes.
 	 */
-	public static final DomainDefinition MALEVOLENT_SHRINE = new DomainDefinition("malevolent_shrine", DomainBarrierKind.OPEN, 100.0f, 0.0f, 40, 0, 20, 560, 1200, null, new CollapseRules(0, 0), null);
+	public static final DomainDefinition MALEVOLENT_SHRINE = new DomainDefinition("malevolent_shrine", DomainBarrierKind.OPEN, 100.0f, 0.0f, 40, 0, 20, 560, 1200, null, new CollapseRules(0.6f, 0), null);
 }

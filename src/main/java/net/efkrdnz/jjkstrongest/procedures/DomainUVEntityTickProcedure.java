@@ -131,7 +131,9 @@ public class DomainUVEntityTickProcedure {
 
 		float progress = Math.min(1.0f, (float) tick / def(domain).collapseTicks());
 		domain.setPhaseProgress(progress);
-		domain.setShellRadius(domain.getTargetRadius() * (1.0f - progress));
+		// The radius deliberately does not shrink any more. The shell breaks where it stands
+		// and the pieces are thrown outward, so they have to start from where the wall
+		// actually was; pulling the radius in under them would drag the shards to the centre.
 
 		boolean restored = DomainCarve.advanceRestore(level, domain);
 		if (restored && progress >= 1.0f)
@@ -163,11 +165,14 @@ public class DomainUVEntityTickProcedure {
 	 * Runs the barrier: heals what nothing is pressing on, and decides whether it still
 	 * stands.
 	 *
-	 * <p>Two ways to lose it, from the same grid. Even pressure from a rival open domain
-	 * runs every cell down together, so the shell reaches zero as a piece and shatters.
-	 * A concentrated attack drives one patch to zero first, and that hole is what kills
-	 * the domain — after a short grace, so a breach reads as the beginning of the end
-	 * rather than an instant loss.
+	 * <p>A hole is not a loss. Punching through the barrier gives you a way in for a few
+	 * seconds and leaves a mark; it does not end the domain, and it used to — the threshold
+	 * was zero holes, so one sword breach started a death clock and anybody willing to keep
+	 * swinging could delete a domain from outside it.
+	 *
+	 * <p>What does end it is losing the surface: most of the shell open at once, or every
+	 * cell of it gone. That second one is how a rival open domain wins, by pressing evenly
+	 * from every side until the whole thing gives at once.
 	 *
 	 * @return false once the barrier has given out
 	 */
@@ -187,7 +192,8 @@ public class DomainUVEntityTickProcedure {
 		if (shell.isShattered() || shell.totalIntegrity() <= 0.0f)
 			return false;
 
-		if (shell.breachCount() > def(domain).collapse().breachThreshold()) {
+		int tolerated = Math.round(DomainShell.CELLS * def(domain).collapse().breachThreshold());
+		if (shell.breachCount() > tolerated) {
 			int left = data.contains("destabiliseTicks") ? data.getInt("destabiliseTicks") : def(domain).collapse().destabiliseTicks();
 			// more holes, less time
 			left -= Math.max(1, shell.breachCount());

@@ -57,6 +57,17 @@ public final class DomainProjectileContainment {
 			if (wasInside == isInside)
 				continue;
 
+			// A hole is a way through for everything, not just for people on foot. This was
+			// missing, so a player could walk out through a gap that an arrow bounced off.
+			DomainShell shell = domain.shell();
+			if (shell != null) {
+				double dx = entity.getX() - sphere.center().x;
+				double dy = entity.getY() - sphere.center().y;
+				double dz = entity.getZ() - sphere.center().z;
+				if (shell.isOpenTowards(dx, dy, dz))
+					continue;
+			}
+
 			// Crossed the shell this tick — put it back on the surface and kill it.
 			Vec3 from = new Vec3(entity.xOld, entity.yOld, entity.zOld);
 			Vec3 rel = from.subtract(sphere.center());

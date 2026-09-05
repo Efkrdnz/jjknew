@@ -95,32 +95,68 @@ vec3 hashDir(float i, float seed) {
 // interior that is gameplay rather than decoration: a cell driven to zero is a hole
 // collision will actually let you walk through, and the cracks are how you find it.
 
+/**
+ * Distance to the nearest Voronoi *boundary* — F2 minus F1.
+ *
+ * The previous version returned F1, the distance to the nearest seed point, and the cracks
+ * were thresholded near zero. F1 is near zero *at the points*, so that drew a small disc
+ * around every seed: a field of dots, not a fracture network. F2 - F1 goes to zero exactly
+ * where the two nearest seeds are equidistant, which is the boundary between their cells,
+ * so thresholding it gives connected lines.
+ *
+ * Both minima come out of the same nine samples, so this costs nothing over what it replaces.
+ * Line width varies with the angle between neighbouring cells, which for fracture is closer
+ * to how glass actually breaks than a uniform-width alternative would be.
+ */
 float voronoiEdge(vec2 uv) {
     vec2 cell = floor(uv);
     vec2 f = fract(uv);
-    float best = 8.0;
+    float first = 8.0;
+    float second = 8.0;
     for (int j = -1; j <= 1; j++) {
         for (int i = -1; i <= 1; i++) {
             vec2 neighbour = vec2(float(i), float(j));
             vec2 point = random2(cell + neighbour);
-            best = min(best, length(neighbour + point - f));
+            float d = length(neighbour + point - f);
+            if (d < first) {
+                second = first;
+                first = d;
+            } else if (d < second) {
+                second = d;
+            }
         }
     }
-    return best;
+    return second - first;
 }
 
+/**
+ * White fracture on the barrier.
+ *
+ * Two lattices rather than one, and deliberately not harmonics of each other: a coarse
+ * network that carries the break, and a finer web inside it that only shows up once a patch
+ * is badly hurt. That is what makes cracks look like they branched outward from a hit rather
+ * than like tiling.
+ */
 float shatterMask(vec2 uv, float localDamage, float globalDamage) {
-    float fine = 22.0 + localDamage * 26.0;
     // x2 on u undoes the equirectangular stretch so shards stay roughly square
-    float dLocal = voronoiEdge(uv * fine * vec2(2.0, 1.0));
-    float crackLocal = 1.0 - smoothstep(0.02, 0.05, dLocal);
-    crackLocal *= smoothstep(0.05, 0.55, localDamage);
+    vec2 aspect = vec2(2.0, 1.0);
 
-    float dGlobal = voronoiEdge(uv * 6.0 * vec2(2.0, 1.0));
-    float crackGlobal = 1.0 - smoothstep(0.03, 0.07, dGlobal);
-    crackGlobal *= globalDamage * globalDamage;
+    // Sharper lines on fresh damage, broadening as a patch is worn down — a new hit reads as
+    // a tight star, a beaten one as a white web.
+    float width = mix(0.020, 0.075, clamp(localDamage, 0.0, 1.0));
 
-    return clamp(crackLocal + crackGlobal, 0.0, 1.0);
+    float coarse = voronoiEdge(uv * 14.0 * aspect);
+    float crack = (1.0 - smoothstep(0.0, width, coarse)) * smoothstep(0.04, 0.45, localDamage);
+
+    float fine = voronoiEdge(uv * 34.0 * aspect + 11.7);
+    crack = max(crack, (1.0 - smoothstep(0.0, width * 0.7, fine)) * smoothstep(0.35, 0.9, localDamage));
+
+    // The whole-shell web, driven by overall integrity rather than by this patch, so a
+    // barrier being pressed evenly from every side crazes over as a piece.
+    float shell = voronoiEdge(uv * 6.0 * aspect);
+    crack = max(crack, (1.0 - smoothstep(0.0, 0.055, shell)) * globalDamage * globalDamage);
+
+    return clamp(crack, 0.0, 1.0);
 }
 
 // ---- the black hole --------------------------------------------------------

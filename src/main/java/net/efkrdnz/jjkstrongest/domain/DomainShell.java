@@ -31,6 +31,17 @@ public final class DomainShell {
 
 	private final float[] integrity = new float[CELLS];
 	private final short[] hold = new short[CELLS];
+	/**
+	 * Ticks each cell stays a hole for.
+	 *
+	 * <p>Separate from {@link #integrity} on purpose. Integrity is the crack — continuous,
+	 * heals slowly, drives what you see. A hole is a discrete thing with its own clock: a
+	 * gap you can walk and shoot through. Deriving one from the other meant a hole sealed on
+	 * the very first healing tick, because that lifts a dead cell from 0 to 0.75 and any
+	 * "is this open" test against zero immediately says no — three seconds of hole behind
+	 * seventeen more seconds of hole-looking crack.
+	 */
+	private final short[] openTicks = new short[CELLS];
 	/** How this particular barrier heals and how well it shrugs off rival pressure. */
 	private final DomainShellProfile profile;
 	private int version;
@@ -196,29 +207,46 @@ public final class DomainShell {
 
 	private void hurt(int cell, float amount) {
 		float before = integrity[cell];
-		if (before <= 0.0f)
+		if (before <= 0.0f) {
+			// Already a hole. Hitting it again does not damage it further — there is nothing
+			// left — but it does keep it open, which is what anybody swinging at a gap
+			// expects. Without this, holding a breach open was impossible.
+			openTicks[cell] = (short) profile.holeTicks();
 			return;
+		}
 		float after = Math.max(0.0f, before - amount);
 		integrity[cell] = after;
 		hold[cell] = (short) profile.regenHoldTicks();
-		if (after <= 0.0f)
-			breaches++;
+		if (after <= 0.0f) {
+			if (openTicks[cell] <= 0)
+				breaches++;
+			openTicks[cell] = (short) profile.holeTicks();
+		}
 	}
 
-	/** Heals cells nothing has touched recently. Sustained pressure outruns this easily. */
+	/**
+	 * Runs both clocks: holes close on theirs, cracks heal on theirs.
+	 *
+	 * <p>Sustained pressure outruns the healing easily, which is the point — a shell being
+	 * leaned on does not quietly repair itself.
+	 */
 	public void tickRegen() {
 		boolean changed = false;
 		for (int i = 0; i < CELLS; i++) {
+			if (openTicks[i] > 0) {
+				openTicks[i]--;
+				if (openTicks[i] <= 0) {
+					breaches--;
+					changed = true;
+				}
+			}
 			if (hold[i] > 0) {
 				hold[i]--;
 				continue;
 			}
 			if (integrity[i] >= FULL)
 				continue;
-			boolean wasBreached = integrity[i] <= 0.0f;
 			integrity[i] = Math.min(FULL, integrity[i] + profile.regenPerTick());
-			if (wasBreached && integrity[i] > 0.0f)
-				breaches--;
 			changed = true;
 		}
 		if (changed)
@@ -235,7 +263,7 @@ public final class DomainShell {
 		return sum / (CELLS * FULL);
 	}
 
-	/** How many cells have been driven to zero — each one is a hole. */
+	/** How many cells are open right now — each one is a hole you can pass through. */
 	public int breachCount() {
 		return breaches;
 	}
@@ -245,9 +273,14 @@ public final class DomainShell {
 		return breaches >= CELLS;
 	}
 
-	/** Whether the shell has been holed in this direction. */
+	/** Whether the shell is open in this direction. Movement and projectiles both ask this. */
 	public boolean isOpenTowards(double dx, double dy, double dz) {
-		return integrity[cellFor(dx, dy, dz)] <= 0.0f;
+		return openTicks[cellFor(dx, dy, dz)] > 0;
+	}
+
+	/** How long this cell has left as a hole. For debug readouts. */
+	public int openTicksAt(int cell) {
+		return openTicks[Math.floorMod(cell, CELLS)];
 	}
 
 	public float integrityAt(int cell) {
@@ -260,11 +293,26 @@ public final class DomainShell {
 		return dirty;
 	}
 
-	/** Quantised copy for the wire: one byte per cell. Pure — call {@link #markSynced} after sending. */
+	/**
+	 * Quantised copy for the wire: one byte per cell. Pure — call {@link #markSynced} after
+	 * sending.
+	 *
+	 * <p>Zero is reserved to mean <em>open</em>, and a cell that is closed but still cracked
+	 * is floored at one. That is how the client learns where the holes are without the packet
+	 * growing: it needs that to predict collision, and a client clamping against a wall the
+	 * server is letting people through is exactly the rubber-banding this system is supposed
+	 * to avoid. Losing one point of integrity resolution to carry it is free.
+	 */
 	public byte[] snapshot() {
 		byte[] out = new byte[CELLS];
-		for (int i = 0; i < CELLS; i++)
-			out[i] = (byte) Math.round(Math.max(0.0f, Math.min(FULL, integrity[i])));
+		for (int i = 0; i < CELLS; i++) {
+			if (openTicks[i] > 0) {
+				out[i] = 0;
+				continue;
+			}
+			int value = Math.round(Math.max(0.0f, Math.min(FULL, integrity[i])));
+			out[i] = (byte) Math.max(1, value);
+		}
 		return out;
 	}
 
@@ -278,15 +326,25 @@ public final class DomainShell {
 		return version;
 	}
 
-	/** Overwrites the grid from a received snapshot. Client side. */
+	/**
+	 * Overwrites the grid from a received snapshot. Client side.
+	 *
+	 * <p>The client does not run the hole countdown — it is told the answer five times a
+	 * second — so {@code openTicks} here is only ever a flag, refreshed by each packet.
+	 */
 	public void applyCells(byte[] cells) {
 		if (cells.length != CELLS)
 			return;
 		breaches = 0;
 		for (int i = 0; i < CELLS; i++) {
-			integrity[i] = cells[i] & 0xFF;
-			if (integrity[i] <= 0.0f)
+			int value = cells[i] & 0xFF;
+			integrity[i] = value;
+			if (value == 0) {
+				openTicks[i] = 1;
 				breaches++;
+			} else {
+				openTicks[i] = 0;
+			}
 		}
 		dirty = false;
 	}
@@ -307,8 +365,15 @@ public final class DomainShell {
 		for (int i = 0; i < CELLS; i++) {
 			integrity[i] = cells[i] & 0xFF;
 			hold[i] = 0;
-			if (integrity[i] <= 0.0f)
+			// A cell saved at zero comes back as a fresh hole rather than a permanent one:
+			// the countdown is not worth persisting, and a domain surviving a reload with an
+			// immortal gap in it would be worse than one that heals a few seconds late.
+			if (integrity[i] <= 0.0f) {
+				openTicks[i] = (short) profile.holeTicks();
 				breaches++;
+			} else {
+				openTicks[i] = 0;
+			}
 		}
 		dirty = true;
 	}
