@@ -100,6 +100,23 @@ public final class DomainRegistry {
 			DomainCarve.restoreOrphans(serverLevel);
 	}
 
+	/**
+	 * Drops a level's entry explicitly, because the weak key cannot do it on its own.
+	 *
+	 * <p>The entry is reachable from its own value: the list holds the domain entities,
+	 * and every entity holds a strong reference to {@code entity.level} — which is the
+	 * key. A {@link WeakHashMap} never collects an entry in that shape, so without this
+	 * the map pins every level it has ever seen, and every entity in them, for the life
+	 * of the process.
+	 */
+	@SubscribeEvent
+	public static void onLevelUnload(LevelEvent.Unload event) {
+		synchronized (DOMAINS) {
+			DOMAINS.remove(event.getLevel());
+		}
+		recount();
+	}
+
 	private static void recount() {
 		int total = 0;
 		synchronized (DOMAINS) {

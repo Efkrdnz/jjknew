@@ -65,13 +65,12 @@ public final class DomainCollision {
 			DomainSphere sphere = domain.volume();
 			if (!sphere.isUsable())
 				continue;
-			// A collapsing shell cannot hold anyone — it is shrinking to nothing — but the
-			// floor has to stay until the carve is back, or everyone inside drops into the
-			// hole the domain just spent its life digging.
-			if (sphere.phase() == DomainPhase.COLLAPSING) {
-				result = sphere.clampFloorWithin(entity.position(), result, domain.fullRadius());
-				continue;
-			}
+			// The floor holds in every phase. The shell is not solid while the domain is
+			// opening and is gone again while it collapses, but the carve starts pulling
+			// ground out on the first tick and is still putting it back after the shell has
+			// shrunk away — so the plane is the only thing underneath you for most of a
+			// domain's life. It only catches things crossing it, so this is free otherwise.
+			result = sphere.clampFloorWithin(entity.position(), result, domain.fullRadius());
 			// Only a shell at full size is solid. While it is still growing the radius
 			// sweeps through every value up from zero, and clamping against that would
 			// squeeze everyone inside into the centre point and then let them go.
@@ -82,10 +81,19 @@ public final class DomainCollision {
 		return result;
 	}
 
+	/**
+	 * Who a domain does not hold.
+	 *
+	 * <p>Creative used to be on this list, and it was the single most confusing thing in
+	 * the system: in creative the shell did not exist on either side and neither did the
+	 * floor plane, so a domain looked completely broken while being exactly as written.
+	 * Testing a barrier in the gamemode you build in is worth more than being able to fly
+	 * out of one, and {@code /jjk sim noclip} is the way out when you actually want it.
+	 */
 	private static boolean isExempt(Entity entity) {
 		if (entity.isSpectator())
 			return true;
-		if (entity instanceof Player player && player.isCreative())
+		if (entity instanceof Player player && DomainNoclip.isExempt(player))
 			return true;
 		return entity.getType().is(TECHNIQUE);
 	}

@@ -152,6 +152,8 @@ public class JjkStrongestMod {
 			registrar.playToClient(SpawnDomainSlashPacket.TYPE, SpawnDomainSlashPacket.STREAM_CODEC, SpawnDomainSlashPacket::handle);
 			registrar.playToClient(net.efkrdnz.jjkstrongest.network.DomainShellSyncPacket.TYPE, net.efkrdnz.jjkstrongest.network.DomainShellSyncPacket.STREAM_CODEC,
 					net.efkrdnz.jjkstrongest.network.DomainShellSyncPacket::handle);
+			registrar.playToClient(net.efkrdnz.jjkstrongest.network.DomainNoclipPacket.TYPE, net.efkrdnz.jjkstrongest.network.DomainNoclipPacket.STREAM_CODEC,
+					net.efkrdnz.jjkstrongest.network.DomainNoclipPacket::handle);
 			registrar.playToClient(TextboxSetMessage.TYPE, TextboxSetMessage.STREAM_CODEC, TextboxSetMessage::handler);
 		}
 	}

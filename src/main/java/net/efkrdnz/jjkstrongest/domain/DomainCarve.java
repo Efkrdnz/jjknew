@@ -21,11 +21,11 @@ import java.util.UUID;
  * budget per tick, one horizontal layer at a time. Blocks that are already air cost
  * nothing and are never recorded.
  *
- * <p>The <em>whole</em> sphere is cleared, below the floor plane as well as above it.
- * That is what lets the domain read as empty space you happen to be standing in: leave
- * the ground below intact and you see dirt and stone through the bottom of the shell,
- * which gives the lie away immediately. The floor you stand on is collision only, and
- * nothing draws it.
+ * <p>Only the dome is cleared — the sphere above its floor plane. The lower hemisphere is
+ * left exactly as it was, and it is what you stand on. Clearing the whole ball instead put
+ * a thirty-block pit under an invisible collision plane, which is a long fall for anything
+ * that ends up one hair below it, and it was half the work again for a volume nobody was
+ * ever meant to see.
  *
  * <p>Blocks are written with {@code UPDATE_CLIENTS} only. Neighbour notification on
  * this many changes would set off gravity and redstone cascades across the whole
@@ -58,10 +58,15 @@ public final class DomainCarve {
 			return true;
 
 		BlockPos center = BlockPos.containing(sphere.center().x, sphere.center().y, sphere.center().z);
-		int bottomY = (int) Math.floor(sphere.center().y - radius);
+		// Stop at the floor plane. Hollowing the lower hemisphere as well was what put a
+		// thirty-block pit under an invisible floor, and it was half the work for something
+		// nobody was ever meant to see: the ground below the plane is what you stand on.
+		int bottomY = Math.max((int) Math.floor(sphere.center().y - radius), (int) Math.floor(sphere.floorY()));
 		int topY = (int) Math.ceil(sphere.center().y + radius);
 
-		int cursor = data.contains("carveY") ? data.getInt("carveY") : bottomY;
+		// Clamped, so a domain that was mid-carve when the floor changed underneath it does
+		// not resume below the plane.
+		int cursor = data.contains("carveY") ? Math.max(data.getInt("carveY"), bottomY) : bottomY;
 		DomainSavedData storage = DomainSavedData.get(level);
 		DomainSavedData.CarveRecord record = storage.record(domain.getUUID());
 
@@ -84,7 +89,7 @@ public final class DomainCarve {
 					BlockState state = level.getBlockState(pos);
 					if (state.isAir())
 						continue;
-					if (state.is(Blocks.BEDROCK) || state.getDestroySpeed(level, pos) < 0)
+					if (isUncarvable(state))
 						continue;
 					CompoundTag beTag = null;
 					BlockEntity be = level.getBlockEntity(pos);
@@ -144,6 +149,24 @@ public final class DomainCarve {
 		applyBlockEntities(level, record);
 		storage.drop(id);
 		return true;
+	}
+
+	/**
+	 * What a domain will not take, even temporarily.
+	 *
+	 * <p>Bedrock is <em>not</em> on this list any more — a domain is supposed to replace
+	 * the world inside it, and stopping at bedrock made the sphere visibly wrong wherever
+	 * one happened to be. It goes back on collapse like anything else.
+	 *
+	 * <p>What is left is the set whose removal a restore cannot honestly undo: a portal
+	 * carved out is a link broken for as long as the domain stands, and a command or
+	 * structure block is somebody's build rather than terrain. The old
+	 * {@code getDestroySpeed &lt; 0} test caught most of these by accident; this names them,
+	 * so it is clear which are deliberate.
+	 */
+	private static boolean isUncarvable(BlockState state) {
+		return state.is(Blocks.BARRIER) || state.is(Blocks.COMMAND_BLOCK) || state.is(Blocks.CHAIN_COMMAND_BLOCK) || state.is(Blocks.REPEATING_COMMAND_BLOCK) || state.is(Blocks.STRUCTURE_BLOCK)
+				|| state.is(Blocks.JIGSAW) || state.is(Blocks.END_PORTAL) || state.is(Blocks.END_GATEWAY) || state.is(Blocks.END_PORTAL_FRAME) || state.is(Blocks.NETHER_PORTAL);
 	}
 
 	private static void applyBlockEntities(ServerLevel level, DomainSavedData.CarveRecord record) {

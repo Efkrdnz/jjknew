@@ -18,6 +18,9 @@ import net.minecraft.world.phys.Vec3;
  */
 public record DomainSphere(Vec3 center, double radius, double floorY, DomainPhase phase, float progress) {
 
+	/** Slack on the floor plane, absorbing the rounding in a landing's own round-trip. */
+	private static final double PLANE_EPSILON = 1.0E-9;
+
 	/**
 	 * The reach of an open domain: a plain ball with no floor cut, since an open domain
 	 * has no interior to stand in — it just covers a volume.
@@ -38,7 +41,11 @@ public record DomainSphere(Vec3 center, double radius, double floorY, DomainPhas
 	}
 
 	public boolean contains(double x, double y, double z) {
-		if (y < floorY)
+		// The tolerance is load-bearing. Landing writes movement.y = floorY - pos.y, and
+		// vanilla then does setPos(getY() + that). Near y = 0 the round-trip can leave you
+		// a few ULPs under the plane, and without the slack that flips "inside" to
+		// "outside" and drops you through your own floor.
+		if (y < floorY - PLANE_EPSILON)
 			return false;
 		return center.distanceToSqr(x, y, z) <= radius * radius;
 	}
@@ -124,13 +131,19 @@ public record DomainSphere(Vec3 center, double radius, double floorY, DomainPhas
 	/**
 	 * The floor plane on its own, bounded to a horizontal footprint.
 	 *
-	 * <p>Used while a domain is collapsing. The shell is shrinking away by then, so it
-	 * cannot hold anyone up, but the ground it carved out is still being put back — and
-	 * with the whole sphere hollowed that is a thirty-block hole to fall into. The plane
-	 * keeps standing until the domain finally goes, and the footprint bound stops it
-	 * becoming an invisible floor stretching across the world.
+	 * <p>The shell is only solid once it has finished opening, and it is gone again while
+	 * the domain collapses — but the floor has to hold through both, because the carve
+	 * starts removing ground the moment the domain is cast and is still putting it back
+	 * long after the shell has shrunk away.
+	 *
+	 * <p>It catches things <em>crossing</em> the plane and nothing else. Without the
+	 * {@code pos.y} check this is not a floor at all but a magnet: anything already below
+	 * it and inside the footprint — someone in a cave twenty blocks under the domain —
+	 * would be yanked up to the plane in a single tick.
 	 */
 	public Vec3 clampFloorWithin(Vec3 pos, Vec3 movement, double horizontalRadius) {
+		if (pos.y < floorY - PLANE_EPSILON)
+			return movement;
 		Vec3 next = pos.add(movement);
 		if (next.y >= floorY)
 			return movement;

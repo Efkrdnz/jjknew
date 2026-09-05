@@ -175,6 +175,29 @@ public class GeomTest {
         check("floor-only clamp leaves horizontal motion alone",
               near(sideways.x,0.9,1e-9) && near(sideways.z,0.4,1e-9), "got " + sideways);
 
+        // The plane is a floor, not a magnet. Someone already below it -- in a cave under
+        // the domain -- must be left alone entirely; clamping them would launch them up to
+        // the plane in a single tick.
+        Vec3 inACaveBelow = new Vec3(5, -21.0, 0);
+        Vec3 undisturbed = room.clampFloorWithin(inACaveBelow, new Vec3(0,-0.8,0), 30.0);
+        check("something already below the plane is not yanked up to it",
+              near(undisturbed.y, -0.8, 1e-9), "y=" + undisturbed.y + " (a 20-block launch)");
+        Vec3 walkingBelow = room.clampFloorWithin(inACaveBelow, new Vec3(0.5,0,0.5), 30.0);
+        check("...and can still walk about down there",
+              near(walkingBelow.x,0.5,1e-9) && near(walkingBelow.z,0.5,1e-9), "got " + walkingBelow);
+
+        // Landing writes movement.y = floorY - pos.y and vanilla adds that to getY(). The
+        // round-trip can leave you a few ULPs under the plane; without slack in contains()
+        // that reads as "outside the domain" and drops you through your own floor.
+        double aHairUnder = Math.nextDown(-1.0);
+        check("a hair under the plane still counts as inside",
+              room.contains(0, aHairUnder, 0), "contains() said outside at y=" + aHairUnder);
+        check("and the floor still catches you there",
+              near(room.clampFloorWithin(new Vec3(0, aHairUnder, 0), new Vec3(0,-0.8,0), 30.0).y,
+                   -1.0 - aHairUnder, 1e-9), "not caught");
+        check("but a block under it is genuinely outside",
+              !room.contains(0, -2.0, 0), "contains() said inside below the floor");
+
         System.out.println("\nDomainIntersect");
         DomainSphere uv = new DomainSphere(new Vec3(0,0,0), 30, -1000, DomainPhase.ACTIVE, 1f);
         DomainSphere shrineNear = DomainSphere.openField(new Vec3(20,0,0), 100);
