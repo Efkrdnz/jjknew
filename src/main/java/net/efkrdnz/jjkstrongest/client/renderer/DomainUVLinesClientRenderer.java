@@ -9,7 +9,6 @@ import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import net.neoforged.api.distmarker.Dist;
 
 import net.minecraft.world.phys.Vec3;
-import net.minecraft.world.phys.AABB;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.RenderType;
@@ -19,8 +18,9 @@ import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.Minecraft;
 
+import net.efkrdnz.jjkstrongest.domain.DomainPhase;
+import net.efkrdnz.jjkstrongest.domain.DomainRegistry;
 import net.efkrdnz.jjkstrongest.entity.DomainUVEntity;
-import net.efkrdnz.jjkstrongest.client.renderer.DomainUVLinesClientRenderer;
 
 import java.util.Random;
 import java.util.List;
@@ -61,9 +61,7 @@ public class DomainUVLinesClientRenderer {
 			poseStack = new PoseStack();
 		MultiBufferSource.BufferSource bufferSource = mc.renderBuffers().bufferSource();
 		Vec3 cameraPos = event.getCamera().getPosition();
-		double renderDistance = 35.0;
-		AABB searchBox = new AABB(cameraPos.x - renderDistance, cameraPos.y - renderDistance, cameraPos.z - renderDistance, cameraPos.x + renderDistance, cameraPos.y + renderDistance, cameraPos.z + renderDistance);
-		List<DomainUVEntity> domains = mc.level.getEntitiesOfClass(DomainUVEntity.class, searchBox);
+		List<DomainUVEntity> domains = DomainRegistry.voidsIn(mc.level);
 		if (domains.isEmpty())
 			return;
 		poseStack.pushPose();
@@ -71,19 +69,19 @@ public class DomainUVLinesClientRenderer {
 		for (DomainUVEntity domain : domains) {
 			if (!domain.isAlive())
 				continue;
-			int age = domain.tickCount;
-			// lines window: 40 ticks right after barrier is done
-			if (age >= 40 && age < 80) {
+			// The rays belong to the beat between the shell closing and the domain
+			// turning hostile. This used to be inferred from the entity's own tick
+			// count, which the client had no way to reconcile with the server.
+			if (domain.getPhase() == DomainPhase.SETTLING)
 				renderDomainLines(domain, poseStack, bufferSource, event.getPartialTick().getGameTimeDeltaPartialTick(false), cameraPos);
-			}
 		}
 		poseStack.popPose();
 		bufferSource.endBatch(LINE_RENDER_TYPE);
 	}
 
 	private static void renderDomainLines(DomainUVEntity domain, PoseStack poseStack, MultiBufferSource bufferSource, float partialTick, Vec3 cameraPos) {
-		// renders rays for the domain post phase
-		float progress = (domain.tickCount - 40 + partialTick) / 40.0f;
+		// renders rays for the domain's settling phase
+		float progress = domain.getPhaseProgress();
 		float alpha = 1.0f;
 		// small fade in/out
 		if (progress < 0.15f)
@@ -98,7 +96,7 @@ public class DomainUVLinesClientRenderer {
 		long seed = domain.getUUID().getMostSignificantBits() ^ domain.getUUID().getLeastSignificantBits();
 		random.setSeed(seed + domain.tickCount);
 		int rays = 140;
-		float length = 36.0f;
+		float length = Math.max(4.0f, domain.getShellRadius() * 1.2f);
 		for (int i = 0; i < rays; i++) {
 			Vec3 dir = randomUnitDirection(random);
 			Vec3 start = dir.scale(1.2);

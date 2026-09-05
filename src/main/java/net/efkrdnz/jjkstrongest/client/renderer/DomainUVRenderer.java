@@ -2,142 +2,166 @@ package net.efkrdnz.jjkstrongest.client.renderer;
 
 import org.joml.Matrix4f;
 
-
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.client.renderer.entity.MobRenderer;
-import net.minecraft.client.renderer.entity.EntityRendererProvider;
-import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.culling.Frustum;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.client.renderer.entity.MobRenderer;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.phys.Vec3;
 
-import net.efkrdnz.jjkstrongest.entity.DomainUVEntity;
-import net.efkrdnz.jjkstrongest.client.model.Modelblank_entity;
 import net.efkrdnz.jjkstrongest.client.JjkShaderManager;
+import net.efkrdnz.jjkstrongest.client.model.Modelblank_entity;
+import net.efkrdnz.jjkstrongest.domain.DomainPhase;
+import net.efkrdnz.jjkstrongest.entity.DomainUVEntity;
 
-import com.mojang.math.Axis;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.math.Axis;
 
+/**
+ * Draws the domain interior.
+ *
+ * <p>Three things changed here, and they are the reason the sphere now reads as a
+ * place rather than an effect:
+ *
+ * <ul>
+ * <li>The radius comes from the entity's synced shape, so what you see is exactly
+ *     what you collide with. It used to be a hard-coded 25.2 against a 30-block
+ *     barrier and a 28.5-block dome.</li>
+ * <li>Depth testing is left on. Every draw here used to be wrapped in
+ *     {@code disableDepthTest()} + {@code depthMask(false)}, so the interior painted
+ *     over everything and entity visibility inside came down to render order.</li>
+ * <li>The mesh is built once. It used to be rebuilt every frame, per domain —
+ *     2560 sine and cosine calls a frame for a shape that never changes.</li>
+ * </ul>
+ */
 public class DomainUVRenderer extends MobRenderer<DomainUVEntity, Modelblank_entity<DomainUVEntity>> {
+
+	private static final int LAT_SEGMENTS = 24;
+	private static final int LON_SEGMENTS = 48;
+	/** Unit sphere, wound inward, as (x, y, z, u, v) per vertex. */
+	private static final float[] UNIT_SPHERE = buildUnitSphere();
+
 	public DomainUVRenderer(EntityRendererProvider.Context context) {
 		super(context, new Modelblank_entity(context.bakeLayer(Modelblank_entity.LAYER_LOCATION)), 0f);
 	}
 
 	@Override
 	public boolean shouldRender(DomainUVEntity entity, Frustum frustum, double x, double y, double z) {
+		// The anchor is a 0.1-block entity carrying a 30-block sphere, so the usual
+		// frustum test would cull it while the shell still fills the screen.
 		return true;
 	}
 
 	@Override
 	public void render(DomainUVEntity entity, float entityYaw, float partialTick, PoseStack poseStack, MultiBufferSource bufferSource, int packedLight) {
 		super.render(entity, entityYaw, partialTick, poseStack, bufferSource, packedLight);
-		if (entity.tickCount >= 80) {
-			renderWhiteBrushes(entity, partialTick, poseStack, bufferSource);
-			renderRift(entity, partialTick, poseStack, bufferSource);
-			renderBlackHole(entity, partialTick, poseStack, bufferSource);
+
+		float radius = entity.getShellRadius();
+		if (radius <= 0.01f)
+			return;
+
+		renderShell(entity, radius, partialTick, poseStack, bufferSource);
+		// The inner flourishes only belong to a domain that has finished opening.
+		if (entity.getPhase() == DomainPhase.ACTIVE || entity.getPhase() == DomainPhase.SETTLING) {
+			renderRift(entity, radius, partialTick, poseStack, bufferSource);
+			renderBlackHole(entity, radius, partialTick, poseStack, bufferSource);
 		}
 	}
 
-	private void renderBlackHole(DomainUVEntity entity, float partialTick, PoseStack poseStack, MultiBufferSource bufferSource) {
+	private void renderShell(DomainUVEntity entity, float radius, float partialTick, PoseStack poseStack, MultiBufferSource bufferSource) {
+		if (JjkShaderManager.VOID_BRUSH_RENDER_TYPE == null)
+			return;
+
+		float timeSeconds = (entity.tickCount + partialTick) / 20.0f;
+		Vec3 camera = this.entityRenderDispatcher.camera.getPosition();
+		Vec3 center = entity.getPosition(partialTick);
+		Vec3 camOffset = camera.subtract(center);
+
+		if (!JjkShaderManager.beginVoidBrushEffect(timeSeconds, entity.getShellSeed() * 0.001f + 1.0f, 0.9f, radius, entity.getPhaseProgress(), entity.getPhase().ordinal(), (float) camOffset.x,
+				(float) camOffset.y, (float) camOffset.z))
+			return;
+
+		poseStack.pushPose();
+		poseStack.scale(radius, radius, radius);
+
+		VertexConsumer vc = bufferSource.getBuffer(JjkShaderManager.VOID_BRUSH_RENDER_TYPE);
+		Matrix4f matrix = poseStack.last().pose();
+		for (int i = 0; i < UNIT_SPHERE.length; i += 5)
+			vc.addVertex(matrix, UNIT_SPHERE[i], UNIT_SPHERE[i + 1], UNIT_SPHERE[i + 2]).setUv(UNIT_SPHERE[i + 3], UNIT_SPHERE[i + 4]);
+
+		poseStack.popPose();
+		if (bufferSource instanceof MultiBufferSource.BufferSource bs)
+			bs.endBatch(JjkShaderManager.VOID_BRUSH_RENDER_TYPE);
+	}
+
+	private void renderBlackHole(DomainUVEntity entity, float radius, float partialTick, PoseStack poseStack, MultiBufferSource bufferSource) {
 		if (JjkShaderManager.VOID_BLACKHOLE_RENDER_TYPE == null)
 			return;
 		float timeSeconds = (entity.tickCount + partialTick) / 20.0f;
-		float intensity = 1.0f;
-		if (!JjkShaderManager.beginVoidBlackholeEffect(timeSeconds, intensity))
+		if (!JjkShaderManager.beginVoidBlackholeEffect(timeSeconds, 1.0f))
 			return;
-		com.mojang.blaze3d.systems.RenderSystem.disableDepthTest();
-		com.mojang.blaze3d.systems.RenderSystem.depthMask(false);
 		poseStack.pushPose();
-		poseStack.translate(18.0, 7.0, 0.0);
+		// offsets are fractions of the real radius now, not fixed block counts
+		poseStack.translate(radius * 0.6, radius * 0.23, 0.0);
 		poseStack.mulPose(Axis.YP.rotationDegrees(-entityRenderDispatcher.camera.getYRot()));
 		poseStack.mulPose(Axis.XP.rotationDegrees(entityRenderDispatcher.camera.getXRot()));
-		float size = 72.0f;
-		poseStack.scale(size, size, size);
+		poseStack.scale(radius * 2.4f, radius * 2.4f, radius * 2.4f);
 		renderCircularQuad(poseStack, bufferSource, JjkShaderManager.VOID_BLACKHOLE_RENDER_TYPE);
 		poseStack.popPose();
-		if (bufferSource instanceof MultiBufferSource.BufferSource bs) {
+		if (bufferSource instanceof MultiBufferSource.BufferSource bs)
 			bs.endBatch(JjkShaderManager.VOID_BLACKHOLE_RENDER_TYPE);
-		}
-		com.mojang.blaze3d.systems.RenderSystem.depthMask(true);
-		com.mojang.blaze3d.systems.RenderSystem.enableDepthTest();
 	}
 
-	private void renderRift(DomainUVEntity entity, float partialTick, PoseStack poseStack, MultiBufferSource bufferSource) {
+	private void renderRift(DomainUVEntity entity, float radius, float partialTick, PoseStack poseStack, MultiBufferSource bufferSource) {
 		if (JjkShaderManager.VOID_RIFT_RENDER_TYPE == null)
 			return;
 		float timeSeconds = (entity.tickCount + partialTick) / 20.0f;
-		float intensity = 1.0f;
-		if (!JjkShaderManager.beginVoidRiftEffect(timeSeconds, intensity))
+		if (!JjkShaderManager.beginVoidRiftEffect(timeSeconds, 1.0f))
 			return;
-		com.mojang.blaze3d.systems.RenderSystem.disableDepthTest();
-		com.mojang.blaze3d.systems.RenderSystem.depthMask(false);
 		poseStack.pushPose();
-		poseStack.translate(0.0, 18.0, 0.0);
+		poseStack.translate(0.0, radius * 0.6, 0.0);
 		poseStack.mulPose(Axis.XP.rotationDegrees(90.0f));
-		float size = 44.0f;
-		poseStack.scale(size, size, size);
+		poseStack.scale(radius * 1.45f, radius * 1.45f, radius * 1.45f);
 		renderCircularQuad(poseStack, bufferSource, JjkShaderManager.VOID_RIFT_RENDER_TYPE);
 		poseStack.popPose();
-		if (bufferSource instanceof MultiBufferSource.BufferSource bs) {
+		if (bufferSource instanceof MultiBufferSource.BufferSource bs)
 			bs.endBatch(JjkShaderManager.VOID_RIFT_RENDER_TYPE);
-		}
-		com.mojang.blaze3d.systems.RenderSystem.depthMask(true);
-		com.mojang.blaze3d.systems.RenderSystem.enableDepthTest();
 	}
 
-	private void renderWhiteBrushes(DomainUVEntity entity, float partialTick, PoseStack poseStack, MultiBufferSource bufferSource) {
-		if (JjkShaderManager.VOID_BRUSH_RENDER_TYPE == null)
-			return;
-		float timeSeconds = (entity.tickCount + partialTick) / 20.0f;
-		float brushSeed = 1.0f;
-		float intensity = 0.8f;
-		JjkShaderManager.beginVoidBrushEffect(timeSeconds, brushSeed, intensity);
-		com.mojang.blaze3d.systems.RenderSystem.disableDepthTest();
-		com.mojang.blaze3d.systems.RenderSystem.depthMask(false);
-		poseStack.pushPose();
-		poseStack.translate(0.0, 0.0, 0.0);
-		float sphereRadius = 25.2f;
-		renderInvertedSphere(poseStack, bufferSource, sphereRadius);
-		poseStack.popPose();
-		if (bufferSource instanceof MultiBufferSource.BufferSource bs) {
-			bs.endBatch(JjkShaderManager.VOID_BRUSH_RENDER_TYPE);
-		}
-		com.mojang.blaze3d.systems.RenderSystem.depthMask(true);
-		com.mojang.blaze3d.systems.RenderSystem.enableDepthTest();
-	}
+	/** Inward-wound unit sphere, generated once at class load. */
+	private static float[] buildUnitSphere() {
+		float[] data = new float[LAT_SEGMENTS * LON_SEGMENTS * 4 * 5];
+		int i = 0;
+		for (int lat = 0; lat < LAT_SEGMENTS; lat++) {
+			float theta1 = (lat / (float) LAT_SEGMENTS) * (float) Math.PI;
+			float theta2 = ((lat + 1) / (float) LAT_SEGMENTS) * (float) Math.PI;
+			for (int lon = 0; lon < LON_SEGMENTS; lon++) {
+				float phi1 = (lon / (float) LON_SEGMENTS) * 2.0f * (float) Math.PI;
+				float phi2 = ((lon + 1) / (float) LON_SEGMENTS) * 2.0f * (float) Math.PI;
 
-	private void renderInvertedSphere(PoseStack poseStack, MultiBufferSource bufferSource, float radius) {
-		VertexConsumer vc = bufferSource.getBuffer(JjkShaderManager.VOID_BRUSH_RENDER_TYPE);
-		Matrix4f matrix = poseStack.last().pose();
-		int latSegments = 20;
-		int lonSegments = 32;
-		for (int lat = 0; lat < latSegments; lat++) {
-			float theta1 = (lat / (float) latSegments) * (float) Math.PI;
-			float theta2 = ((lat + 1) / (float) latSegments) * (float) Math.PI;
-			for (int lon = 0; lon < lonSegments; lon++) {
-				float phi1 = (lon / (float) lonSegments) * 2.0f * (float) Math.PI;
-				float phi2 = ((lon + 1) / (float) lonSegments) * 2.0f * (float) Math.PI;
-				float x1 = radius * (float) (Math.sin(theta1) * Math.cos(phi1));
-				float y1 = radius * (float) (Math.cos(theta1));
-				float z1 = radius * (float) (Math.sin(theta1) * Math.sin(phi1));
-				float x2 = radius * (float) (Math.sin(theta1) * Math.cos(phi2));
-				float y2 = radius * (float) (Math.cos(theta1));
-				float z2 = radius * (float) (Math.sin(theta1) * Math.sin(phi2));
-				float x3 = radius * (float) (Math.sin(theta2) * Math.cos(phi2));
-				float y3 = radius * (float) (Math.cos(theta2));
-				float z3 = radius * (float) (Math.sin(theta2) * Math.sin(phi2));
-				float x4 = radius * (float) (Math.sin(theta2) * Math.cos(phi1));
-				float y4 = radius * (float) (Math.cos(theta2));
-				float z4 = radius * (float) (Math.sin(theta2) * Math.sin(phi1));
-				float u1 = lon / (float) lonSegments;
-				float u2 = (lon + 1) / (float) lonSegments;
-				float v1 = lat / (float) latSegments;
-				float v2 = (lat + 1) / (float) latSegments;
-				vc.addVertex(matrix, x1, y1, z1).setUv(u1, v1);
-				vc.addVertex(matrix, x4, y4, z4).setUv(u1, v2);
-				vc.addVertex(matrix, x3, y3, z3).setUv(u2, v2);
-				vc.addVertex(matrix, x2, y2, z2).setUv(u2, v1);
+				float u1 = lon / (float) LON_SEGMENTS;
+				float u2 = (lon + 1) / (float) LON_SEGMENTS;
+				float v1 = lat / (float) LAT_SEGMENTS;
+				float v2 = (lat + 1) / (float) LAT_SEGMENTS;
+
+				// wound v1, v4, v3, v2 so the faces look inward
+				i = put(data, i, theta1, phi1, u1, v1);
+				i = put(data, i, theta2, phi1, u1, v2);
+				i = put(data, i, theta2, phi2, u2, v2);
+				i = put(data, i, theta1, phi2, u2, v1);
 			}
 		}
+		return data;
+	}
+
+	private static int put(float[] data, int i, float theta, float phi, float u, float v) {
+		data[i++] = (float) (Math.sin(theta) * Math.cos(phi));
+		data[i++] = (float) Math.cos(theta);
+		data[i++] = (float) (Math.sin(theta) * Math.sin(phi));
+		data[i++] = u;
+		data[i++] = v;
+		return i;
 	}
 
 	private void renderCircularQuad(PoseStack poseStack, MultiBufferSource bufferSource, net.minecraft.client.renderer.RenderType renderType) {

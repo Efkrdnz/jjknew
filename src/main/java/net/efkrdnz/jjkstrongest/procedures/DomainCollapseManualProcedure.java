@@ -1,80 +1,67 @@
 package net.efkrdnz.jjkstrongest.procedures;
 
-import net.minecraft.world.phys.AABB;
-import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.phys.Vec3;
 
-import net.efkrdnz.jjkstrongest.entity.MalevolentShrineEntity;
+import net.efkrdnz.jjkstrongest.domain.DomainRegistry;
 import net.efkrdnz.jjkstrongest.entity.DomainUVEntity;
+import net.efkrdnz.jjkstrongest.entity.MalevolentShrineEntity;
 
+/**
+ * Casting a domain a second time closes the one you have open.
+ *
+ * <p>These used to be 200-block entity scans over two classes, run on every cast and
+ * on every NPC AI tick. They are registry lookups now.
+ */
 public class DomainCollapseManualProcedure {
-	// check if entity has ANY active domain (Gojo OR Sukuna)
+
+	/** Whether this entity already has a domain of either kind open. */
 	public static boolean hasActiveDomain(LevelAccessor world, Entity entity) {
-		if (!(world instanceof ServerLevel serverLevel))
+		if (!(world instanceof Level level) || entity == null)
 			return false;
-		if (entity == null)
-			return false;
-		String playerUUID = entity.getStringUUID();
-		AABB searchBox = AABB.ofSize(entity.position(), 200, 200, 200);
-		// check for Gojo's domain
-		for (DomainUVEntity domainEntity : serverLevel.getEntitiesOfClass(DomainUVEntity.class, searchBox, e -> true)) {
-			CompoundTag data = domainEntity.getPersistentData();
-			if (data.contains("ownerUUID") && data.getString("ownerUUID").equals(playerUUID)) {
-				return true;
-			}
-		}
-		// check for Sukuna's domain
-		for (MalevolentShrineEntity shrineEntity : serverLevel.getEntitiesOfClass(MalevolentShrineEntity.class, searchBox, e -> true)) {
-			CompoundTag data = shrineEntity.getPersistentData();
-			if (data.contains("ownerUUID") && data.getString("ownerUUID").equals(playerUUID)) {
-				return true;
-			}
-		}
-		return false;
+		return DomainRegistry.hasDomain(level, entity.getStringUUID());
 	}
 
-	// collapse player's domain (either type)
+	/** Closes whichever domain this entity owns. */
 	public static void collapsePlayerDomain(LevelAccessor world, Entity entity) {
-		if (!(world instanceof ServerLevel serverLevel))
+		if (!(world instanceof Level level) || entity == null)
 			return;
-		if (entity == null)
+		String owner = entity.getStringUUID();
+
+		DomainUVEntity domain = DomainRegistry.voidByOwner(level, owner);
+		if (domain != null) {
+			domain.getPersistentData().putInt("duration", 0);
+			DomainUVEntityTickProcedure.beginCollapse(domain);
 			return;
-		String playerUUID = entity.getStringUUID();
-		AABB searchBox = AABB.ofSize(entity.position(), 200, 200, 200);
-		// collapse Gojo's domain
-		for (DomainUVEntity domainEntity : serverLevel.getEntitiesOfClass(DomainUVEntity.class, searchBox, e -> true)) {
-			CompoundTag data = domainEntity.getPersistentData();
-			if (data.contains("ownerUUID") && data.getString("ownerUUID").equals(playerUUID)) {
-				data.putInt("duration", 0);
-				return; // found and collapsed
-			}
 		}
-		// collapse Sukuna's domain
-		for (MalevolentShrineEntity shrineEntity : serverLevel.getEntitiesOfClass(MalevolentShrineEntity.class, searchBox, e -> true)) {
-			CompoundTag data = shrineEntity.getPersistentData();
-			if (data.contains("ownerUUID") && data.getString("ownerUUID").equals(playerUUID)) {
-				data.putInt("domainLifetimeTicks", 600); // trigger collapse
-				return; // found and collapsed
-			}
-		}
+		MalevolentShrineEntity shrine = DomainRegistry.shrineByOwner(level, owner);
+		if (shrine != null)
+			shrine.getPersistentData().putInt("domainLifetimeTicks", 600);
 	}
 
-	// collapse domain at specific position
+	/** Closes the nearest domain to a position, whoever owns it. */
 	public static void execute(LevelAccessor world, double x, double y, double z) {
-		if (!(world instanceof ServerLevel serverLevel))
+		if (!(world instanceof Level level))
 			return;
-		AABB searchBox = new AABB(x - 50, y - 50, z - 50, x + 50, y + 50, z + 50);
-		// collapse Gojo's domain
-		for (DomainUVEntity domainEntity : serverLevel.getEntitiesOfClass(DomainUVEntity.class, searchBox, e -> true)) {
-			domainEntity.getPersistentData().putInt("duration", 0);
-			return;
-		}
-		// collapse Sukuna's domain
-		for (MalevolentShrineEntity shrineEntity : serverLevel.getEntitiesOfClass(MalevolentShrineEntity.class, searchBox, e -> true)) {
-			shrineEntity.getPersistentData().putInt("domainLifetimeTicks", 600);
+		DomainUVEntity domain = DomainRegistry.nearestVoid(level, x, y, z, 50.0);
+		if (domain != null) {
+			domain.getPersistentData().putInt("duration", 0);
+			DomainUVEntityTickProcedure.beginCollapse(domain);
 			return;
 		}
+		Vec3 point = new Vec3(x, y, z);
+		MalevolentShrineEntity nearest = null;
+		double bestSq = 50.0 * 50.0;
+		for (MalevolentShrineEntity shrine : DomainRegistry.shrinesIn(level)) {
+			double distSq = shrine.position().distanceToSqr(point);
+			if (distSq <= bestSq) {
+				bestSq = distSq;
+				nearest = shrine;
+			}
+		}
+		if (nearest != null)
+			nearest.getPersistentData().putInt("domainLifetimeTicks", 600);
 	}
 }

@@ -12,8 +12,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.Entity;
 
+import net.efkrdnz.jjkstrongest.domain.DomainRegistry;
 import net.efkrdnz.jjkstrongest.entity.MalevolentShrineEntity;
-import net.efkrdnz.jjkstrongest.entity.DomainUVEntity;
 
 import javax.annotation.Nullable;
 
@@ -48,7 +48,7 @@ public class ShrineScreenshakeProcedure {
 			return;
 		// suppress screenshake during clash if player is inside UV barrier
 		if (nearestShrine.getPersistentData().getBoolean("isClashing")) {
-			if (isPlayerInsideUV(world, x, y, z))
+			if (world instanceof Level level && DomainRegistry.isInside(level, x, y, z))
 				return;
 		}
 		String ownerUUID = nearestShrine.getPersistentData().getString("ownerUUID");
@@ -60,16 +60,4 @@ public class ShrineScreenshakeProcedure {
 		}
 	}
 
-	// check if given position is inside an active UV domain barrier
-	private static boolean isPlayerInsideUV(LevelAccessor world, double x, double y, double z) {
-		AABB searchBox = new AABB(x - 150, y - 150, z - 150, x + 150, y + 150, z + 150);
-		for (DomainUVEntity uv : world.getEntitiesOfClass(DomainUVEntity.class, searchBox, e -> e.isAlive())) {
-			if (!uv.getPersistentData().getBoolean("isActive") && !uv.getPersistentData().getBoolean("isClashing"))
-				continue;
-			double radius = uv.getPersistentData().getDouble("domainRadius");
-			if (uv.position().distanceToSqr(x, y, z) <= radius * radius)
-				return true;
-		}
-		return false;
-	}
 }

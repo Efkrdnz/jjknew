@@ -202,7 +202,7 @@ public class JjkShaderManager {
 			System.out.println("[JJK Strongest] Attempting to load Void Brush shader...");
 			event.registerShader(new ShaderInstance(event.getResourceProvider(), ResourceLocation.fromNamespaceAndPath("jjk_strongest", "void_brush"), DefaultVertexFormat.POSITION_TEX), shader -> {
 				VOID_BRUSH_SHADER = shader;
-				VOID_BRUSH_RENDER_TYPE = makeRenderType("void_brush", () -> VOID_BRUSH_SHADER);
+				VOID_BRUSH_RENDER_TYPE = makeDomainShellRenderType("void_brush", () -> VOID_BRUSH_SHADER);
 				System.out.println("[JJK Strongest] ✓ Void Brush shader loaded successfully!");
 			});
 		} catch (Exception e) {
@@ -424,11 +424,28 @@ public class JjkShaderManager {
 	}
 
 	public static boolean beginVoidBrushEffect(float timeSeconds, float brushSeed, float intensity) {
+		return beginVoidBrushEffect(timeSeconds, brushSeed, intensity, 30.0f, 1.0f, 2.0f, 0.0f, 0.0f, 0.0f);
+	}
+
+	/**
+	 * @param radius    the domain's real radius, so the pattern keeps its apparent
+	 *                  feature size as the shell grows
+	 * @param progress  0..1 through the current phase
+	 * @param phase     {@code DomainPhase} ordinal, to change the look per stage
+	 * @param camX/Y/Z  camera position relative to the sphere centre. Without this the
+	 *                  interior is painted on the surface and looks identical wherever
+	 *                  you stand; with it, walking across the domain parallaxes.
+	 */
+	public static boolean beginVoidBrushEffect(float timeSeconds, float brushSeed, float intensity, float radius, float progress, float phase, float camX, float camY, float camZ) {
 		if (VOID_BRUSH_SHADER == null)
 			return false;
 		setUniformIfExistsVoidBrush("Time", timeSeconds);
 		setUniformIfExistsVoidBrush("BrushSeed", brushSeed);
 		setUniformIfExistsVoidBrush("Intensity", intensity);
+		setUniformIfExistsVoidBrush("Radius", radius);
+		setUniformIfExistsVoidBrush("Progress", progress);
+		setUniformIfExistsVoidBrush("Phase", phase);
+		setUniformIfExistsVoidBrush("CamOffset", camX, camY, camZ);
 		return true;
 	}
 
@@ -619,6 +636,36 @@ public class JjkShaderManager {
 		setUniformIfExistsFlameArrowExplosion("Time", timeSeconds);
 		setUniformIfExistsFlameArrowExplosion("ChargeProgress", intensity);
 		return true;
+	}
+
+	/**
+	 * Render type for the domain shell.
+	 *
+	 * <p>Differs from {@link #makeRenderType} in one decisive way: the write mask
+	 * includes depth. The existing factories are colour-only, and the domain renderer
+	 * additionally called {@code RenderSystem.disableDepthTest()} around every draw,
+	 * so the interior painted over everything already in the buffer and which entities
+	 * you could see inside came down to render order. Writing depth makes the shell a
+	 * real surface — it occludes the world outside, and anything nearer draws in front
+	 * of it.
+	 *
+	 * <p>Culling stays off deliberately: the mesh is wound inward, so with culling on
+	 * the sphere would vanish when viewed from outside, leaving a carved hole in the
+	 * ground and nothing above it. The fragment shader branches on {@code gl_FrontFacing}
+	 * instead, giving the interior one treatment and the outer shell another.
+	 */
+	private static RenderType makeDomainShellRenderType(String name, java.util.function.Supplier<ShaderInstance> shaderSup) {
+		return RenderType.create(name, DefaultVertexFormat.POSITION_TEX, VertexFormat.Mode.QUADS, 2048, false, false,
+				RenderType.CompositeState.builder().setShaderState(new RenderStateShard.ShaderStateShard(shaderSup)).setDepthTestState(new RenderStateShard.DepthTestStateShard("lequal", 515)).setCullState(new RenderStateShard.CullStateShard(false))
+						.setWriteMaskState(new RenderStateShard.WriteMaskStateShard(true, true)).setTransparencyState(new RenderStateShard.TransparencyStateShard("translucent_transparency", () -> {
+							com.mojang.blaze3d.systems.RenderSystem.enableBlend();
+							com.mojang.blaze3d.systems.RenderSystem.blendFuncSeparate(org.lwjgl.opengl.GL11.GL_SRC_ALPHA, org.lwjgl.opengl.GL11.GL_ONE_MINUS_SRC_ALPHA, org.lwjgl.opengl.GL11.GL_ONE, org.lwjgl.opengl.GL11.GL_ONE_MINUS_SRC_ALPHA);
+						}, () -> {
+							com.mojang.blaze3d.systems.RenderSystem.disableBlend();
+							com.mojang.blaze3d.systems.RenderSystem.defaultBlendFunc();
+						})).setOutputState(new RenderStateShard.OutputStateShard("main_target", () -> {
+						}, () -> {
+						})).createCompositeState(true));
 	}
 
 	private static RenderType makeAdditiveRenderType(String name, java.util.function.Supplier<ShaderInstance> shaderSup) {

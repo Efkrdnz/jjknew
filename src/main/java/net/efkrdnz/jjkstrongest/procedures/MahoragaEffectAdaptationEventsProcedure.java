@@ -5,7 +5,6 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.entity.living.MobEffectEvent;
 
-import net.minecraft.world.phys.AABB;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Entity;
@@ -16,11 +15,10 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.resources.ResourceLocation;
 
 import net.efkrdnz.jjkstrongest.entity.MahoragaEntity;
+import net.efkrdnz.jjkstrongest.domain.DomainRegistry;
 import net.efkrdnz.jjkstrongest.entity.DomainUVEntity;
 
 import java.util.UUID;
-import java.util.List;
-import java.util.Comparator;
 
 @EventBusSubscriber(modid = "jjk_strongest", bus = EventBusSubscriber.Bus.GAME)
 public class MahoragaEffectAdaptationEventsProcedure {
@@ -93,32 +91,38 @@ public class MahoragaEffectAdaptationEventsProcedure {
 		return id.toString().replace(':', '_').replace('/', '_').replace('.', '_');
 	}
 
-	// finds the DomainUV Mahoraga is inside and collapses the OWNER's domain using your procedure
+	// Collapses the domain Mahoraga is actually standing in.
+	//
+	// This used to take the nearest domain within 220 blocks and collapse that,
+	// whether or not Mahoraga was inside it — adapting to Information Overload in
+	// one domain could shut down somebody else's across the map. The registry gives
+	// the containing domain directly, so it now collapses the right one or nothing.
 	private static void collapseDomainMahoragaIsInside(Entity mahoraga) {
 		if (!(mahoraga.level() instanceof ServerLevel level))
 			return;
-		AABB box = AABB.ofSize(mahoraga.position(), 220, 220, 220);
-		List<DomainUVEntity> list = level.getEntitiesOfClass(DomainUVEntity.class, box, e -> true);
-		if (list.isEmpty())
-			return;
-		DomainUVEntity closest = list.stream().min(Comparator.comparingDouble(d -> d.distanceToSqr(mahoraga))).orElse(null);
-		if (closest == null)
-			return;
-		String ownerUUID = closest.getPersistentData().getString("ownerUUID");
-		if (ownerUUID == null || ownerUUID.isEmpty()) {
-			closest.getPersistentData().putInt("duration", 0);
-			return;
-		}
-		try {
-			UUID uuid = UUID.fromString(ownerUUID);
-			Player owner = level.getServer().getPlayerList().getPlayer(uuid);
-			if (owner != null) {
-				DomainCollapseManualProcedure.collapsePlayerDomain(level, owner);
-			} else {
-				closest.getPersistentData().putInt("duration", 0);
+		DomainUVEntity inside = null;
+		for (DomainUVEntity domain : DomainRegistry.voidsIn(level)) {
+			if (domain.isAlive() && domain.sphere().contains(mahoraga.getX(), mahoraga.getY(), mahoraga.getZ())) {
+				inside = domain;
+				break;
 			}
-		} catch (Exception e) {
-			closest.getPersistentData().putInt("duration", 0);
+		}
+		if (inside == null)
+			return;
+		String ownerUUID = inside.getPersistentData().getString("ownerUUID");
+		Player owner = null;
+		if (ownerUUID != null && !ownerUUID.isEmpty()) {
+			try {
+				owner = level.getServer().getPlayerList().getPlayer(UUID.fromString(ownerUUID));
+			} catch (IllegalArgumentException malformedUUID) {
+				owner = null;
+			}
+		}
+		if (owner != null) {
+			DomainCollapseManualProcedure.collapsePlayerDomain(level, owner);
+		} else {
+			inside.getPersistentData().putInt("duration", 0);
+			DomainUVEntityTickProcedure.beginCollapse(inside);
 		}
 	}
 }

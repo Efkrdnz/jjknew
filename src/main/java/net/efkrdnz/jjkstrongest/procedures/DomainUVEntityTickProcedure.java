@@ -1,217 +1,218 @@
 package net.efkrdnz.jjkstrongest.procedures;
 
-import net.minecraft.world.phys.Vec3;
-import net.minecraft.world.phys.AABB;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.LevelAccessor;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.nbt.NbtUtils;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.phys.Vec3;
 
-import net.efkrdnz.jjkstrongest.init.JjkStrongestModBlocks;
+import net.efkrdnz.jjkstrongest.domain.DomainCarve;
+import net.efkrdnz.jjkstrongest.domain.DomainPhase;
+import net.efkrdnz.jjkstrongest.domain.DomainSphere;
+import net.efkrdnz.jjkstrongest.entity.DomainUVEntity;
 
 import java.util.UUID;
 
+/**
+ * Drives an Unlimited Void domain through its life.
+ *
+ * <p>The shape lives in the entity's synced data now, so the client sees the same
+ * radius and phase the server is acting on. What used to be three booleans that could
+ * contradict each other is a single {@link DomainPhase}, and what used to be a voxel
+ * shell of barrier blocks is an analytic sphere plus a budgeted carve.
+ */
 public class DomainUVEntityTickProcedure {
+
 	private static final int ABSOLUTE_MAX_LIFETIME = 1200;
+	/** Ticks spent growing to full size. */
+	private static final int EXPANSION_TICKS = 40;
+	/** Ticks at full size before the domain turns hostile. */
+	private static final int SETTLE_TICKS = 40;
+	/** Ticks spent shrinking while the terrain goes back. */
+	private static final int COLLAPSE_TICKS = 20;
 
 	public static void execute(LevelAccessor world, Entity entity) {
-		if (entity == null || !(world instanceof ServerLevel serverLevel))
+		if (!(entity instanceof DomainUVEntity domain) || !(world instanceof ServerLevel level))
 			return;
-		CompoundTag data = entity.getPersistentData();
-		if (!data.contains("domainType")) {
-			entity.discard();
+
+		CompoundTag data = domain.getPersistentData();
+		if (data.contains("storedBlocks")) {
+			// A domain saved before the shell became analytic. Put its blocks back the
+			// old way and let it go; the player can recast into the new system.
+			restoreLegacyBlocks(level, data);
+			domain.discard();
 			return;
 		}
-		double radius = data.getDouble("domainRadius");
-		double captureRadius = data.getDouble("captureRadius");
-		int expansionTick = data.getInt("expansionTick");
-		boolean isExpanding = data.getBoolean("isExpanding");
-		boolean isActive = data.getBoolean("isActive");
-		int duration = data.getInt("duration");
-		boolean isClashing = data.getBoolean("isClashing");
-		Vec3 center = entity.position();
+		if (!data.contains("ownerUUID")) {
+			domain.discard();
+			return;
+		}
+
 		int absoluteTicks = data.getInt("domainAbsoluteTicks") + 1;
 		data.putInt("domainAbsoluteTicks", absoluteTicks);
-		if (absoluteTicks >= ABSOLUTE_MAX_LIFETIME) {
-			collapseDomain(serverLevel, center, radius, data, entity);
-			return;
+
+		DomainPhase phase = domain.getPhase();
+
+		if (phase != DomainPhase.COLLAPSING) {
+			if (absoluteTicks >= ABSOLUTE_MAX_LIFETIME || shouldCollapseDueToCaster(level, domain)) {
+				beginCollapse(domain);
+				phase = DomainPhase.COLLAPSING;
+			}
 		}
-		// check caster validity
-		if (isActive || isExpanding || data.getBoolean("isPostLines") || isClashing) {
-			if (shouldCollapseDueToCaster(serverLevel, center, data, radius)) {
-				collapseDomain(serverLevel, center, radius, data, entity);
+
+		boolean clashing = false;
+		if (phase != DomainPhase.COLLAPSING) {
+			clashing = DomainClashManagerProcedure.detectAndRunClash(level, domain);
+			if (!domain.isAlive())
 				return;
-			}
+			// detectAndRunClash can lose the clash outright, which asks for a collapse
+			phase = domain.getPhase();
 		}
-		// run clash detection every tick when active or clashing
-		if (isActive || isExpanding || data.getBoolean("isPostLines") || isClashing) {
-			isClashing = DomainClashManagerProcedure.detectAndRunClash(serverLevel, entity);
-			// re-read in case collapse was triggered inside detectAndRunClash
-			if (!entity.isAlive())
-				return;
-		}
-		// progressive expansion (unchanged)
-		if (isExpanding && expansionTick < 40) {
-			expandDomainProgressive(serverLevel, center, radius, expansionTick, data);
-			data.putInt("expansionTick", expansionTick + 1);
-			if (expansionTick >= 39) {
-				data.putBoolean("isExpanding", false);
-				data.putBoolean("isPostLines", true);
-				data.putInt("postTick", 0);
-			}
-		}
-		if (data.getBoolean("isPostLines")) {
-			DomainUVPostLinesPhaseProcedure.execute(world, entity);
-		}
-		// active domain logic — frozen during clash
-		if (isActive) {
-			if (!isClashing) {
-				// sure-hit only runs outside of clash
-				UVDomainSureHitProcedure.execute(entity.level(), entity);
-				pullEntities(serverLevel, center, captureRadius, radius);
-				// duration only drains when not clashing
-				duration--;
-				data.putInt("duration", duration);
-				if (duration <= 0) {
-					collapseDomain(serverLevel, center, radius, data, entity);
-				}
-			}
-			// pull still works during clash to keep entities from escaping the barrier
-			if (isClashing) {
-				pullEntities(serverLevel, center, captureRadius, radius);
-			}
+
+		switch (phase) {
+			case EXPANDING -> tickExpanding(level, domain, data);
+			case SETTLING -> DomainUVPostLinesPhaseProcedure.execute(level, domain, SETTLE_TICKS);
+			case ACTIVE -> tickActive(level, domain, data, clashing);
+			case COLLAPSING -> tickCollapsing(level, domain, data);
 		}
 	}
 
-	private static boolean shouldCollapseDueToCaster(ServerLevel level, Vec3 center, CompoundTag data, double radius) {
-		if (!data.contains("ownerUUID"))
+	private static void tickExpanding(ServerLevel level, DomainUVEntity domain, CompoundTag data) {
+		int tick = data.getInt("expansionTick") + 1;
+		data.putInt("expansionTick", tick);
+
+		float progress = Math.min(1.0f, (float) tick / EXPANSION_TICKS);
+		// ease-out so the shell slams outward and settles, rather than crawling
+		float eased = 1.0f - (1.0f - progress) * (1.0f - progress);
+		domain.setShellRadius(domain.getTargetRadius() * eased);
+		domain.setPhaseProgress(progress);
+
+		boolean carved = DomainCarve.advanceCarve(level, domain, domain.sphere());
+		if (progress >= 1.0f && carved) {
+			domain.setShellRadius(domain.getTargetRadius());
+			domain.setPhase(DomainPhase.SETTLING);
+			domain.setPhaseProgress(0.0f);
+			data.putInt("postTick", 0);
+		}
+	}
+
+	private static void tickActive(ServerLevel level, DomainUVEntity domain, CompoundTag data, boolean clashing) {
+		DomainSphere sphere = domain.sphere();
+		// The pull keeps things from loitering against the shell whether or not a rival
+		// domain is pressing on it; everything else pauses for the duration of a clash.
+		pullEntities(level, sphere);
+		if (data.getInt("domainAbsoluteTicks") % 20 == 0)
+			lightInterior(level, sphere);
+		if (clashing)
+			return;
+
+		UVDomainSureHitProcedure.execute(level, domain);
+
+		int duration = data.getInt("duration") - 1;
+		data.putInt("duration", duration);
+		if (duration <= 0)
+			beginCollapse(domain);
+	}
+
+	private static void tickCollapsing(ServerLevel level, DomainUVEntity domain, CompoundTag data) {
+		int tick = data.getInt("collapseTick") + 1;
+		data.putInt("collapseTick", tick);
+
+		float progress = Math.min(1.0f, (float) tick / COLLAPSE_TICKS);
+		domain.setPhaseProgress(progress);
+		domain.setShellRadius(domain.getTargetRadius() * (1.0f - progress));
+
+		boolean restored = DomainCarve.advanceRestore(level, domain);
+		if (restored && progress >= 1.0f)
+			domain.discard();
+	}
+
+	/**
+	 * Undoes a pre-rework domain: blocks were stored one compound per position under a
+	 * "x,y,z" key. Kept only so existing worlds clean themselves up on load.
+	 */
+	private static void restoreLegacyBlocks(ServerLevel level, CompoundTag data) {
+		CompoundTag stored = data.getCompound("storedBlocks");
+		for (String key : stored.getAllKeys()) {
+			String[] coords = key.split(",");
+			if (coords.length != 3)
+				continue;
+			try {
+				net.minecraft.core.BlockPos pos = new net.minecraft.core.BlockPos(Integer.parseInt(coords[0]), Integer.parseInt(coords[1]), Integer.parseInt(coords[2]));
+				CompoundTag blockData = stored.getCompound(key);
+				level.setBlock(pos, net.minecraft.nbt.NbtUtils.readBlockState(level.holderLookup(net.minecraft.core.registries.Registries.BLOCK), blockData.getCompound("state")), 3);
+			} catch (NumberFormatException malformedKey) {
+				// a key we did not write; nothing sensible to restore
+			}
+		}
+		data.remove("storedBlocks");
+	}
+
+	/** Puts the domain into its shutdown phase. Safe to call more than once. */
+	public static void beginCollapse(DomainUVEntity domain) {
+		if (domain.getPhase() == DomainPhase.COLLAPSING)
+			return;
+		domain.setPhase(DomainPhase.COLLAPSING);
+		domain.setPhaseProgress(0.0f);
+		domain.getPersistentData().putInt("collapseTick", 0);
+		domain.getPersistentData().putInt("restoreIndex", 0);
+	}
+
+	private static boolean shouldCollapseDueToCaster(ServerLevel level, DomainUVEntity domain) {
+		CompoundTag data = domain.getPersistentData();
+		String owner = data.getString("ownerUUID");
+		if (owner.isEmpty())
 			return false;
 		try {
-			UUID ownerUUID = UUID.fromString(data.getString("ownerUUID"));
-			Entity caster = level.getEntity(ownerUUID);
-			if (caster == null)
-				return true;
-			if (!caster.isAlive())
-				return true;
-			if (caster.position().distanceToSqr(center) > radius * radius)
+			Entity caster = level.getEntity(UUID.fromString(owner));
+			if (caster == null || !caster.isAlive())
 				return true;
 			if (caster instanceof Player player && player.isSpectator())
 				return true;
-		} catch (Exception e) {
+			double reach = Math.max(domain.getTargetRadius(), domain.getShellRadius());
+			return caster.position().distanceToSqr(domain.position()) > reach * reach;
+		} catch (IllegalArgumentException malformedUUID) {
 			return true;
 		}
-		return false;
 	}
 
-	private static void expandDomainProgressive(ServerLevel level, Vec3 center, double maxRadius, int tick, CompoundTag entityData) {
-		BlockPos centerPos = BlockPos.containing(center.x, center.y, center.z);
-		CompoundTag storedBlocks = entityData.getCompound("storedBlocks");
-		double wallThickness = 1.6;
-		double eps = 0.55;
-		int platformY = centerPos.getY() - 1;
-		double bottomProgress = Math.min(1.0, (tick + 1) / 20.0);
-		double bottomRadius = maxRadius * bottomProgress;
-		double topProgress = tick < 21 ? 0.0 : Math.min(1.0, (tick - 20) / 20.0);
-		double topRadius = maxRadius * topProgress;
-		double effectiveRadius = Math.max(bottomRadius, topRadius);
-		int searchRadius = (int) Math.ceil(effectiveRadius + wallThickness + 2);
-		double innerTopRadius = Math.max(0, topRadius - wallThickness);
-		for (BlockPos pos : BlockPos.betweenClosed(centerPos.offset(-searchRadius, -searchRadius, -searchRadius), centerPos.offset(searchRadius, searchRadius, searchRadius))) {
-			double dx = pos.getX() - centerPos.getX();
-			double dy = pos.getY() - centerPos.getY();
-			double dz = pos.getZ() - centerPos.getZ();
-			double dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
-			if (pos.getY() < platformY) {
-				if (dist <= bottomRadius + eps)
-					placeBarrierBlock(level, pos, storedBlocks);
+	/**
+	 * Keeps the inside of the domain visible.
+	 *
+	 * <p>The barrier blocks this replaced were {@code lightLevel(s -> 15)}, so they lit
+	 * the whole interior. A carved-out air pocket is at sky-light zero, which would
+	 * leave every entity in there rendering as a silhouette.
+	 */
+	private static void lightInterior(ServerLevel level, DomainSphere sphere) {
+		if (!sphere.isUsable())
+			return;
+		for (LivingEntity target : level.getEntitiesOfClass(LivingEntity.class, sphere.bounds(), e -> true)) {
+			if (!sphere.contains(target.getX(), target.getY(), target.getZ()))
 				continue;
-			}
-			if (pos.getY() == platformY) {
-				double flatDist = Math.sqrt(dx * dx + dz * dz);
-				if (flatDist <= bottomRadius + eps)
-					placeBarrierBlock(level, pos, storedBlocks);
-				continue;
-			}
-			if (pos.getY() > platformY && topRadius > 0.0) {
-				if (dist < innerTopRadius - eps) {
-					setAirBlock(level, pos, storedBlocks);
-					continue;
-				}
-				if (dist <= topRadius + eps && dist >= innerTopRadius - eps)
-					placeBarrierBlock(level, pos, storedBlocks);
-			}
+			target.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, 60, 0, true, false, false));
 		}
-		entityData.put("storedBlocks", storedBlocks);
 	}
 
-	private static void setAirBlock(ServerLevel level, BlockPos pos, CompoundTag storedBlocks) {
-		BlockState currentState = level.getBlockState(pos);
-		if (currentState.is(net.minecraft.world.level.block.Blocks.BEDROCK) || currentState.is(net.minecraft.world.level.block.Blocks.AIR))
+	/** Nudges anything drifting against the shell back toward the middle. */
+	private static void pullEntities(ServerLevel level, DomainSphere sphere) {
+		if (!sphere.isUsable())
 			return;
-		String posKey = pos.getX() + "," + pos.getY() + "," + pos.getZ();
-		if (!storedBlocks.contains(posKey)) {
-			CompoundTag blockData = new CompoundTag();
-			blockData.put("state", NbtUtils.writeBlockState(currentState));
-			BlockEntity be = level.getBlockEntity(pos);
-			if (be != null)
-				blockData.put("blockEntity", be.saveWithoutMetadata(level.registryAccess()));
-			storedBlocks.put(posKey, blockData);
-		}
-		if (level.getBlockEntity(pos) != null)
-			level.removeBlockEntity(pos);
-		level.setBlock(pos, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(), 3);
-	}
-
-	private static void placeBarrierBlock(ServerLevel level, BlockPos pos, CompoundTag storedBlocks) {
-		BlockState currentState = level.getBlockState(pos);
-		if (currentState.is(net.minecraft.world.level.block.Blocks.BEDROCK) || currentState.is(JjkStrongestModBlocks.DOMAIN_BARRIER.get()))
+		double edge = sphere.radius() - 2.0;
+		if (edge <= 0.0)
 			return;
-		String posKey = pos.getX() + "," + pos.getY() + "," + pos.getZ();
-		if (storedBlocks.contains(posKey))
-			return;
-		CompoundTag blockData = new CompoundTag();
-		blockData.put("state", NbtUtils.writeBlockState(currentState));
-		BlockEntity be = level.getBlockEntity(pos);
-		if (be != null)
-			blockData.put("blockEntity", be.saveWithoutMetadata(level.registryAccess()));
-		storedBlocks.put(posKey, blockData);
-		level.setBlock(pos, JjkStrongestModBlocks.DOMAIN_BARRIER.get().defaultBlockState(), 3);
-	}
-
-	private static void pullEntities(ServerLevel level, Vec3 center, double captureRadius, double barrierRadius) {
-		AABB pullBox = new AABB(center.x - captureRadius, center.y - captureRadius, center.z - captureRadius, center.x + captureRadius, center.y + captureRadius, center.z + captureRadius);
-		for (Entity entity : level.getEntitiesOfClass(Entity.class, pullBox, e -> e instanceof Player || e instanceof LivingEntity)) {
+		double edgeSq = edge * edge;
+		for (Entity entity : level.getEntitiesOfClass(Entity.class, sphere.bounds(), e -> e instanceof LivingEntity)) {
 			if (entity instanceof Player player && (player.isCreative() || player.isSpectator()))
 				continue;
-			Vec3 entityPos = entity.position();
-			double dist = Math.sqrt(entityPos.distanceToSqr(center));
-			if (dist > barrierRadius - 2.0) {
-				Vec3 direction = center.subtract(entityPos).normalize();
-				entity.setDeltaMovement(entity.getDeltaMovement().add(direction.scale(0.3)));
-			}
+			Vec3 pos = entity.position();
+			if (pos.distanceToSqr(sphere.center()) <= edgeSq)
+				continue;
+			Vec3 inward = sphere.center().subtract(pos).normalize();
+			entity.setDeltaMovement(entity.getDeltaMovement().add(inward.scale(0.3)));
 		}
-	}
-
-	private static void collapseDomain(ServerLevel level, Vec3 center, double radius, CompoundTag entityData, Entity domainEntity) {
-		CompoundTag storedBlocks = entityData.getCompound("storedBlocks");
-		for (String posKey : storedBlocks.getAllKeys()) {
-			String[] coords = posKey.split(",");
-			BlockPos pos = new BlockPos(Integer.parseInt(coords[0]), Integer.parseInt(coords[1]), Integer.parseInt(coords[2]));
-			CompoundTag blockData = storedBlocks.getCompound(posKey);
-			BlockState originalState = NbtUtils.readBlockState(level.holderLookup(net.minecraft.core.registries.Registries.BLOCK), blockData.getCompound("state"));
-			level.setBlock(pos, originalState, 3);
-			if (blockData.contains("blockEntity")) {
-				BlockEntity be = level.getBlockEntity(pos);
-				if (be != null)
-					be.loadWithComponents(blockData.getCompound("blockEntity"), level.registryAccess());
-			}
-		}
-		domainEntity.discard();
 	}
 }

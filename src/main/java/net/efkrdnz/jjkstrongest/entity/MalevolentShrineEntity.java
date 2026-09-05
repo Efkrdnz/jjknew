@@ -20,10 +20,18 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 
 import net.efkrdnz.jjkstrongest.init.JjkStrongestModEntities;
 
 public class MalevolentShrineEntity extends PathfinderMob {
+
+	// Clash state has to reach the client for the versus HUD to draw; persistent
+	// data never leaves the server.
+	private static final EntityDataAccessor<Float> CLASH_HP = SynchedEntityData.defineId(MalevolentShrineEntity.class, EntityDataSerializers.FLOAT);
+	private static final EntityDataAccessor<Boolean> CLASHING = SynchedEntityData.defineId(MalevolentShrineEntity.class, EntityDataSerializers.BOOLEAN);
 
 	public MalevolentShrineEntity(EntityType<MalevolentShrineEntity> type, Level world) {
 		super(type, world);
@@ -31,6 +39,30 @@ public class MalevolentShrineEntity extends PathfinderMob {
 		xpReward = 0;
 		setNoAi(true);
 		setPersistenceRequired();
+	}
+
+	@Override
+	protected void defineSynchedData(SynchedEntityData.Builder builder) {
+		super.defineSynchedData(builder);
+		builder.define(CLASH_HP, 100.0f);
+		builder.define(CLASHING, false);
+	}
+
+	public float getClashHP() {
+		return this.entityData.get(CLASH_HP);
+	}
+
+	public void setClashHP(float hp) {
+		this.entityData.set(CLASH_HP, hp);
+	}
+
+	public boolean isClashing() {
+		return this.entityData.get(CLASHING);
+	}
+
+	public void setClashing(boolean clashing) {
+		if (this.entityData.get(CLASHING) != clashing)
+			this.entityData.set(CLASHING, clashing);
 	}
 
 

@@ -1,59 +1,54 @@
 package net.efkrdnz.jjkstrongest.procedures;
 
-import net.minecraft.world.phys.Vec3;
-import net.minecraft.world.phys.AABB;
-import net.minecraft.world.level.LevelAccessor;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.effect.MobEffects;
-import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.AABB;
 
-import java.util.UUID;
+import net.efkrdnz.jjkstrongest.domain.DomainPhase;
+import net.efkrdnz.jjkstrongest.entity.DomainUVEntity;
 
+/**
+ * The beat between the shell closing and the domain turning hostile: the rays fire
+ * client-side and everyone inside is briefly blinded.
+ */
 public class DomainUVPostLinesPhaseProcedure {
-	public static void execute(LevelAccessor world, Entity domainEntity) {
-		if (!(world instanceof ServerLevel level))
-			return;
-		if (domainEntity == null)
-			return;
-		CompoundTag data = domainEntity.getPersistentData();
-		if (!data.getBoolean("isPostLines"))
-			return;
+
+	/** Tick within the phase at which the blinding flash lands. */
+	private static final int FLASH_TICK = 30;
+	private static final double BLIND_RADIUS = 35.0;
+
+	public static void execute(ServerLevel level, DomainUVEntity domain, int settleTicks) {
+		CompoundTag data = domain.getPersistentData();
 		int postTick = data.getInt("postTick");
-		Vec3 center = domainEntity.position();
-		double radius = data.getDouble("domainRadius");
-		double captureRadius = data.getDouble("captureRadius");
-		UUID ownerUUID = null;
-		try {
-			String owner = data.getString("ownerUUID");
-			if (owner != null && !owner.isEmpty())
-				ownerUUID = UUID.fromString(owner);
-		} catch (Exception ignored) {
-		}
-		if (postTick == 30) {
-			applyBlindness(level, center, captureRadius, ownerUUID);
-		}
+
+		if (postTick == FLASH_TICK)
+			applyBlindness(level, domain);
+
 		postTick++;
 		data.putInt("postTick", postTick);
-		// after 40 ticks -> domain becomes active
-		if (postTick >= 40) {
-			data.putBoolean("isPostLines", false);
-			data.putBoolean("isActive", true);
+		domain.setPhaseProgress(Math.min(1.0f, (float) postTick / settleTicks));
+
+		if (postTick >= settleTicks) {
+			domain.setPhase(DomainPhase.ACTIVE);
+			domain.setPhaseProgress(0.0f);
 		}
 	}
 
-	private static void applyBlindness(ServerLevel level, Vec3 center, double r, UUID ownerUUID) {
-		AABB box = new AABB(center.x - r, center.y - r, center.z - r, center.x + r, center.y + r, center.z + r);
-		double r2 = r * r;
+	private static void applyBlindness(ServerLevel level, DomainUVEntity domain) {
+		String owner = domain.getPersistentData().getString("ownerUUID");
+		AABB box = new AABB(domain.getX() - BLIND_RADIUS, domain.getY() - BLIND_RADIUS, domain.getZ() - BLIND_RADIUS, domain.getX() + BLIND_RADIUS, domain.getY() + BLIND_RADIUS,
+				domain.getZ() + BLIND_RADIUS);
+		double radiusSq = BLIND_RADIUS * BLIND_RADIUS;
 		for (LivingEntity target : level.getEntitiesOfClass(LivingEntity.class, box, e -> true)) {
-			if (ownerUUID != null && target.getUUID().equals(ownerUUID))
+			if (target.getStringUUID().equals(owner))
 				continue;
-			if (target instanceof Player p && (p.isCreative() || p.isSpectator()))
+			if (target instanceof Player player && (player.isCreative() || player.isSpectator()))
 				continue;
-			if (target.position().distanceToSqr(center) > r2)
+			if (target.position().distanceToSqr(domain.position()) > radiusSq)
 				continue;
 			target.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 15, 0, true, false, false));
 		}

@@ -3,8 +3,13 @@
 uniform float Time;
 uniform float BrushSeed;
 uniform float Intensity;
+uniform float Radius;     // the domain's real radius
+uniform float Progress;   // 0..1 through the current phase
+uniform float Phase;      // DomainPhase ordinal: 0 expanding, 1 settling, 2 active, 3 collapsing
+uniform vec3  CamOffset;  // camera position relative to the sphere centre
 
 in vec2 texCoord;
+in vec3 localPos;
 out vec4 fragColor;
 
 const float PI = 3.14159265359;
@@ -46,10 +51,13 @@ float noise3(vec3 p) {
     return mix(nxy0, nxy1, f.z);
 }
 
+// Four octaves rather than six. Together with the shorter march below this takes the
+// per-fragment noise count from roughly 324 to about 40 — the shell now covers the
+// whole screen when you are inside it, so the old cost was not survivable.
 float fbm3(vec3 p) {
     float v = 0.0;
     float a = 0.5;
-    for (int i = 0; i < 6; i++) {
+    for (int i = 0; i < 4; i++) {
         v += a * noise3(p);
         p *= 2.0;
         a *= 0.5;
@@ -59,20 +67,12 @@ float fbm3(vec3 p) {
 
 mat3 rotY(float a){
     float s = sin(a), c = cos(a);
-    return mat3(
-        c, 0.0, -s,
-        0.0, 1.0, 0.0,
-        s, 0.0,  c
-    );
+    return mat3(c, 0.0, -s, 0.0, 1.0, 0.0, s, 0.0, c);
 }
 
 mat3 rotX(float a){
     float s = sin(a), c = cos(a);
-    return mat3(
-        1.0, 0.0, 0.0,
-        0.0,  c,  s,
-        0.0, -s,  c
-    );
+    return mat3(1.0, 0.0, 0.0, 0.0, c, s, 0.0, -s, c);
 }
 
 vec3 palette(float x){
@@ -90,15 +90,10 @@ vec3 palette(float x){
 void main() {
     float t = Time;
 
-    // seamless sphere direction from uv (periodic => no seam)
-    float theta = texCoord.x * 2.0 * PI;
-    float phi   = texCoord.y * PI;
-
-    vec3 dir = vec3(
-        sin(phi) * cos(theta),
-        cos(phi),
-        sin(phi) * sin(theta)
-    );
+    // The ray from the eye to this point on the shell. This is what makes the domain
+    // read as a space you are standing in rather than a texture on a wall: move across
+    // the room and the depth layers slide past one another.
+    vec3 dir = normalize(localPos - CamOffset);
 
     // subtle global drift for hypnotic motion
     dir = rotY(t * 0.025) * rotX(t * 0.018) * dir;
@@ -106,28 +101,30 @@ void main() {
     float seed = BrushSeed * 9.7;
     vec3 seedV = vec3(seed, seed * 0.37, seed * 0.91);
 
+    // Keep apparent feature size constant as the shell grows, instead of the pattern
+    // stretching with the mesh.
+    float featureScale = 30.0 / max(Radius, 1.0);
+
     // flow field (prevents "boiling"; looks like currents)
-    float f0 = fbm3(dir * 2.3 + seedV * 0.7 + vec3(t * 0.03, -t * 0.02, t * 0.025));
-    float f1 = fbm3(dir * 3.2 - seedV * 0.5 + vec3(-t * 0.02, t * 0.028, -t * 0.018));
+    float f0 = fbm3(dir * 2.3 * featureScale + seedV * 0.7 + vec3(t * 0.03, -t * 0.02, t * 0.025));
+    float f1 = fbm3(dir * 3.2 * featureScale - seedV * 0.5 + vec3(-t * 0.02, t * 0.028, -t * 0.018));
     vec3 flow = vec3(f0 - 0.5, f1 - 0.5, (f0 + f1) * 0.5 - 0.5) * 0.85;
 
-    // volumetric accumulation
     vec3 colAcc = vec3(0.0);
     float aAcc = 0.0;
 
-    // feel knobs
     float baseScale = 2.35;
-    float stepSize  = 0.40;
+    float stepSize  = 0.55;
 
-    for (int i = 0; i < 9; i++) { // 9 steps: good look, still ok performance
+    // five steps, down from nine
+    for (int i = 0; i < 5; i++) {
         float fi = float(i);
 
-        vec3 p = dir * (baseScale + fi * stepSize);
+        vec3 p = dir * (baseScale + fi * stepSize) * featureScale;
         p += seedV;
-        p += flow * (0.6 + fi * 0.08);
+        p += flow * (0.6 + fi * 0.12);
 
-        // layer-specific swirl
-        float layerSpin = t * (0.03 + fi * 0.004);
+        float layerSpin = t * (0.03 + fi * 0.006);
         p = rotY(layerSpin) * rotX(layerSpin * 0.8) * p;
 
         float nA = fbm3(p * 1.15 + vec3(t * 0.02, -t * 0.015, t * 0.018));
@@ -136,54 +133,48 @@ void main() {
         float density = nA * 0.62 + nB * 0.38;
         density = smoothstep(0.22, 0.95, density);
 
-        // depth weighting (near layers contribute more)
-        float w = exp(-fi * 0.24);
+        float w = exp(-fi * 0.34);
 
         vec3 layerCol = palette(density);
         layerCol *= (0.85 + density * 0.55);
 
-        float a = density * (0.20 * w);
+        float a = density * (0.34 * w);
         colAcc += layerCol * a * (1.0 - aAcc);
         aAcc   += a * (1.0 - aAcc);
     }
 
-    // "information shards" (white streak fragments), depth aware
-    // build in direction space so it's seamless
+    // "information shards" — white streak fragments, built in direction space so they
+    // stay seamless across the sphere
     float shardAcc = 0.0;
     vec3 shardCol = vec3(0.95, 0.98, 1.0);
 
-    for (int k = 0; k < 4; k++) {
+    for (int k = 0; k < 3; k++) {
         float fk = float(k);
         vec3 sp = dir * (6.0 + fk * 2.0) + seedV * (1.3 + fk * 0.2);
 
-        // project to pseudo-2D for streaking
         vec2 sUV = vec2(sp.x + sp.z, sp.y - sp.z);
         sUV += vec2(t * (0.06 + fk * 0.01), -t * (0.04 + fk * 0.008));
 
-        // cells
         vec2 cell = floor(sUV * 6.0);
         vec2 f = fract(sUV * 6.0) - 0.5;
 
         float rnd = hash12(cell + fk * 13.7);
         vec2 axis = normalize(vec2(cos(rnd * 6.2831), sin(rnd * 6.2831)));
 
-        // elongated distance to axis => thin streak
         float d = abs(dot(f, vec2(-axis.y, axis.x)));
         float l = abs(dot(f, axis));
 
         float streak = smoothstep(0.08, 0.00, d) * smoothstep(0.55, 0.10, l);
-        streak *= step(0.78, rnd); // sparsity
+        streak *= step(0.78, rnd);
         streak *= (0.55 + 0.45 * sin(t * 2.2 + rnd * 12.0));
 
-        // depth fade (far streaks weaker)
-        float depthFade = 1.0 / (1.0 + fk * 0.9);
-        shardAcc += streak * depthFade;
+        shardAcc += streak / (1.0 + fk * 0.9);
     }
 
     shardAcc = clamp(shardAcc, 0.0, 1.0);
     colAcc += shardCol * shardAcc * 0.95;
 
-    // richer star layers (tiny + mid + a few big)
+    // star layers
     float sTiny = noise3(dir * 110.0 + seedV + t * 0.01);
     float tinyStars = step(0.986, sTiny) * 0.75;
 
@@ -198,23 +189,34 @@ void main() {
     colAcc += starC * midStars * 0.95;
     colAcc += starC * bigStars * 1.25;
 
-    // subtle chroma shimmer in highlights
     float highlight = clamp((dot(colAcc, vec3(0.333)) - 0.35) * 1.8, 0.0, 1.0);
     vec3 tint = vec3(0.05, -0.02, 0.08) * (0.5 + 0.5 * sin(t * 1.7 + aAcc * 7.0));
     colAcc += tint * highlight;
 
-    // pulse + exposure lift so it's not "too dark"
     float pulse = sin(t * 0.55) * 0.08 + 0.92;
     colAcc *= pulse;
     colAcc *= 1.45;
 
-    // soft vignette for immersion (darker edges)
-    float v = texCoord.y * (1.0 - texCoord.y);
-    float u = texCoord.x * (1.0 - texCoord.x);
-    float vignette = pow(clamp(u * v * 18.0, 0.0, 1.0), 0.55);
-    colAcc *= (0.70 + vignette * 0.55);
+    float alpha = clamp(0.60 + aAcc * 0.85 + shardAcc * 0.10, 0.55, 0.98);
 
-    float alpha = clamp(0.60 + aAcc * 0.85 + shardAcc * 0.10, 0.55, 0.95) * Intensity;
+    // The mesh is wound inward and drawn double-sided, so this same shader has to
+    // serve both faces: the space you stand in, and the shell seen from outside.
+    if (!gl_FrontFacing) {
+        // Outer shell. Replaces the look the emissive barrier blocks used to give the
+        // domain from the outside; deliberately cheap, since it is the far side.
+        float rim = pow(1.0 - abs(dot(normalize(localPos), normalize(localPos - CamOffset))), 2.0);
+        vec3 outer = mix(vec3(0.05, 0.07, 0.16), vec3(0.55, 0.72, 1.0), rim * 0.85);
+        outer += shardCol * shardAcc * 0.35;
+        fragColor = vec4(outer * Intensity, clamp(0.35 + rim * 0.5, 0.0, 0.9));
+        return;
+    }
 
-    fragColor = vec4(colAcc, alpha);
+    // While the shell is still growing, fade the interior in rather than popping it.
+    float phaseFade = 1.0;
+    if (Phase < 0.5)
+        phaseFade = smoothstep(0.0, 0.65, Progress);
+    else if (Phase > 2.5)
+        phaseFade = 1.0 - smoothstep(0.35, 1.0, Progress);
+
+    fragColor = vec4(colAcc, alpha * Intensity * phaseFade);
 }

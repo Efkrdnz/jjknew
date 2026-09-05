@@ -18,6 +18,7 @@ import net.minecraft.core.particles.ParticleTypes;
 
 import net.efkrdnz.jjkstrongest.network.SpawnDomainSlashPacket;
 import net.efkrdnz.jjkstrongest.network.DomainSlashNetworkHandler;
+import net.efkrdnz.jjkstrongest.domain.DomainSphere;
 import net.efkrdnz.jjkstrongest.entity.DomainUVEntity;
 
 import java.util.UUID;
@@ -145,6 +146,10 @@ public class MalevolentShrineTickProcedure {
 	}
 
 	private static void spawnSlashesViaPackets(ServerLevel world, Entity owner, double centerX, double centerY, double centerZ, int count, String domainUUID, boolean isClashing) {
+		// Resolved once per tick. This used to be a fresh 300-block entity scan for
+		// every one of the sixty-odd slash candidates, i.e. up to eighty world scans
+		// a tick; now the inner loop is pure arithmetic.
+		DomainSphere rivalSphere = isClashing ? DomainClashManagerProcedure.rivalVoidSphere(world) : null;
 		double radiusSq = RADIUS * RADIUS;
 		double twoPI = Math.PI * 2;
 		List<ServerPlayer> nearbyPlayers = world.getEntitiesOfClass(ServerPlayer.class, new AABB(centerX - 150, centerY - 150, centerZ - 150, centerX + 150, centerY + 150, centerZ + 150));
@@ -162,7 +167,7 @@ public class MalevolentShrineTickProcedure {
 			double slashY = centerY + offsetY;
 			double slashZ = centerZ + offsetZ;
 			// during clash skip slash positions that are inside UV barrier
-			if (isClashing && DomainClashManagerProcedure.isPosInsideUV(world, slashX, slashY, slashZ))
+			if (rivalSphere != null && rivalSphere.contains(slashX, slashY, slashZ))
 				continue;
 			Vec3 randomDir = new Vec3(world.random.nextDouble() - 0.5, world.random.nextDouble() - 0.5, world.random.nextDouble() - 0.5).normalize();
 			int styleRoll = world.random.nextInt(100);
@@ -188,6 +193,7 @@ public class MalevolentShrineTickProcedure {
 	private static void damageEntitiesOptimized(Level world, Entity owner, double centerX, double centerY, double centerZ, boolean isClashing) {
 		if (world == null || owner == null)
 			return;
+		DomainSphere rivalSphere = isClashing && world instanceof ServerLevel srv ? DomainClashManagerProcedure.rivalVoidSphere(srv) : null;
 		AABB boundingBox = new AABB(centerX - RADIUS, centerY - RADIUS, centerZ - RADIUS, centerX + RADIUS, centerY + RADIUS, centerZ + RADIUS);
 		List<Entity> entities = world.getEntitiesOfClass(Entity.class, boundingBox, e -> e instanceof LivingEntity && e != owner && !e.isPassengerOfSameVehicle(owner));
 		double radiusSq = RADIUS * RADIUS;
@@ -200,10 +206,8 @@ public class MalevolentShrineTickProcedure {
 			if (dx * dx + dy * dy + dz * dz > radiusSq)
 				continue;
 			// during clash: skip entities inside UV's barrier — they're protected
-			if (isClashing && world instanceof ServerLevel serverLevel) {
-				if (DomainClashManagerProcedure.isPosInsideUV(serverLevel, target.getX(), target.getY(), target.getZ()))
-					continue;
-			}
+			if (rivalSphere != null && rivalSphere.contains(target.getX(), target.getY(), target.getZ()))
+				continue;
 			int slashCount = 2 + world.random.nextInt(2);
 			if (world instanceof ServerLevel serverLevel) {
 				for (int i = 0; i < slashCount; i++) {

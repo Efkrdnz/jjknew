@@ -1,16 +1,15 @@
 package net.efkrdnz.jjkstrongest.procedures;
 
 import net.minecraft.world.phys.Vec3;
-import net.minecraft.world.phys.AABB;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.nbt.CompoundTag;
 
+import net.efkrdnz.jjkstrongest.domain.DomainRegistry;
+import net.efkrdnz.jjkstrongest.domain.DomainSphere;
 import net.efkrdnz.jjkstrongest.entity.MalevolentShrineEntity;
 import net.efkrdnz.jjkstrongest.entity.DomainUVEntity;
-
-import java.util.List;
 
 public class DomainClashManagerProcedure {
 	// uv loses hp in 15s = 300 ticks → 100hp / 300 = 0.333/tick
@@ -37,6 +36,8 @@ public class DomainClashManagerProcedure {
 		// mark both as clashing and reset grace counter
 		uvData.putBoolean("isClashing", true);
 		shrineData.putBoolean("isClashing", true);
+		setSyncedClashing(uvEntity, true);
+		setSyncedClashing(shrineEntity, true);
 		uvData.putInt("clashLostTicks", 0);
 		shrineData.putInt("clashLostTicks", 0);
 		// store rival uuids
@@ -45,6 +46,10 @@ public class DomainClashManagerProcedure {
 		// drain uv hp passively every tick
 		float uvHP = uvData.getFloat("uvClashHP") - UV_DRAIN_PER_TICK;
 		uvData.putFloat("uvClashHP", uvHP);
+		// mirror onto synced data — the clash HUD reads this on the client, where
+		// persistent data has always been empty
+		if (uvEntity instanceof DomainUVEntity uv)
+			uv.setClashHP(Math.max(0f, uvHP));
 		// check uv collapse
 		if (uvHP <= 0f) {
 			collapseUV(world, uvEntity);
@@ -53,6 +58,8 @@ public class DomainClashManagerProcedure {
 		}
 		// check shrine collapse (hp drained by melee hits in DomainClashMeleeHitProcedure)
 		float shrineHP = shrineData.getFloat("shrineClashHP");
+		if (shrineEntity instanceof MalevolentShrineEntity shrine)
+			shrine.setClashHP(Math.max(0f, shrineHP));
 		if (shrineHP <= 0f) {
 			collapseShrine(shrineEntity);
 			endClashWinner(uvEntity);
@@ -64,13 +71,13 @@ public class DomainClashManagerProcedure {
 	public static boolean detectAndRunClash(ServerLevel level, Entity uvEntity) {
 		Vec3 uvPos = uvEntity.position();
 		CompoundTag uvData = uvEntity.getPersistentData();
-		double uvRadius = uvData.getDouble("domainRadius");
-		AABB searchBox = new AABB(uvPos.x - CLASH_DETECT_RADIUS, uvPos.y - CLASH_DETECT_RADIUS, uvPos.z - CLASH_DETECT_RADIUS, uvPos.x + CLASH_DETECT_RADIUS, uvPos.y + CLASH_DETECT_RADIUS, uvPos.z + CLASH_DETECT_RADIUS);
-		List<MalevolentShrineEntity> shrines = level.getEntitiesOfClass(MalevolentShrineEntity.class, searchBox, e -> e.isAlive());
-		for (MalevolentShrineEntity shrine : shrines) {
-			double distSq = uvPos.distanceToSqr(shrine.position());
-			double overlapThreshold = uvRadius + 100.0;
-			if (distSq <= overlapThreshold * overlapThreshold) {
+		double uvRadius = uvEntity instanceof DomainUVEntity uv ? uv.getTargetRadius() : 30.0;
+		double overlapThreshold = uvRadius + 100.0;
+		double thresholdSq = overlapThreshold * overlapThreshold;
+		for (MalevolentShrineEntity shrine : DomainRegistry.shrinesIn(level)) {
+			if (!shrine.isAlive())
+				continue;
+			if (uvPos.distanceToSqr(shrine.position()) <= thresholdSq) {
 				// found active rival — run clash logic and reset grace counter
 				execute(level, uvEntity, shrine);
 				return true;
@@ -90,19 +97,24 @@ public class DomainClashManagerProcedure {
 		return false;
 	}
 
-	// check if a position is inside UV's barrier — used by shrine to filter targets
+	// check if a position is inside UV's barrier — used by the shrine to filter targets
 	public static boolean isPosInsideUV(ServerLevel level, double px, double py, double pz) {
-		AABB searchBox = new AABB(px - 150, py - 150, pz - 150, px + 150, py + 150, pz + 150);
-		List<DomainUVEntity> uvDomains = level.getEntitiesOfClass(DomainUVEntity.class, searchBox, e -> e.isAlive());
-		for (DomainUVEntity uv : uvDomains) {
-			CompoundTag data = uv.getPersistentData();
-			if (!data.getBoolean("isActive") && !data.getBoolean("isClashing"))
+		return DomainRegistry.isInside(level, px, py, pz);
+	}
+
+	/**
+	 * The rival domain's sphere, resolved once so a caller looping over many candidate
+	 * points does not repeat the lookup for each one.
+	 */
+	public static DomainSphere rivalVoidSphere(ServerLevel level) {
+		for (DomainUVEntity uv : DomainRegistry.voidsIn(level)) {
+			if (!uv.isAlive())
 				continue;
-			double radius = data.getDouble("domainRadius");
-			if (uv.position().distanceToSqr(px, py, pz) <= radius * radius)
-				return true;
+			DomainSphere sphere = uv.sphere();
+			if (sphere.isUsable())
+				return sphere;
 		}
-		return false;
+		return null;
 	}
 
 	// drain shrine hp from a melee hit — called by DomainClashMeleeHitProcedure
@@ -124,31 +136,22 @@ public class DomainClashManagerProcedure {
 	}
 
 	public static DomainUVEntity findUVByOwner(ServerLevel level, String ownerUUID) {
-		List<DomainUVEntity> list = level.getEntitiesOfClass(DomainUVEntity.class, new AABB(-30000, -512, -30000, 30000, 512, 30000), e -> e.isAlive());
-		for (DomainUVEntity uv : list) {
-			if (uv.getPersistentData().getString("ownerUUID").equals(ownerUUID))
-				return uv;
-		}
-		return null;
+		return DomainRegistry.voidByOwner(level, ownerUUID);
 	}
 
 	public static MalevolentShrineEntity findShrineByOwner(ServerLevel level, String ownerUUID) {
-		List<MalevolentShrineEntity> list = level.getEntitiesOfClass(MalevolentShrineEntity.class, new AABB(-30000, -512, -30000, 30000, 512, 30000), e -> e.isAlive());
-		for (MalevolentShrineEntity shrine : list) {
-			if (shrine.getPersistentData().getString("ownerUUID").equals(ownerUUID))
-				return shrine;
-		}
-		return null;
+		return DomainRegistry.shrineByOwner(level, ownerUUID);
 	}
 
-	// collapse uv — block restore handled by DomainUVEntityTickProcedure
+	// collapse uv — the shrinking shell and the terrain restore are driven by
+	// DomainUVEntityTickProcedure's COLLAPSING phase
 	private static void collapseUV(LevelAccessor world, Entity uvEntity) {
 		uvEntity.getPersistentData().putInt("duration", 0);
 		uvEntity.getPersistentData().putBoolean("isClashing", false);
-		uvEntity.getPersistentData().putBoolean("isExpanding", false);
-		uvEntity.getPersistentData().putBoolean("isPostLines", false);
-		uvEntity.getPersistentData().putBoolean("isActive", true);
 		uvEntity.getPersistentData().remove("uvClashHP");
+		setSyncedClashing(uvEntity, false);
+		if (uvEntity instanceof DomainUVEntity uv)
+			DomainUVEntityTickProcedure.beginCollapse(uv);
 	}
 
 	// collapse shrine — handled by MalevolentShrineTickProcedure
@@ -156,12 +159,14 @@ public class DomainClashManagerProcedure {
 		shrineEntity.getPersistentData().putInt("domainLifetimeTicks", 600);
 		shrineEntity.getPersistentData().putBoolean("isClashing", false);
 		shrineEntity.getPersistentData().remove("shrineClashHP");
+		setSyncedClashing(shrineEntity, false);
 	}
 
 	// winner — clear clash flag, keep remaining hp in case of future clash
 	private static void endClashWinner(Entity domainEntity) {
 		CompoundTag data = domainEntity.getPersistentData();
 		data.putBoolean("isClashing", false);
+		setSyncedClashing(domainEntity, false);
 		data.putInt("clashLostTicks", 0);
 		data.remove("rivalUUID");
 		// hp intentionally NOT reset — winner keeps their remaining clash hp
@@ -171,9 +176,18 @@ public class DomainClashManagerProcedure {
 	private static void endClashLoser(Entity domainEntity) {
 		CompoundTag data = domainEntity.getPersistentData();
 		data.putBoolean("isClashing", false);
+		setSyncedClashing(domainEntity, false);
 		data.putInt("clashLostTicks", 0);
 		data.remove("rivalUUID");
 		data.remove("uvClashHP");
 		data.remove("shrineClashHP");
+	}
+
+	/** Keeps the client-visible clash flag in step with the server-side one. */
+	private static void setSyncedClashing(Entity domainEntity, boolean clashing) {
+		if (domainEntity instanceof DomainUVEntity uv)
+			uv.setClashing(clashing);
+		else if (domainEntity instanceof MalevolentShrineEntity shrine)
+			shrine.setClashing(clashing);
 	}
 }

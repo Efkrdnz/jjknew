@@ -6,14 +6,12 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.RenderGuiEvent;
 import net.neoforged.api.distmarker.Dist;
 
-import net.minecraft.world.phys.Vec3;
-import net.minecraft.world.phys.AABB;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.Minecraft;
 
+import net.efkrdnz.jjkstrongest.domain.DomainRegistry;
 import net.efkrdnz.jjkstrongest.entity.MalevolentShrineEntity;
 import net.efkrdnz.jjkstrongest.entity.DomainUVEntity;
-import net.efkrdnz.jjkstrongest.client.DomainClashHudOverlay;
 
 @EventBusSubscriber(modid = "jjk_strongest", value = Dist.CLIENT)
 public class DomainClashHudOverlay {
@@ -38,30 +36,27 @@ public class DomainClashHudOverlay {
 		Minecraft mc = Minecraft.getInstance();
 		if (mc.level == null || mc.player == null)
 			return;
-		// only render during clash
-		Vec3 playerPos = mc.player.position();
-		AABB searchBox = AABB.ofSize(playerPos, 300, 300, 300);
-		// find nearby clashing uv
+		// The clash flag and both HP pools now come off the entities' synced data via
+		// the registry. This overlay could never draw before: it read
+		// getPersistentData() on the client, where that tag is always empty.
 		DomainUVEntity uvDomain = null;
-		for (DomainUVEntity uv : mc.level.getEntitiesOfClass(DomainUVEntity.class, searchBox, e -> e.isAlive())) {
-			if (uv.getPersistentData().getBoolean("isClashing")) {
+		for (DomainUVEntity uv : DomainRegistry.voidsIn(mc.level)) {
+			if (uv.isAlive() && uv.isClashing()) {
 				uvDomain = uv;
 				break;
 			}
 		}
-		// find nearby clashing shrine
 		MalevolentShrineEntity shrine = null;
-		for (MalevolentShrineEntity s : mc.level.getEntitiesOfClass(MalevolentShrineEntity.class, searchBox, e -> e.isAlive())) {
-			if (s.getPersistentData().getBoolean("isClashing")) {
-				shrine = s;
+		for (MalevolentShrineEntity candidate : DomainRegistry.shrinesIn(mc.level)) {
+			if (candidate.isAlive() && candidate.isClashing()) {
+				shrine = candidate;
 				break;
 			}
 		}
-		// only draw if both are clashing
 		if (uvDomain == null || shrine == null)
 			return;
-		float uvHP = uvDomain.getPersistentData().getFloat("uvClashHP");
-		float shrineHP = shrine.getPersistentData().getFloat("shrineClashHP");
+		float uvHP = uvDomain.getClashHP();
+		float shrineHP = shrine.getClashHP();
 		float uvPct = Math.max(0f, Math.min(1f, uvHP / MAX_CLASH_HP));
 		float shrinePct = Math.max(0f, Math.min(1f, shrineHP / MAX_CLASH_HP));
 		GuiGraphics gui = event.getGuiGraphics();

@@ -44,7 +44,7 @@ import java.util.List;
  * below 50 % HP, making the fight feel persistent rather than just tanky.
  *
  * Reactive domain: automatically deploys Unlimited Void at 35 % HP. If Gojo
- * detects a hostile domain forming (isExpanding / isPostLines) he counter-
+ * detects a hostile domain that has not started shutting down he counter-
  * deploys his own UV domain before the sure-hit wave fires — the two domains
  * clash and neutralise each other.
  */
@@ -587,11 +587,12 @@ public class GojoNPCAIProcedure {
 
 		AABB scanBox = AABB.ofSize(entity.position(), 140, 140, 140);
 		for (net.efkrdnz.jjkstrongest.entity.DomainUVEntity domain
-				: sl.getEntitiesOfClass(net.efkrdnz.jjkstrongest.entity.DomainUVEntity.class, scanBox, e -> true)) {
-			CompoundTag d = domain.getPersistentData();
-			if (entity.getStringUUID().equals(d.getString("ownerUUID"))) continue;
-			if (d.getBoolean("isExpanding") || d.getBoolean("isPostLines")
-					|| d.getBoolean("isActive") || d.getBoolean("isClashing")) {
+				: net.efkrdnz.jjkstrongest.domain.DomainRegistry.voidsIn(sl)) {
+			if (!domain.isAlive()) continue;
+			if (entity.getStringUUID().equals(domain.getPersistentData().getString("ownerUUID"))) continue;
+			if (domain.position().distanceToSqr(entity.position()) > 140.0 * 140.0) continue;
+			// any phase short of shutting down is a threat worth answering
+			if (domain.getPhase() != net.efkrdnz.jjkstrongest.domain.DomainPhase.COLLAPSING) {
 				deployDomain(world, entity, mob);
 				return;
 			}

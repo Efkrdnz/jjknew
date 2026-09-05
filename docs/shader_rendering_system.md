@@ -37,7 +37,8 @@ There are two different shader systems in play:
 |---|---|
 | Custom shader registration and uniform helpers | `E:\minecraft mods\jujutsu kaisen 1.21.1\src\main\java\net\efkrdnz\jjkstrongest\client\JjkShaderManager.java` |
 | Entity renderer registration | `E:\minecraft mods\jujutsu kaisen 1.21.1\src\main\java\net\efkrdnz\jjkstrongest\init\JjkStrongestModEntityRenderers.java` |
-| First-person render hook | `E:\minecraft mods\jujutsu kaisen 1.21.1\src\main\java\net\efkrdnz\jjkstrongest\clientenderer\RedFirstPersonRenderHook.java` |
+| First-person render hook | `E:\minecraft mods\jujutsu kaisen 1.21.1\src\main\java\net\efkrdnz\jjkstrongest\client
+enderer\RedFirstPersonRenderHook.java` |
 | Dismantle slash renderer | `E:\minecraft mods\jujutsu kaisen 1.21.1\src\main\java\net\efkrdnz\jjkstrongest\client\renderer\DismantleProjectileRenderer.java` |
 | Dismantle travel renderer | `E:\minecraft mods\jujutsu kaisen 1.21.1\src\main\java\net\efkrdnz\jjkstrongest\client\renderer\DismantleTravelRenderer.java` |
 | Hollow Purple renderer | `E:\minecraft mods\jujutsu kaisen 1.21.1\src\main\java\net\efkrdnz\jjkstrongest\client\renderer\HollowPurpleBigRenderer.java` |
@@ -45,8 +46,10 @@ There are two different shader systems in play:
 | Unlimited Void entity renderer | `E:\minecraft mods\jujutsu kaisen 1.21.1\src\main\java\net\efkrdnz\jjkstrongest\client\renderer\DomainUVRenderer.java` |
 | Flame Arrow explosion renderer | `E:\minecraft mods\jujutsu kaisen 1.21.1\src\main\java\net\efkrdnz\jjkstrongest\client\renderer\FlameArrowExplosionRenderer.java` |
 | Fuga domain explosion renderer | `E:\minecraft mods\jujutsu kaisen 1.21.1\src\main\java\net\efkrdnz\jjkstrongest\client\renderer\FugaDomainExplosionRenderer.java` |
-| Black Flash lightning world renderer | `E:\minecraft mods\jujutsu kaisen 1.21.1\src\main\java\net\efkrdnz\jjkstrongest\clientenderer\BlackFlashLightningClientRenderer.java` |
-| Unlimited Void line world renderer | `E:\minecraft mods\jujutsu kaisen 1.21.1\src\main\java\net\efkrdnz\jjkstrongest\clientenderer\DomainUVLinesClientRenderer.java` |
+| Black Flash lightning world renderer | `E:\minecraft mods\jujutsu kaisen 1.21.1\src\main\java\net\efkrdnz\jjkstrongest\client
+enderer\BlackFlashLightningClientRenderer.java` |
+| Unlimited Void line world renderer | `E:\minecraft mods\jujutsu kaisen 1.21.1\src\main\java\net\efkrdnz\jjkstrongest\client
+enderer\DomainUVLinesClientRenderer.java` |
 | Information Overload overlay renderer | `E:\minecraft mods\jujutsu kaisen 1.21.1\src\main\java\net\efkrdnz\jjkstrongest\InformationOverloadDebugLinesClientRenderer.java` |
 | Cleave post shader loader | `E:\minecraft mods\jujutsu kaisen 1.21.1\src\main\java\net\efkrdnz\jjkstrongest\procedures\CleaveDistortionShaderProcedure.java` |
 | Impact frame post shader loader | `E:\minecraft mods\jujutsu kaisen 1.21.1\src\main\java\net\efkrdnz\jjkstrongest\procedures\ImpactFrameShaderProcedure.java` |
@@ -147,10 +150,15 @@ private static RenderType makeRenderType(String name, Supplier<ShaderInstance> s
                     RenderSystem.defaultBlendFunc();
                 }
             ))
+            .setOutputState(new RenderStateShard.OutputStateShard("main_target", () -> {}, () -> {}))
             .createCompositeState(true)
     );
 }
 ```
+
+Note both factories use `WriteMaskStateShard(true, false)` — colour writes only, no
+depth. A surface that has to occlude the world (the domain shell) needs a third
+factory with `(true, true)`; see `makeDomainShellRenderType`.
 
 The additive glow render type:
 
@@ -470,7 +478,8 @@ The important idea is that every line segment is actually a camera-facing rectan
 
 First-person effects are handled by:
 
-`E:\minecraft mods\jujutsu kaisen 1.21.1\src\main\java\net\efkrdnz\jjkstrongest\clientenderer\RedFirstPersonRenderHook.java`
+`E:\minecraft mods\jujutsu kaisen 1.21.1\src\main\java\net\efkrdnz\jjkstrongest\client
+enderer\RedFirstPersonRenderHook.java`
 
 It subscribes to `RenderHandEvent`:
 
@@ -552,19 +561,22 @@ Use this style when the effect is UI/screen-space, not attached to a world entit
 
 Post shaders live under:
 
-`E:\minecraft mods\jujutsu kaisen 1.21.1\src\main\resources\assets\minecraft\shaders\post`
+`src/main/resources/assets/jjk_strongest/shaders/post`
 
 and:
 
-`E:\minecraft mods\jujutsu kaisen 1.21.1\src\main\resources\assets\minecraft\shaders\program`
+`src/main/resources/assets/jjk_strongest/shaders/program`
+
+There is no `assets/minecraft` directory in this repository. Every shader asset —
+core, post and program alike — sits in the `jjk_strongest` namespace.
 
 The mod has three main post shader loaders:
 
 | Loader | Post JSON | State |
 |---|---|---|
-| `CleaveDistortionShaderProcedure` | `assets/minecraft/shaders/post/cleave_distortion.json` | `CleaveDistortionStateProcedure.INSTANCE` |
-| `ImpactFrameShaderProcedure` | `assets/minecraft/shaders/post/impact_charged.json` | `ImpactFrameStateProcedure.INSTANCE` |
-| `BlackFlashShaderProcedure` | `assets/minecraft/shaders/post/blackflash_shatter.json` | `BlackFlashShaderStateProcedure.INSTANCE` |
+| `CleaveDistortionShaderProcedure` | `assets/jjk_strongest/shaders/post/cleave_distortion.json` | `CleaveDistortionStateProcedure.INSTANCE` |
+| `ImpactFrameShaderProcedure` | `assets/jjk_strongest/shaders/post/impact_charged.json` | `ImpactFrameStateProcedure.INSTANCE` |
+| `BlackFlashShaderProcedure` | `assets/jjk_strongest/shaders/post/blackflash_shatter.json` | `BlackFlashShaderStateProcedure.INSTANCE` |
 
 Post shader loading pattern:
 
@@ -624,7 +636,7 @@ for (PostPass pass : passes) {
 
 ### Post JSON Example
 
-`assets/minecraft/shaders/post/cleave_distortion.json`:
+`assets/jjk_strongest/shaders/post/cleave_distortion.json`:
 
 ```json
 {
@@ -653,7 +665,7 @@ for (PostPass pass : passes) {
 
 The matching program JSON is:
 
-`assets/minecraft/shaders/program/cleave_distortion.json`
+`assets/jjk_strongest/shaders/program/cleave_distortion.json`
 
 It references:
 
@@ -702,10 +714,10 @@ new ResourceLocation("minecraft", "shaders/post/blackflash_shatter.json")
 requires:
 
 ```text
-assets/minecraft/shaders/post/blackflash_shatter.json
-assets/minecraft/shaders/program/blackflash_shatter.json
-assets/minecraft/shaders/program/blackflash_shatter.fsh
-assets/minecraft/shaders/program/blackflash_shatter.vsh
+assets/jjk_strongest/shaders/post/blackflash_shatter.json
+assets/jjk_strongest/shaders/program/blackflash_shatter.json
+assets/jjk_strongest/shaders/program/blackflash_shatter.fsh
+assets/jjk_strongest/shaders/program/blackflash_shatter.vsh
 ```
 
 Note: this project has `blackflash_shatter.json` and `.fsh`, but no custom `.vsh` file beside it. Minecraft can use built-in/default expectations depending on the program declaration. For clean portability, include an explicit `.vsh`.
@@ -743,9 +755,12 @@ Note: this project has `blackflash_shatter.json` and `.fsh`, but no custom `.vsh
 | `void_brush.json` | Unlimited Void white brush shader declaration |
 | `void_rift.json` | Unlimited Void rift shader declaration |
 
-### Core shader source under `assets/minecraft/shaders/core`
+### Core shader source under `assets/jjk_strongest/shaders/core`
 
-These are duplicated or fallback shader sources used by Minecraft namespace shader loading:
+Each declaration above is paired with its own `.vsh`/`.fsh`. An older revision of this
+document listed these under `assets/minecraft` as "duplicated or fallback" sources;
+that is no longer true and the duplicates are gone — see the NeoForge notes at the end
+for why the namespace moved.
 
 | Pair | Purpose |
 |---|---|
@@ -767,7 +782,7 @@ These are duplicated or fallback shader sources used by Minecraft namespace shad
 | `void_brush.vsh` / `void_brush.fsh` | Void brush shader source |
 | `void_rift.vsh` / `void_rift.fsh` | Void rift shader source |
 
-### Post shaders under `assets/minecraft/shaders/post`
+### Post shaders under `assets/jjk_strongest/shaders/post`
 
 | File | Purpose |
 |---|---|
@@ -776,7 +791,7 @@ These are duplicated or fallback shader sources used by Minecraft namespace shad
 | `impact_charged.json` | Impact-frame post chain |
 | `impact_darken.json` | Dark impact post chain |
 
-### Post shader programs under `assets/minecraft/shaders/program`
+### Post shader programs under `assets/jjk_strongest/shaders/program`
 
 | File | Purpose |
 |---|---|

@@ -159,7 +159,7 @@ public class SukunaNPCAIProcedure {
 		}
 
 		// ── Pre-emptive domain counter ────────────────────────────────────────────
-		// Scan for an Unlimited Void that is still forming (isExpanding / isPostLines).
+		// Scan for an Unlimited Void that is still standing.
 		// If found, Sukuna deploys Malevolent Shrine before the sure-hit fires.
 		checkForHostileDomain(world, entity, mob);
 
@@ -895,8 +895,8 @@ public class SukunaNPCAIProcedure {
 	// PRE-EMPTIVE DOMAIN COUNTER
 	// ═════════════════════════════════════════════════════════════════════════
 	/**
-	 * Scans for a hostile Unlimited Void that is still forming (isExpanding or
-	 * isPostLines phase). If found, Sukuna immediately deploys Malevolent Shrine
+	 * Scans for a hostile Unlimited Void that has not started shutting down. If
+	 * found, Sukuna immediately deploys Malevolent Shrine
 	 * so the two domains clash before the sure-hit wave of Unlimited Void fires.
 	 * CD_SHRINE is set to 9999 so the normal ability loop won't double-fire.
 	 */
@@ -907,14 +907,13 @@ public class SukunaNPCAIProcedure {
 		if (entity.getPersistentData().getInt(AI_BURNOUT_TIMER) > 0) return;
 		// don't fire if Sukuna already has an active domain
 		if (DomainCollapseManualProcedure.hasActiveDomain(world, entity)) return;
-		AABB scanBox = AABB.ofSize(entity.position(), 140, 140, 140);
-		for (DomainUVEntity domain : sl.getEntitiesOfClass(DomainUVEntity.class, scanBox, e -> true)) {
-			CompoundTag dData = domain.getPersistentData();
+		for (DomainUVEntity domain : net.efkrdnz.jjkstrongest.domain.DomainRegistry.voidsIn(sl)) {
+			if (!domain.isAlive()) continue;
 			// ignore domains Sukuna himself owns
-			if (entity.getStringUUID().equals(dData.getString("ownerUUID"))) continue;
-			// react during isExpanding (first 40 ticks) or isPostLines — before isActive
-			if (dData.getBoolean("isExpanding") || dData.getBoolean("isPostLines")
-					|| dData.getBoolean("isActive") || dData.getBoolean("isClashing")) {
+			if (entity.getStringUUID().equals(domain.getPersistentData().getString("ownerUUID"))) continue;
+			if (domain.position().distanceToSqr(entity.position()) > 140.0 * 140.0) continue;
+			// react while it is still forming, and go on reacting once it is open
+			if (domain.getPhase() != net.efkrdnz.jjkstrongest.domain.DomainPhase.COLLAPSING) {
 				MalevolentShrineSummonProcedure.execute(world, entity);
 				playSound(world, entity, "jjk_strongest:sukuna_domain_act", 1.0f, 1.0f);
 				// lock the CD so the normal shrine check won't re-fire
