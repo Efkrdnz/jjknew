@@ -55,6 +55,14 @@ public class DomainUVEntity extends PathfinderMob implements DomainSource {
 	// even before the per-cell grid arrives.
 	private static final EntityDataAccessor<Float> SHELL_INTEGRITY = SynchedEntityData.defineId(DomainUVEntity.class, EntityDataSerializers.FLOAT);
 	private static final EntityDataAccessor<Integer> BREACHES = SynchedEntityData.defineId(DomainUVEntity.class, EntityDataSerializers.INT);
+	/**
+	 * The caster, synced.
+	 *
+	 * <p>Persistent data never crosses to the client, so anything client-side asking who
+	 * cast this domain got an empty string and silently took the "not the owner" branch —
+	 * which is why the shrine's screen shake hit its own caster as hard as everyone else.
+	 */
+	private static final EntityDataAccessor<String> OWNER = SynchedEntityData.defineId(DomainUVEntity.class, EntityDataSerializers.STRING);
 
 	private DomainShell shell;
 
@@ -83,6 +91,7 @@ public class DomainUVEntity extends PathfinderMob implements DomainSource {
 		builder.define(CLASHING, false);
 		builder.define(SHELL_INTEGRITY, 1.0f);
 		builder.define(BREACHES, 0);
+		builder.define(OWNER, "");
 	}
 
 	/**
@@ -105,7 +114,25 @@ public class DomainUVEntity extends PathfinderMob implements DomainSource {
 
 	@Override
 	public String domainOwnerUUID() {
-		return this.getPersistentData().getString("ownerUUID");
+		String synced = this.entityData.get(OWNER);
+		// Persistent data is still the server's own record, and it is written first.
+		return synced.isEmpty() ? this.getPersistentData().getString("ownerUUID") : synced;
+	}
+
+	public void setDomainOwnerUUID(String ownerUUID) {
+		String value = ownerUUID == null ? "" : ownerUUID;
+		this.entityData.set(OWNER, value);
+		this.getPersistentData().putString("ownerUUID", value);
+	}
+
+	@Override
+	public DomainPhase phase() {
+		return getPhase();
+	}
+
+	@Override
+	public float phaseProgress() {
+		return getPhaseProgress();
 	}
 
 	/** The synced target, not the definition's figure: this is what the shell is growing to. */
@@ -281,6 +308,7 @@ public class DomainUVEntity extends PathfinderMob implements DomainSource {
 		compound.putFloat("floorOffset", getFloorOffset());
 		compound.putInt("shellSeed", getShellSeed());
 		compound.putFloat("clashHP", getClashHP());
+		compound.putString("ownerUUID", domainOwnerUUID());
 		if (this.shell != null)
 			compound.put("shell", this.shell.save());
 	}
@@ -300,6 +328,8 @@ public class DomainUVEntity extends PathfinderMob implements DomainSource {
 			setFloorOffset(compound.getFloat("floorOffset"));
 		if (compound.contains("shellSeed"))
 			setShellSeed(compound.getInt("shellSeed"));
+		if (compound.contains("ownerUUID"))
+			setDomainOwnerUUID(compound.getString("ownerUUID"));
 		if (compound.contains("clashHP"))
 			setClashHP(compound.getFloat("clashHP"));
 		if (compound.contains("shell")) {

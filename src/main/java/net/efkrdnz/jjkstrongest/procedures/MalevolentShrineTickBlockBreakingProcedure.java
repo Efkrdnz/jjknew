@@ -6,7 +6,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -15,6 +14,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.efkrdnz.jjkstrongest.domain.DomainRegistry;
 import net.efkrdnz.jjkstrongest.domain.DomainSource;
 import net.efkrdnz.jjkstrongest.domain.DomainSphere;
+import net.efkrdnz.jjkstrongest.entity.MalevolentShrineEntity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,36 +31,37 @@ import java.util.List;
  *
  * <p>Blocks are written directly now, with client updates only: neighbour notification
  * across a volume this size sets off gravity and redstone cascades for no benefit.
+ *
+ * <p>It also kept the shrine's whole lifecycle in three untracked pieces of persistent
+ * data — a {@code life} counter, an {@code active} flag and a {@code domainBBRadius} —
+ * with no logical-side guard around any of them, so both sides ran the arithmetic and the
+ * client's copy happened to agree with the server's. That accident was load-bearing: the
+ * screen shake read {@code active} client-side and there was no other way for it to know.
+ * The lifecycle is synced entity data on the shrine now, and this file only carves.
  */
 public class MalevolentShrineTickBlockBreakingProcedure {
 
 	private static final int SET_FLAGS = Block.UPDATE_CLIENTS;
 
 	public static void execute(LevelAccessor world, double x, double y, double z, Entity entity) {
-		if (entity == null)
+		if (!(entity instanceof MalevolentShrineEntity shrine))
 			return;
-
-		double life = entity.getPersistentData().getDouble("life") + 1;
-		entity.getPersistentData().putDouble("life", life);
-
-		if (life == 1 && world instanceof Level level) {
-			if (!level.isClientSide())
-				level.playSound(null, BlockPos.containing(x, y, z), BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("jjk_strongest:sukuna_domain_ost")), SoundSource.AMBIENT, 1, 1);
-			else
-				level.playLocalSound(x, y, z, BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("jjk_strongest:sukuna_domain_ost")), SoundSource.AMBIENT, 1, 1, false);
+		// One sound, played once, from the side that can broadcast it. The old pair of
+		// branches played it server-side to everyone nearby *and* locally on each of those
+		// same clients, so anyone in earshot heard it twice.
+		if (world instanceof ServerLevel serverLevel && !shrine.getPersistentData().getBoolean("openingSoundPlayed")) {
+			shrine.getPersistentData().putBoolean("openingSoundPlayed", true);
+			serverLevel.playSound(null, BlockPos.containing(x, y, z), BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("jjk_strongest:sukuna_domain_ost")), SoundSource.AMBIENT, 1, 1);
 		}
-		if (life == 60)
-			entity.getPersistentData().putBoolean("active", true);
 
-		if (life <= 60 || life % 4 != 0)
-			return;
 		if (!(world instanceof ServerLevel level))
 			return;
-
-		double previousRadius = entity.getPersistentData().getDouble("domainBBRadius");
-		double radius = previousRadius + 1;
-		entity.getPersistentData().putDouble("domainBBRadius", radius);
-		carve(level, x, y, z, (int) radius, (int) previousRadius);
+		int radius = (int) shrine.getCarveRadius();
+		int previousRadius = shrine.getPersistentData().getInt("carvedTo");
+		if (radius <= previousRadius)
+			return;
+		shrine.getPersistentData().putInt("carvedTo", radius);
+		carve(level, x, y, z, radius, previousRadius);
 	}
 
 	private static void carve(ServerLevel level, double x, double y, double z, int radius, int previousRadius) {

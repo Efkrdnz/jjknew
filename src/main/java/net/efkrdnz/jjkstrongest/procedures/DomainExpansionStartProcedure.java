@@ -42,7 +42,7 @@ public class DomainExpansionStartProcedure {
 		// Server-side bookkeeping the client has no business knowing.
 		CompoundTag data = domain.getPersistentData();
 		data.putInt("domainType", domainType);
-		data.putString("ownerUUID", caster.getStringUUID());
+		domain.setDomainOwnerUUID(caster.getStringUUID());
 		data.putInt("duration", DURATION_TICKS);
 		data.putInt("expansionTick", 0);
 

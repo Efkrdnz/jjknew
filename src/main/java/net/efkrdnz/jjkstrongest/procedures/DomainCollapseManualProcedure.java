@@ -38,7 +38,7 @@ public class DomainCollapseManualProcedure {
 		}
 		MalevolentShrineEntity shrine = DomainRegistry.shrineByOwner(level, owner);
 		if (shrine != null)
-			shrine.getPersistentData().putInt("domainLifetimeTicks", 600);
+			MalevolentShrineTickProcedure.beginCollapse(shrine);
 	}
 
 	/** Closes the nearest domain to a position, whoever owns it. */
@@ -62,6 +62,6 @@ public class DomainCollapseManualProcedure {
 			}
 		}
 		if (nearest != null)
-			nearest.getPersistentData().putInt("domainLifetimeTicks", 600);
+			MalevolentShrineTickProcedure.beginCollapse(nearest);
 	}
 }

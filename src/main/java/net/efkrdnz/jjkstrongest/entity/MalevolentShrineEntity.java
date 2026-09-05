@@ -25,6 +25,7 @@ import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 
 import net.efkrdnz.jjkstrongest.domain.DomainDefinition;
+import net.efkrdnz.jjkstrongest.domain.DomainPhase;
 import net.efkrdnz.jjkstrongest.domain.DomainSource;
 import net.efkrdnz.jjkstrongest.domain.DomainSphere;
 import net.efkrdnz.jjkstrongest.init.JjkStrongestModEntities;
@@ -35,6 +36,28 @@ public class MalevolentShrineEntity extends PathfinderMob implements DomainSourc
 	// data never leaves the server.
 	private static final EntityDataAccessor<Float> CLASH_HP = SynchedEntityData.defineId(MalevolentShrineEntity.class, EntityDataSerializers.FLOAT);
 	private static final EntityDataAccessor<Boolean> CLASHING = SynchedEntityData.defineId(MalevolentShrineEntity.class, EntityDataSerializers.BOOLEAN);
+	/**
+	 * The lifecycle, synced, exactly as the closed domain carries it.
+	 *
+	 * <p>What this replaces: a {@code life} counter and an {@code active} boolean in
+	 * persistent data, which never crosses to the client. Everything client-side that
+	 * needed to know whether the shrine had opened — the screen shake, most of all — only
+	 * worked because the procedure keeping those counters had no logical-side guard and so
+	 * ran the same arithmetic twice, once per side, and happened to agree. Any divergence,
+	 * a lagged tick or a reload, and the two sides silently disagreed.
+	 */
+	private static final EntityDataAccessor<Integer> PHASE = SynchedEntityData.defineId(MalevolentShrineEntity.class, EntityDataSerializers.INT);
+	private static final EntityDataAccessor<Float> PHASE_PROGRESS = SynchedEntityData.defineId(MalevolentShrineEntity.class, EntityDataSerializers.FLOAT);
+	/** How far the ground has been eaten away, in blocks. Was {@code domainBBRadius}. */
+	private static final EntityDataAccessor<Float> CARVE_RADIUS = SynchedEntityData.defineId(MalevolentShrineEntity.class, EntityDataSerializers.FLOAT);
+	/**
+	 * The caster, synced.
+	 *
+	 * <p>Persistent data never crosses to the client, so anything client-side asking who
+	 * cast this domain got an empty string and silently took the "not the owner" branch —
+	 * which is why the shrine's screen shake hit its own caster as hard as everyone else.
+	 */
+	private static final EntityDataAccessor<String> OWNER = SynchedEntityData.defineId(MalevolentShrineEntity.class, EntityDataSerializers.STRING);
 
 	public MalevolentShrineEntity(EntityType<MalevolentShrineEntity> type, Level world) {
 		super(type, world);
@@ -49,6 +72,36 @@ public class MalevolentShrineEntity extends PathfinderMob implements DomainSourc
 		super.defineSynchedData(builder);
 		builder.define(CLASH_HP, 100.0f);
 		builder.define(CLASHING, false);
+		builder.define(PHASE, DomainPhase.EXPANDING.ordinal());
+		builder.define(PHASE_PROGRESS, 0.0f);
+		builder.define(CARVE_RADIUS, 0.0f);
+		builder.define(OWNER, "");
+	}
+
+	@Override
+	public DomainPhase phase() {
+		return DomainPhase.byOrdinal(this.entityData.get(PHASE));
+	}
+
+	public void setPhase(DomainPhase phase) {
+		this.entityData.set(PHASE, phase.ordinal());
+	}
+
+	@Override
+	public float phaseProgress() {
+		return this.entityData.get(PHASE_PROGRESS);
+	}
+
+	public void setPhaseProgress(float progress) {
+		this.entityData.set(PHASE_PROGRESS, Math.max(0.0f, Math.min(1.0f, progress)));
+	}
+
+	public float getCarveRadius() {
+		return this.entityData.get(CARVE_RADIUS);
+	}
+
+	public void setCarveRadius(float radius) {
+		this.entityData.set(CARVE_RADIUS, Math.max(0.0f, radius));
 	}
 
 	/** How far the shrine's slashes and damage reach. Matches its tick procedure's radius. */
@@ -62,12 +115,20 @@ public class MalevolentShrineEntity extends PathfinderMob implements DomainSourc
 
 	@Override
 	public DomainSphere volume() {
-		return DomainSphere.openField(this.position(), FIELD_RADIUS);
+		return DomainSphere.openField(this.position(), FIELD_RADIUS, phase(), phaseProgress());
 	}
 
 	@Override
 	public String domainOwnerUUID() {
-		return this.getPersistentData().getString("ownerUUID");
+		String synced = this.entityData.get(OWNER);
+		// Persistent data is still the server's own record, and it is written first.
+		return synced.isEmpty() ? this.getPersistentData().getString("ownerUUID") : synced;
+	}
+
+	public void setDomainOwnerUUID(String ownerUUID) {
+		String value = ownerUUID == null ? "" : ownerUUID;
+		this.entityData.set(OWNER, value);
+		this.getPersistentData().putString("ownerUUID", value);
 	}
 
 	public float getClashHP() {
@@ -150,13 +211,16 @@ public class MalevolentShrineEntity extends PathfinderMob implements DomainSourc
 		if (this.getPersistentData().contains("destructionProgress")) {
 			compound.putInt("destructionProgress", this.getPersistentData().getInt("destructionProgress"));
 		}
+		compound.putInt("phase", phase().ordinal());
+		compound.putFloat("phaseProgress", phaseProgress());
+		compound.putFloat("carveRadius", getCarveRadius());
 	}
 
 	@Override
 	public void readAdditionalSaveData(CompoundTag compound) {
 		super.readAdditionalSaveData(compound);
 		if (compound.contains("ownerUUID")) {
-			this.getPersistentData().putString("ownerUUID", compound.getString("ownerUUID"));
+			setDomainOwnerUUID(compound.getString("ownerUUID"));
 		}
 		if (compound.contains("domainCastY")) {
 			this.getPersistentData().putDouble("domainCastY", compound.getDouble("domainCastY"));
@@ -167,6 +231,12 @@ public class MalevolentShrineEntity extends PathfinderMob implements DomainSourc
 		if (compound.contains("destructionProgress")) {
 			this.getPersistentData().putInt("destructionProgress", compound.getInt("destructionProgress"));
 		}
+		if (compound.contains("phase"))
+			setPhase(DomainPhase.byOrdinal(compound.getInt("phase")));
+		if (compound.contains("phaseProgress"))
+			setPhaseProgress(compound.getFloat("phaseProgress"));
+		if (compound.contains("carveRadius"))
+			setCarveRadius(compound.getFloat("carveRadius"));
 	}
 
 	@Override

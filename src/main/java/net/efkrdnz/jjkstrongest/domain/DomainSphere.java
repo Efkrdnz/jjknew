@@ -23,7 +23,18 @@ public record DomainSphere(Vec3 center, double radius, double floorY, DomainPhas
 	 * has no interior to stand in — it just covers a volume.
 	 */
 	public static DomainSphere openField(Vec3 center, double radius) {
-		return new DomainSphere(center, radius, Double.NEGATIVE_INFINITY, DomainPhase.ACTIVE, 1.0f);
+		return openField(center, radius, DomainPhase.ACTIVE, 1.0f);
+	}
+
+	/**
+	 * An open field that knows where it is in its life.
+	 *
+	 * <p>The single-argument form reported {@code ACTIVE} unconditionally, which was true
+	 * only because open domains had no phases. They do now, and code that asks a domain
+	 * what phase it is in has to get the same answer whichever kind it is holding.
+	 */
+	public static DomainSphere openField(Vec3 center, double radius, DomainPhase phase, float progress) {
+		return new DomainSphere(center, radius, Double.NEGATIVE_INFINITY, phase, progress);
 	}
 
 	public boolean contains(double x, double y, double z) {

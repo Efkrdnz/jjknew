@@ -27,8 +27,10 @@ public class MalevolentShrineTickingEventProcedure {
 		if (entity == null)
 			return;
 		if (entity instanceof MalevolentShrineEntity) {
-			MalevolentShrineTickBlockBreakingProcedure.execute(world, x, y, z, entity);
+			// Lifecycle first, then the carve: the carve reads the radius the phase machine
+			// sets, so running it first would always work a tick behind.
 			MalevolentShrineTickProcedure.execute(entity.level(), entity.getX(), entity.getY(), entity.getZ(), entity);
+			MalevolentShrineTickBlockBreakingProcedure.execute(world, x, y, z, entity);
 		}
 	}
 }

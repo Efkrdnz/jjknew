@@ -38,7 +38,7 @@ public class FugaDomainExplosionExecuteProcedure {
 				return;
 			data.putBoolean("fugaTriggered", true);
 			executeFugaExplosion(serverLevel, shrineEntity, entity);
-			data.putInt("domainLifetimeTicks", 600); // collapses next tick
+			MalevolentShrineTickProcedure.beginCollapse(shrineEntity);
 			return;
 		}
 	}

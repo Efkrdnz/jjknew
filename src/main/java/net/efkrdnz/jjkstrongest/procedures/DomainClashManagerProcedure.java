@@ -122,8 +122,11 @@ public class DomainClashManagerProcedure {
 		float hp = (data.contains("shrineClashHP") ? data.getFloat("shrineClashHP") : SHRINE_HOLD_POOL) - amount;
 		data.putFloat("shrineClashHP", hp);
 		shrine.setClashHP(Math.max(0f, hp / SHRINE_HOLD_POOL * MAX_CLASH_HP));
+		// The shrine has no barrier to break, so this is how it loses: its caster is worn
+		// down until they cannot hold it. Collapsing it is a phase change now, not a
+		// lifetime counter set to a number the tick procedure used to compare against.
 		if (hp <= 0f)
-			data.putInt("domainLifetimeTicks", 600);
+			MalevolentShrineTickProcedure.beginCollapse(shrine);
 	}
 
 	/**
@@ -174,12 +177,17 @@ public class DomainClashManagerProcedure {
 			DomainUVEntityTickProcedure.beginCollapse(uv);
 	}
 
-	// collapse shrine — handled by MalevolentShrineTickProcedure
+	// collapse shrine — the fade is driven by MalevolentShrineTickProcedure's COLLAPSING
+	// phase, exactly as collapseUV above hands off to the Void's
 	private static void collapseShrine(Entity shrineEntity) {
-		shrineEntity.getPersistentData().putInt("domainLifetimeTicks", 600);
 		shrineEntity.getPersistentData().putBoolean("isClashing", false);
 		shrineEntity.getPersistentData().remove("shrineClashHP");
 		setSyncedClashing(shrineEntity, false);
+		// This used to write domainLifetimeTicks = 600 and rely on the tick procedure
+		// noticing it had run out — which only worked while 600 happened to be the number
+		// that procedure compared against.
+		if (shrineEntity instanceof MalevolentShrineEntity shrine)
+			MalevolentShrineTickProcedure.beginCollapse(shrine);
 	}
 
 	// winner — clear clash flag, keep remaining hp in case of future clash

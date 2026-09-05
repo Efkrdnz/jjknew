@@ -26,8 +26,8 @@ public class MalevolentShrineSummonProcedure {
 		if (world instanceof ServerLevel serverLevel) {
 			MalevolentShrineEntity domain = JjkStrongestModEntities.MALEVOLENT_SHRINE.get().spawn(serverLevel, BlockPos.containing(spawnX, spawnY, spawnZ), MobSpawnType.MOB_SUMMONED);
 			if (domain != null) {
-				// store owner uuid
-				domain.getPersistentData().putString("ownerUUID", player.getStringUUID());
+				// store owner uuid — synced, because the client needs it too
+				domain.setDomainOwnerUUID(player.getStringUUID());
 				// store cast Y level for block destruction reference
 				domain.getPersistentData().putDouble("domainCastY", spawnY);
 				// initialize lifetime counter (20 seconds = 400 ticks)

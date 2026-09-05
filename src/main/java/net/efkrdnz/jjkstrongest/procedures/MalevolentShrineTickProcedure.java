@@ -22,15 +22,24 @@ import net.efkrdnz.jjkstrongest.domain.DomainOcclusion;
 import net.efkrdnz.jjkstrongest.domain.DomainShell;
 import net.efkrdnz.jjkstrongest.domain.DomainSphere;
 import net.efkrdnz.jjkstrongest.entity.DomainUVEntity;
+import net.efkrdnz.jjkstrongest.domain.DomainDefinition;
+import net.efkrdnz.jjkstrongest.domain.DomainPhase;
 import net.efkrdnz.jjkstrongest.entity.MalevolentShrineEntity;
 
 import java.util.UUID;
 import java.util.List;
 
 public class MalevolentShrineTickProcedure {
-	private static final int MAX_LIFETIME = 600;
-	private static final int ABSOLUTE_MAX_LIFETIME = 1200;
-	private static final int STARTUP_DELAY = 40;
+	/**
+	 * The shrine's mechanics, from the same table the Void's come from.
+	 *
+	 * <p>MAX_LIFETIME, ABSOLUTE_MAX_LIFETIME and STARTUP_DELAY used to live here as three
+	 * private constants, and the shrine had no phases at all: it counted ticks, crossed a
+	 * threshold, and started cutting. It runs the same four phases the closed domain does
+	 * now, off the same definition, so "what phase is this domain in" has one answer
+	 * whichever kind you are holding.
+	 */
+	private static final DomainDefinition DEFINITION = DomainDefinition.MALEVOLENT_SHRINE;
 	// Single source of truth for the shrine's reach, shared with its DomainSource volume.
 	private static final double RADIUS = MalevolentShrineEntity.FIELD_RADIUS;
 	private static final double RADIUS_SQ = RADIUS * RADIUS;
@@ -42,53 +51,105 @@ public class MalevolentShrineTickProcedure {
 	private static final float IMPACT_DAMAGE = 0.35f;
 
 	public static void execute(Level world, double x, double y, double z, Entity domainEntity) {
-		if (world == null || domainEntity == null || world.isClientSide())
+		if (world == null || !(domainEntity instanceof MalevolentShrineEntity shrine) || world.isClientSide())
 			return;
-		CompoundTag data = domainEntity.getPersistentData();
+		CompoundTag data = shrine.getPersistentData();
 		int absoluteTicks = data.getInt("domainAbsoluteTicks") + 1;
 		data.putInt("domainAbsoluteTicks", absoluteTicks);
-		if (absoluteTicks >= ABSOLUTE_MAX_LIFETIME) {
-			domainEntity.discard();
-			return;
-		}
+		if (absoluteTicks >= DEFINITION.maxLifetimeTicks() && shrine.phase() != DomainPhase.COLLAPSING)
+			beginCollapse(shrine);
+
 		boolean isClashing = data.getBoolean("isClashing");
 		if (isClashing) {
-			isClashing = reconcileClashState((ServerLevel) world, domainEntity, data);
+			isClashing = reconcileClashState((ServerLevel) world, shrine, data);
 		}
-		// freeze lifetime counter during clash
+
+		if (shrine.phase() == DomainPhase.COLLAPSING) {
+			tickCollapsing(shrine, data);
+			return;
+		}
+
+		// The clash freezes the shrine's life, exactly as it freezes the Void's.
 		if (!isClashing) {
-			int lifetimeTicks = data.getInt("domainLifetimeTicks");
-			lifetimeTicks++;
+			int lifetimeTicks = data.getInt("domainLifetimeTicks") + 1;
 			data.putInt("domainLifetimeTicks", lifetimeTicks);
-			// check natural collapse
-			if (lifetimeTicks >= MAX_LIFETIME) {
-				domainEntity.discard();
+			if (lifetimeTicks % OWNER_CHECK_INTERVAL == 0 && !validateOwner(world, data, x, y, z)) {
+				beginCollapse(shrine);
 				return;
 			}
-			// check owner every 20 ticks
-			if (lifetimeTicks % OWNER_CHECK_INTERVAL == 0) {
-				if (!validateOwner(world, data, x, y, z)) {
-					domainEntity.discard();
-					return;
-				}
-			}
+			if (!advancePhase(shrine, lifetimeTicks))
+				return;
 		}
-		int lifetimeTicks = data.getInt("domainLifetimeTicks");
-		// wait for startup regardless of clash state
-		if (lifetimeTicks < STARTUP_DELAY)
+
+		if (shrine.phase() != DomainPhase.ACTIVE)
 			return;
+
 		Entity owner = getOwner(world, data);
 		if (owner == null) {
-			domainEntity.discard();
+			beginCollapse(shrine);
 			return;
 		}
+		int lifetimeTicks = data.getInt("domainLifetimeTicks");
 		// slashes always fire — but filtered to exclude inside UV during clash
 		int slashCount = BASE_SLASH_COUNT + world.random.nextInt(SLASH_VARIANCE);
-		spawnSlashesViaPackets((ServerLevel) world, owner, x, y, z, slashCount, domainEntity, isClashing);
+		spawnSlashesViaPackets((ServerLevel) world, owner, x, y, z, slashCount, shrine, isClashing);
 		// damage every 4 ticks — also filtered during clash
 		if (lifetimeTicks % DAMAGE_INTERVAL == 0) {
-			damageEntitiesOptimized(world, owner, x, y, z, isClashing, domainEntity);
+			damageEntitiesOptimized(world, owner, x, y, z, isClashing, shrine);
 		}
+	}
+
+	/**
+	 * Walks the shrine through opening and running out.
+	 *
+	 * <p>The carve radius is set here and synced, rather than each side counting its own
+	 * ticks and hoping to agree.
+	 *
+	 * @return false if the shrine has nothing more to do this tick
+	 */
+	private static boolean advancePhase(MalevolentShrineEntity shrine, int lifetimeTicks) {
+		int expansion = Math.max(1, DEFINITION.expansionTicks());
+		if (lifetimeTicks <= expansion) {
+			shrine.setPhase(DomainPhase.EXPANDING);
+			shrine.setPhaseProgress((float) lifetimeTicks / expansion);
+			return false;
+		}
+		int active = lifetimeTicks - expansion;
+		if (active >= DEFINITION.durationTicks()) {
+			beginCollapse(shrine);
+			return false;
+		}
+		shrine.setPhase(DomainPhase.ACTIVE);
+		shrine.setPhaseProgress((float) active / Math.max(1, DEFINITION.durationTicks()));
+		// The ground opens once the domain is hostile and keeps creeping outward, one block
+		// every four ticks — the cadence the block-breaking pass has always run at. It used
+		// to be a separate counter maintained on both sides; it is set here and synced now.
+		if (active % 4 == 0)
+			shrine.setCarveRadius(shrine.getCarveRadius() + 1.0f);
+		return true;
+	}
+
+	/** Puts the shrine into its shutdown phase. Safe to call more than once. */
+	public static void beginCollapse(MalevolentShrineEntity shrine) {
+		if (shrine.phase() == DomainPhase.COLLAPSING)
+			return;
+		shrine.setPhase(DomainPhase.COLLAPSING);
+		shrine.setPhaseProgress(0.0f);
+		shrine.getPersistentData().putInt("collapseTick", 0);
+	}
+
+	/**
+	 * An open domain has no terrain to put back, so closing it is only a fade — but it is
+	 * a fade rather than the entity vanishing between one tick and the next, which is what
+	 * {@code discard()} straight out of the running state used to be.
+	 */
+	private static void tickCollapsing(MalevolentShrineEntity shrine, CompoundTag data) {
+		int tick = data.getInt("collapseTick") + 1;
+		data.putInt("collapseTick", tick);
+		int collapse = Math.max(1, DEFINITION.collapseTicks());
+		shrine.setPhaseProgress(Math.min(1.0f, (float) tick / collapse));
+		if (tick >= collapse)
+			shrine.discard();
 	}
 
 	private static boolean validateOwner(Level world, CompoundTag data, double x, double y, double z) {
@@ -124,7 +185,7 @@ public class MalevolentShrineTickProcedure {
 		return null;
 	}
 
-	private static boolean reconcileClashState(ServerLevel level, Entity domainEntity, CompoundTag data) {
+	private static boolean reconcileClashState(ServerLevel level, MalevolentShrineEntity domainEntity, CompoundTag data) {
 		String rivalUUIDStr = data.getString("rivalUUID");
 		boolean rivalAlive = false;
 		if (!rivalUUIDStr.isEmpty()) {

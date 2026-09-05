@@ -5,19 +5,17 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.bus.api.Event;
 
-import net.minecraft.world.phys.Vec3;
-import net.minecraft.world.phys.AABB;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.Entity;
 
+import net.efkrdnz.jjkstrongest.domain.DomainPhase;
 import net.efkrdnz.jjkstrongest.domain.DomainRegistry;
 import net.efkrdnz.jjkstrongest.entity.MalevolentShrineEntity;
 
 import javax.annotation.Nullable;
 
-import java.util.Comparator;
 
 @EventBusSubscriber
 public class ShrineScreenshakeProcedure {
@@ -35,28 +33,35 @@ public class ShrineScreenshakeProcedure {
 			return;
 		if (world.getLevelData().getGameTime() % 10 != 0)
 			return;
-		if (!(entity instanceof Player))
+		if (!(entity instanceof Player) || !(world instanceof Level level))
 			return;
-		AABB searchBox = AABB.ofSize(new Vec3(x, y, z), 200, 200, 200);
-		if (world.getEntitiesOfClass(MalevolentShrineEntity.class, searchBox, e -> true).isEmpty())
-			return;
-		// get nearest shrine
-		MalevolentShrineEntity nearestShrine = (MalevolentShrineEntity) world.getEntitiesOfClass(MalevolentShrineEntity.class, searchBox, e -> true).stream().min(Comparator.comparingDouble(e -> e.distanceToSqr(x, y, z))).orElse(null);
+		// Two 200-block entity scans per player, every ten ticks, for something the
+		// registry already has in a list.
+		MalevolentShrineEntity nearestShrine = null;
+		double bestSq = 100.0 * 100.0;
+		for (MalevolentShrineEntity shrine : DomainRegistry.shrinesIn(level)) {
+			double distSq = shrine.distanceToSqr(x, y, z);
+			if (distSq <= bestSq) {
+				bestSq = distSq;
+				nearestShrine = shrine;
+			}
+		}
 		if (nearestShrine == null)
 			return;
-		if (!nearestShrine.getPersistentData().getBoolean("active"))
+		// Read off synced entity data, not off an "active" flag in persistent data. That
+		// flag never crossed to the client; this ran client-side and only saw it because
+		// another procedure was re-deriving the same counter on this side in parallel.
+		if (nearestShrine.phase() != DomainPhase.ACTIVE)
 			return;
 		// suppress screenshake during clash if player is inside UV barrier
-		if (nearestShrine.getPersistentData().getBoolean("isClashing")) {
-			if (world instanceof Level level && DomainRegistry.isInside(level, x, y, z))
-				return;
-		}
-		String ownerUUID = nearestShrine.getPersistentData().getString("ownerUUID");
+		if (nearestShrine.isClashing() && DomainRegistry.isInside(level, x, y, z))
+			return;
+		String ownerUUID = nearestShrine.domainOwnerUUID();
 		boolean isOwner = entity.getStringUUID().equals(ownerUUID);
 		if (isOwner) {
-			TriggerScreenShakeProcedure.execute((Level) world, entity, 20, 1.0f);
+			TriggerScreenShakeProcedure.execute(level, entity, 20, 1.0f);
 		} else {
-			TriggerScreenShakeProcedure.execute((Level) world, entity, 20, 4.0f);
+			TriggerScreenShakeProcedure.execute(level, entity, 20, 4.0f);
 		}
 	}
 

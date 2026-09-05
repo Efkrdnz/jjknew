@@ -33,6 +33,19 @@ public interface DomainSource {
 	}
 
 	/**
+	 * Where this domain is in its life.
+	 *
+	 * <p>Both kinds run the same four phases now. The Shrine used to have none: it kept a
+	 * {@code life} counter and an {@code active} flag in persistent data, which never
+	 * leaves the server, and got away with it only because the procedure that maintained
+	 * them had no side guard and so re-simulated them on the client in parallel.
+	 */
+	DomainPhase phase();
+
+	/** How far through {@link #phase()} this domain is, 0..1. */
+	float phaseProgress();
+
+	/**
 	 * Whether this domain is still standing.
 	 *
 	 * <p>Declared rather than defaulted: both implementers are entities, so
