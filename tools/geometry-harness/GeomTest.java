@@ -198,6 +198,32 @@ public class GeomTest {
         check("but a block under it is genuinely outside",
               !room.contains(0, -2.0, 0), "contains() said inside below the floor");
 
+        System.out.println("\napplyFacePressure (two barriers meeting)");
+        // directionOf must be the exact inverse of cellFor, or a clash wears down a face
+        // pointing somewhere other than the rival.
+        int wrong = 0;
+        for (int cell = 0; cell < DomainShell.CELLS; cell++)
+            if (DomainShell.cellFor(DomainShell.directionOf(cell)) != cell) wrong++;
+        check("directionOf round-trips through cellFor for all 512 cells", wrong == 0, wrong + " cells disagreed");
+
+        DomainShell pressed2 = new DomainShell(VOID_SHELL);
+        Vec3 towardRival = new Vec3(1, 0, 0);
+        for (int i = 0; i < 400; i++) pressed2.applyFacePressure(towardRival, 1.0f, 0.5);
+        int facing = DomainShell.cellFor(towardRival);
+        int behind = DomainShell.cellFor(new Vec3(-1, 0, 0));
+        check("the face pointing at the rival is worn down",
+              pressed2.integrityAt(facing) < DomainShell.FULL * 0.5f, "integrity " + pressed2.integrityAt(facing));
+        check("...and the far side is untouched",
+              near(pressed2.integrityAt(behind), DomainShell.FULL, 1e-6), "integrity " + pressed2.integrityAt(behind));
+        check("a face breaches before the shell shatters",
+              pressed2.breachCount() > 0 && !pressed2.isShattered(),
+              "breaches=" + pressed2.breachCount() + " shattered=" + pressed2.isShattered());
+
+        DomainShell untouched = new DomainShell(VOID_SHELL);
+        untouched.applyFacePressure(new Vec3(0, 0, 0), 5.0f, 0.5);
+        check("a degenerate direction does nothing rather than NaN-ing the grid",
+              near(untouched.totalIntegrity(), 1.0f, 1e-6), "integrity " + untouched.totalIntegrity());
+
         System.out.println("\nDomainIntersect");
         DomainSphere uv = new DomainSphere(new Vec3(0,0,0), 30, -1000, DomainPhase.ACTIVE, 1f);
         DomainSphere shrineNear = DomainSphere.openField(new Vec3(20,0,0), 100);

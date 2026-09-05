@@ -6,7 +6,9 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.nbt.CompoundTag;
 
+import net.efkrdnz.jjkstrongest.domain.DomainIntersect;
 import net.efkrdnz.jjkstrongest.domain.DomainRegistry;
+import net.efkrdnz.jjkstrongest.domain.DomainSource;
 import net.efkrdnz.jjkstrongest.domain.DomainShell;
 import net.efkrdnz.jjkstrongest.domain.DomainSphere;
 import net.efkrdnz.jjkstrongest.entity.MalevolentShrineEntity;
@@ -26,6 +28,15 @@ public class DomainClashManagerProcedure {
 	public static final float SHRINE_HOLD_POOL = 60f;
 	// ticks with no rival detected before clash is considered truly over
 	public static final int CLASH_END_GRACE_TICKS = 40;
+	/**
+	 * What a rival barrier costs the cells pointing straight at it, each tick, at full
+	 * overlap. Tuned so a contact face gives way in about fifteen seconds — quicker than a
+	 * shrine takes to grind down a whole shell, because the damage is going into a patch
+	 * rather than being spread over five hundred cells.
+	 */
+	private static final float BARRIER_PRESSURE_PER_TICK = DomainShell.FULL / 300f;
+	/** Cosine of the contact face's half-angle. 0.5 is 60 degrees. */
+	private static final double BARRIER_FACE_CONE = 0.5;
 
 	public static void execute(LevelAccessor world, Entity uvEntity, Entity shrineEntity) {
 		if (world == null || uvEntity == null || shrineEntity == null)
@@ -93,6 +104,26 @@ public class DomainClashManagerProcedure {
 				return true;
 			}
 		}
+		// A rival barrier. This used to be missing entirely: the scan above only ever looked
+		// for shrines, so two Voids overlapped, both stayed up, and nothing happened.
+		if (uvEntity instanceof DomainUVEntity self && self.volume().isUsable()) {
+			for (DomainSource rival : DomainRegistry.closedIn(level)) {
+				if (rival == self || !rival.isAlive())
+					continue;
+				DomainSphere rivalSphere = rival.volume();
+				if (!rivalSphere.isUsable() || !rivalSphere.phase().isSealed())
+					continue;
+				if (!DomainIntersect.intersects(self.volume(), rivalSphere))
+					continue;
+				runBarrierClash(self, rivalSphere);
+				uvData.putInt("clashLostTicks", 0);
+				uvData.putString("rivalUUID", rival instanceof Entity e ? e.getStringUUID() : "");
+				uvData.putBoolean("isClashing", true);
+				setSyncedClashing(self, true);
+				return true;
+			}
+		}
+
 		// no shrine found this tick — use grace period before truly ending clash
 		if (uvData.getBoolean("isClashing")) {
 			int graceTicks = uvData.getInt("clashLostTicks") + 1;
@@ -105,6 +136,35 @@ public class DomainClashManagerProcedure {
 			return uvData.getBoolean("isClashing");
 		}
 		return false;
+	}
+
+	/**
+	 * Two barriers pressing on each other.
+	 *
+	 * <p>Only ever damages {@code self}, on the face pointing at the rival. Both domains
+	 * tick, so each runs this against the other and the exchange comes out symmetric —
+	 * doing both sides here would charge every pair twice.
+	 *
+	 * <p>Where a shrine wears a shell down evenly because it has no surface of its own,
+	 * two shells meet along a real contact plane. The face gives way first and the domain
+	 * fails inward from that side, which is a different shape of fight and a different
+	 * thing to watch.
+	 */
+	private static void runBarrierClash(DomainUVEntity self, DomainSphere rival) {
+		DomainShell shell = self.shell();
+		if (shell == null)
+			return;
+		DomainSphere mine = self.volume();
+		Vec3 toward = rival.center().subtract(mine.center());
+		// Deeper overlap presses harder. Normalised against the smaller of the two, so a
+		// domain half-swallowed by a bigger one is at full pressure rather than a fraction.
+		double reference = Math.max(1.0, Math.min(mine.radius(), rival.radius()));
+		double depth = Math.min(1.0, DomainIntersect.overlapDepth(mine, rival) / reference);
+		if (depth <= 0.0)
+			return;
+		shell.applyFacePressure(toward, (float) (BARRIER_PRESSURE_PER_TICK * depth), BARRIER_FACE_CONE);
+		self.setShellIntegrity(shell.totalIntegrity());
+		self.setClashHP(Math.max(0f, shell.totalIntegrity() * MAX_CLASH_HP));
 	}
 
 	/**

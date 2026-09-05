@@ -8,10 +8,18 @@ import net.neoforged.api.distmarker.Dist;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.Minecraft;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.phys.Vec3;
 
 import net.efkrdnz.jjkstrongest.domain.DomainRegistry;
+import net.efkrdnz.jjkstrongest.domain.DomainSource;
 import net.efkrdnz.jjkstrongest.entity.MalevolentShrineEntity;
 import net.efkrdnz.jjkstrongest.entity.DomainUVEntity;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Locale;
 
 @EventBusSubscriber(modid = "jjk_strongest", value = Dist.CLIENT)
 public class DomainClashHudOverlay {
@@ -39,26 +47,26 @@ public class DomainClashHudOverlay {
 		// The clash flag and both HP pools now come off the entities' synced data via
 		// the registry. This overlay could never draw before: it read
 		// getPersistentData() on the client, where that tag is always empty.
-		DomainUVEntity uvDomain = null;
-		for (DomainUVEntity uv : DomainRegistry.voidsIn(mc.level)) {
-			if (uv.isAlive() && uv.isClashing()) {
-				uvDomain = uv;
-				break;
-			}
-		}
-		MalevolentShrineEntity shrine = null;
-		for (MalevolentShrineEntity candidate : DomainRegistry.shrinesIn(mc.level)) {
-			if (candidate.isAlive() && candidate.isClashing()) {
-				shrine = candidate;
-				break;
-			}
-		}
-		if (uvDomain == null || shrine == null)
+		// Any two clashing domains, of whatever kind. This used to require one Void and one
+		// Shrine, so a Void-versus-Void clash — which the engine now runs — drew nothing at
+		// all, which is exactly the case you most want a readout for.
+		List<DomainSource> clashing = new ArrayList<>();
+		for (DomainUVEntity uv : DomainRegistry.voidsIn(mc.level))
+			if (uv.isAlive() && uv.isClashing())
+				clashing.add(uv);
+		for (MalevolentShrineEntity shrine : DomainRegistry.shrinesIn(mc.level))
+			if (shrine.isAlive() && shrine.isClashing())
+				clashing.add(shrine);
+		if (clashing.size() < 2)
 			return;
-		float uvHP = uvDomain.getClashHP();
-		float shrineHP = shrine.getClashHP();
-		float uvPct = Math.max(0f, Math.min(1f, uvHP / MAX_CLASH_HP));
-		float shrinePct = Math.max(0f, Math.min(1f, shrineHP / MAX_CLASH_HP));
+		// Nearest first, so the domain you are standing in is the one on the left.
+		Vec3 eye = mc.player.position();
+		clashing.sort(Comparator.comparingDouble(d -> d instanceof Entity e ? e.position().distanceToSqr(eye) : Double.MAX_VALUE));
+		DomainSource left = clashing.get(0);
+		DomainSource right = clashing.get(1);
+
+		float leftPct = Math.max(0f, Math.min(1f, clashHP(left) / MAX_CLASH_HP));
+		float rightPct = Math.max(0f, Math.min(1f, clashHP(right) / MAX_CLASH_HP));
 		GuiGraphics gui = event.getGuiGraphics();
 		int screenW = mc.getWindow().getGuiScaledWidth();
 		int screenH = mc.getWindow().getGuiScaledHeight();
@@ -67,16 +75,43 @@ public class DomainClashHudOverlay {
 		int panelH = (BAR_HEIGHT + BAR_PADDING) * 2 + BAR_PADDING + 20; // 20 = label row
 		int panelX = (screenW - panelW * 2 - 16) / 2;
 		int panelY = 12;
-		// uv panel (left)
-		renderDomainPanel(gui, panelX, panelY, panelW, panelH, uvPct, UV_BAR_COLOR, UV_BAR_BG, UV_BORDER_COLOR, "UNLIMITED VOID", (int) (uvPct * 100) + "%", false);
+		// nearest domain (left)
+		renderDomainPanel(gui, panelX, panelY, panelW, panelH, leftPct, barColor(left), barBackground(left), borderColor(left), label(left), (int) (leftPct * 100) + "%", false);
 		// vs label in the middle
 		int vsX = panelX + panelW + 4;
 		int vsY = panelY + panelH / 2 - 4;
 		gui.drawString(mc.font, "VS", vsX + 1, vsY, 0xAA888888, false);
 		gui.drawString(mc.font, "VS", vsX, vsY, 0xFFFFFFFF, false);
-		// shrine panel (right)
-		int shrineX = vsX + 14;
-		renderDomainPanel(gui, shrineX, panelY, panelW, panelH, shrinePct, SHRINE_BAR_COLOR, SHRINE_BAR_BG, SHRINE_BORDER_COLOR, "MALEVOLENT SHRINE", (int) (shrinePct * 100) + "%", true);
+		// its rival (right)
+		int rightX = vsX + 14;
+		renderDomainPanel(gui, rightX, panelY, panelW, panelH, rightPct, barColor(right), barBackground(right), borderColor(right), label(right), (int) (rightPct * 100) + "%", true);
+	}
+
+	private static float clashHP(DomainSource domain) {
+		if (domain instanceof DomainUVEntity uv)
+			return uv.getClashHP();
+		if (domain instanceof MalevolentShrineEntity shrine)
+			return shrine.getClashHP();
+		return 0f;
+	}
+
+	/** "unlimited_void" reads out as "UNLIMITED VOID", so a new domain names itself. */
+	private static String label(DomainSource domain) {
+		return domain.definition().id().replace('_', ' ').toUpperCase(Locale.ROOT);
+	}
+
+	// Coloured by what kind of barrier it is, not by which side of the screen it is on —
+	// so two Voids clashing are honestly both blue.
+	private static int barColor(DomainSource domain) {
+		return domain.isClosed() ? UV_BAR_COLOR : SHRINE_BAR_COLOR;
+	}
+
+	private static int barBackground(DomainSource domain) {
+		return domain.isClosed() ? UV_BAR_BG : SHRINE_BAR_BG;
+	}
+
+	private static int borderColor(DomainSource domain) {
+		return domain.isClosed() ? UV_BORDER_COLOR : SHRINE_BORDER_COLOR;
 	}
 
 	private static void renderDomainPanel(GuiGraphics gui, int x, int y, int panelW, int panelH, float pct, int barColor, int barBg, int borderColor, String label, String pctText, boolean flipBar) {

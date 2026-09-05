@@ -95,6 +95,77 @@ public final class DomainShell {
 		dirty = true;
 	}
 
+	/**
+	 * Wear concentrated on the face pointing one way, for a barrier being pressed on by
+	 * another barrier.
+	 *
+	 * <p>Deliberately not the even wear {@link #applyPressure} does. An open domain has no
+	 * surface, so all it can do is lean on a closed one from every side at once; two closed
+	 * domains meet along a real contact plane, and the shell should give way <em>there</em>
+	 * and collapse inward from that side. That is what the clash looks like in the source
+	 * material and it is what makes it read differently from a shrine grinding a dome down
+	 * everywhere at the same rate.
+	 *
+	 * @param coneCos cosine of the half-angle of the affected face; 0.5 is 60&deg;
+	 */
+	public void applyFacePressure(Vec3 direction, float amount, double coneCos) {
+		if (amount <= 0.0f)
+			return;
+		double length = direction.length();
+		if (length <= 1.0E-6)
+			return;
+		double nx = direction.x / length;
+		double ny = direction.y / length;
+		double nz = direction.z / length;
+		double span = 1.0 - coneCos;
+		if (span <= 1.0E-6)
+			return;
+		boolean touched = false;
+		for (int i = 0; i < CELLS; i++) {
+			double align = CELL_DIRECTIONS[i * 3] * nx + CELL_DIRECTIONS[i * 3 + 1] * ny + CELL_DIRECTIONS[i * 3 + 2] * nz;
+			if (align <= coneCos)
+				continue;
+			// Squared so the middle of the face takes far more than its edge, which is what
+			// opens one hole rather than thinning a whole hemisphere at once.
+			float falloff = (float) ((align - coneCos) / span);
+			hurt(i, amount * falloff * falloff);
+			touched = true;
+		}
+		if (touched)
+			dirty = true;
+	}
+
+	/**
+	 * Unit direction of a cell's centre — the inverse of {@link #cellFor}.
+	 *
+	 * <p>Built once because the face-pressure loop runs over all 512 cells every tick a
+	 * clash is live, and allocating a vector per cell for that would be 512 objects a tick
+	 * per domain for numbers that never change.
+	 */
+	private static final double[] CELL_DIRECTIONS = buildCellDirections();
+
+	private static double[] buildCellDirections() {
+		double[] out = new double[CELLS * 3];
+		for (int cell = 0; cell < CELLS; cell++) {
+			int lat = cell / LON_CELLS;
+			int lon = cell % LON_CELLS;
+			// Cell centres, so the direction round-trips back through cellFor to itself.
+			double theta = (lat + 0.5) / LAT_CELLS * Math.PI;
+			double phi = (lon + 0.5) / LON_CELLS * Math.PI * 2.0;
+			double sinTheta = Math.sin(theta);
+			out[cell * 3] = sinTheta * Math.cos(phi);
+			out[cell * 3 + 1] = Math.cos(theta);
+			out[cell * 3 + 2] = sinTheta * Math.sin(phi);
+		}
+		return out;
+	}
+
+	/** Unit direction of a cell's centre, as a vector. For tests and debug readouts. */
+	public static Vec3 directionOf(int cell) {
+		int i = Math.floorMod(cell, CELLS) * 3;
+		return new Vec3(CELL_DIRECTIONS[i], CELL_DIRECTIONS[i + 1], CELL_DIRECTIONS[i + 2]);
+	}
+
 	/** A single stopped projectile or slash. Small — mostly so the hit is visible. */
 	public void applyImpact(Vec3 direction, float amount) {
 		hurt(cellFor(direction), amount);
