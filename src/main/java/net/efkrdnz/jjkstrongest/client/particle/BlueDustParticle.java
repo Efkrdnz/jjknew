@@ -50,25 +50,6 @@ public class BlueDustParticle extends TextureSheetParticle {
 		this.pickSprite(spriteSet);
 	}
 
-	/**
-	 * Retunes a freshly created dust into an Unlimited Void interior mote.
-	 *
-	 * <p>Same particle, different job: as combat dust it lives fifteen ticks and spins
-	 * hard, which inside a thirty-block sphere reads as a spark rather than something
-	 * suspended in the air. A mote drifts for ten seconds and barely turns.
-	 */
-	public void asInteriorMote(int lifetime, float spin, float size) {
-		this.lifetime = Math.max(1, lifetime);
-		this.angularVelocity = spin;
-		this.angularAcceleration = spin * 0.01f;
-		this.quadSize = size;
-		// Bone-white with a cold cast rather than the saturated blue it is made of. The
-		// interior carries its structure in ink and bone and lets colour mean depth; a
-		// field of blue specks floating in front of that fights it. setColor is protected
-		// on Particle, so this has to happen here rather than at the call site.
-		this.setColor(0.88f, 0.91f, 0.98f);
-	}
-
 	@Override
 	public int getLightColor(float partialTick) {
 		return 15728880;

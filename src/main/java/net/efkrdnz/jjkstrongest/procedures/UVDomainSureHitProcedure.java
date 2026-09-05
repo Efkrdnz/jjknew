@@ -52,7 +52,11 @@ public class UVDomainSureHitProcedure {
 				continue;
 			if (!sphere.contains(target.getX(), target.getY(), target.getZ()))
 				continue;
-			target.addEffect(new MobEffectInstance(sureHit.effect(), sureHit.durationTicks(), sureHit.amplifier()));
+			// Invisible: no swirling effect particles, no HUD icon. Information Overload is
+			// something you experience through the overlay shader, not something you watch
+			// spin around your own head — and the three-argument constructor defaults
+			// visible to true, which is where those particles were coming from.
+			target.addEffect(new MobEffectInstance(sureHit.effect(), sureHit.durationTicks(), sureHit.amplifier(), false, false));
 		}
 	}
 }

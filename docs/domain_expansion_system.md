@@ -194,7 +194,7 @@ Treating `Position` as a unit vector is what once cost the interior all its para
 **Key files:** `client/renderer/DomainUVRenderer`, `client/JjkShaderManager`,
 `shaders/core/uv_interior.*`, `shaders/core/uv_shards.*`, `client/DomainFloorRipples`,
 `client/renderer/DomainUVLinesClientRenderer`, `client/DomainAtmosphereRenderer`,
-`client/DomainLightmap`, `client/DomainInteriorParticles`, `client/DomainClashHudOverlay`
+`client/DomainLightmap`, `client/DomainClashHudOverlay`
 
 ---
 

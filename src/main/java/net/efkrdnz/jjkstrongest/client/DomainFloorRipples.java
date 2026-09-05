@@ -26,9 +26,10 @@ import java.util.WeakHashMap;
 /**
  * Turns footsteps on the Void's floor into ripples.
  *
- * <p>Purely client side, on the same pattern as {@link DomainInteriorParticles}: the entities
- * are already here, so watching them costs nothing on the wire. Each entity standing on the
- * sea gets a ripple every {@link #STRIDE} blocks walked and a bigger one when it lands, sized
+ * <p>Purely client side: the entities are already here, so watching them costs nothing on
+ * the wire, where a server-side emitter would be a packet per ripple per player. Each
+ * entity standing on the sea gets a ripple every {@link #STRIDE} blocks walked and a bigger
+ * one when it lands, sized
  * by how far it fell. Nothing else disturbs the water — a still sea is the point, and the
  * rings are what tell you it is water at all.
  *
