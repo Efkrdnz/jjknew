@@ -110,6 +110,26 @@ public record DomainSphere(Vec3 center, double radius, double floorY, DomainPhas
 		return out;
 	}
 
+	/**
+	 * The floor plane on its own, bounded to a horizontal footprint.
+	 *
+	 * <p>Used while a domain is collapsing. The shell is shrinking away by then, so it
+	 * cannot hold anyone up, but the ground it carved out is still being put back — and
+	 * with the whole sphere hollowed that is a thirty-block hole to fall into. The plane
+	 * keeps standing until the domain finally goes, and the footprint bound stops it
+	 * becoming an invisible floor stretching across the world.
+	 */
+	public Vec3 clampFloorWithin(Vec3 pos, Vec3 movement, double horizontalRadius) {
+		Vec3 next = pos.add(movement);
+		if (next.y >= floorY)
+			return movement;
+		double dx = next.x - center.x;
+		double dz = next.z - center.z;
+		if (dx * dx + dz * dz > horizontalRadius * horizontalRadius)
+			return movement;
+		return new Vec3(movement.x, floorY - pos.y, movement.z);
+	}
+
 	public boolean isUsable() {
 		return radius > 0.0;
 	}

@@ -18,9 +18,14 @@ import java.util.UUID;
  * <p>The version this replaces walked a cube of up to 69&sup3; block positions —
  * around 330,000, each with a square root — <em>every tick for forty ticks</em>, and
  * filled the entire lower hemisphere with solid barrier blocks. Here the work is a
- * budget per tick, one horizontal layer at a time from the floor upward, and only the
- * space above the floor plane is touched. Blocks that are already air cost nothing and
- * are never recorded.
+ * budget per tick, one horizontal layer at a time. Blocks that are already air cost
+ * nothing and are never recorded.
+ *
+ * <p>The <em>whole</em> sphere is cleared, below the floor plane as well as above it.
+ * That is what lets the domain read as empty space you happen to be standing in: leave
+ * the ground below intact and you see dirt and stone through the bottom of the shell,
+ * which gives the lie away immediately. The floor you stand on is collision only, and
+ * nothing draws it.
  *
  * <p>Blocks are written with {@code UPDATE_CLIENTS} only. Neighbour notification on
  * this many changes would set off gravity and redstone cascades across the whole
@@ -53,10 +58,10 @@ public final class DomainCarve {
 			return true;
 
 		BlockPos center = BlockPos.containing(sphere.center().x, sphere.center().y, sphere.center().z);
-		int floorY = (int) Math.floor(sphere.floorY());
+		int bottomY = (int) Math.floor(sphere.center().y - radius);
 		int topY = (int) Math.ceil(sphere.center().y + radius);
 
-		int cursor = data.contains("carveY") ? data.getInt("carveY") : floorY + 1;
+		int cursor = data.contains("carveY") ? data.getInt("carveY") : bottomY;
 		DomainSavedData storage = DomainSavedData.get(level);
 		DomainSavedData.CarveRecord record = storage.record(domain.getUUID());
 

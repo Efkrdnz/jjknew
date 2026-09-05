@@ -64,10 +64,16 @@ public final class DomainCollision {
 			DomainSphere sphere = domain.sphere();
 			if (!sphere.isUsable())
 				continue;
-			// Only a shell at full size is solid. While it is still growing — or
-			// shrinking on the way out — the radius sweeps through every value down to
-			// zero, and clamping against that would squeeze everyone inside into the
-			// centre point and then let them go.
+			// A collapsing shell cannot hold anyone — it is shrinking to nothing — but the
+			// floor has to stay until the carve is back, or everyone inside drops into the
+			// hole the domain just spent its life digging.
+			if (sphere.phase() == DomainPhase.COLLAPSING) {
+				result = sphere.clampFloorWithin(entity.position(), result, domain.getTargetRadius());
+				continue;
+			}
+			// Only a shell at full size is solid. While it is still growing the radius
+			// sweeps through every value up from zero, and clamping against that would
+			// squeeze everyone inside into the centre point and then let them go.
 			if (!sphere.phase().isSealed())
 				continue;
 			result = clampAgainst(entity, result, sphere, domain.shell());

@@ -156,6 +156,20 @@ public class GeomTest {
         }
         check("a clamp never lengthens a move (20k random)", !grew, "some clamp grew the vector");
 
+        System.out.println("\nclampFloorWithin (the floor that outlives the shell)");
+        Vec3 standing = new Vec3(5, -1.0, 0);
+        Vec3 held = room.clampFloorWithin(standing, new Vec3(0,-0.8,0), 30.0);
+        check("floor still holds inside the carved footprint", near(standing.y + held.y, -1.0, 1e-9), "y=" + held.y);
+        Vec3 outsideFootprint = new Vec3(45, -1.0, 0);
+        Vec3 unheld = room.clampFloorWithin(outsideFootprint, new Vec3(0,-0.8,0), 30.0);
+        check("and not beyond it \u2014 no invisible floor across the world",
+              near(unheld.y, -0.8, 1e-9), "y=" + unheld.y);
+        Vec3 climbing = room.clampFloorWithin(standing, new Vec3(0,0.6,0), 30.0);
+        check("floor-only clamp never blocks going up", near(climbing.y, 0.6, 1e-9), "y=" + climbing.y);
+        Vec3 sideways = room.clampFloorWithin(standing, new Vec3(0.9,0,0.4), 30.0);
+        check("floor-only clamp leaves horizontal motion alone",
+              near(sideways.x,0.9,1e-9) && near(sideways.z,0.4,1e-9), "got " + sideways);
+
         System.out.println("\nDomainIntersect");
         DomainSphere uv = new DomainSphere(new Vec3(0,0,0), 30, -1000, DomainPhase.ACTIVE, 1f);
         DomainSphere shrineNear = DomainSphere.openField(new Vec3(20,0,0), 100);
