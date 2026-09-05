@@ -40,6 +40,12 @@ public class DomainUVRenderer extends MobRenderer<DomainUVEntity, Modelblank_ent
 
 	private static final int LAT_SEGMENTS = 24;
 	private static final int LON_SEGMENTS = 48;
+	/**
+	 * Hard cap on the brush strokes drifting inside the shell. Fourteen fills the volume
+	 * without any one of them being unavoidable, and it is 56 vertices a frame — nothing
+	 * against the sphere's 4608.
+	 */
+	private static final int RIBBON_COUNT = 14;
 	/** Unit sphere, wound inward, as (x, y, z, u, v) per vertex. */
 	private static final float[] UNIT_SPHERE = buildUnitSphere();
 
@@ -67,6 +73,7 @@ public class DomainUVRenderer extends MobRenderer<DomainUVEntity, Modelblank_ent
 		if (entity.getPhase() == DomainPhase.ACTIVE || entity.getPhase() == DomainPhase.SETTLING) {
 			renderRift(entity, radius, partialTick, poseStack, bufferSource);
 			renderBlackHole(entity, radius, partialTick, poseStack, bufferSource);
+			renderRibbons(entity, radius, partialTick, poseStack, bufferSource);
 		}
 	}
 
@@ -104,15 +111,96 @@ public class DomainUVRenderer extends MobRenderer<DomainUVEntity, Modelblank_ent
 		if (!JjkShaderManager.beginVoidBlackholeEffect(timeSeconds, 1.0f))
 			return;
 		poseStack.pushPose();
-		// offsets are fractions of the real radius now, not fixed block counts
-		poseStack.translate(radius * 0.6, radius * 0.23, 0.0);
-		poseStack.mulPose(Axis.YP.rotationDegrees(-entityRenderDispatcher.camera.getYRot()));
-		poseStack.mulPose(Axis.XP.rotationDegrees(entityRenderDispatcher.camera.getXRot()));
-		poseStack.scale(radius * 2.4f, radius * 2.4f, radius * 2.4f);
+		// Centred on the sphere's axis and lifted into the dome. It used to sit 0.6R due
+		// east — a hard-coded translate(18, 7, 0) from the 30-block era, converted to
+		// fractions but never re-centred.
+		poseStack.translate(0.0, radius * 0.35, 0.0);
+		// cameraOrientation() carries the 180° the hand-rolled yaw/pitch pair was missing,
+		// and the pitch sign the camera actually uses; without it this drew its own
+		// mirrored back face, visible only because the render type has culling off.
+		poseStack.mulPose(this.entityRenderDispatcher.cameraOrientation());
+		// The quad's half-extent is 0.5, so this is a world radius of 0.45R — a feature
+		// inside the shell rather than the 1.2R disc that used to clip straight through it.
+		poseStack.scale(radius * 0.9f, radius * 0.9f, radius * 0.9f);
 		renderCircularQuad(poseStack, bufferSource, JjkShaderManager.VOID_BLACKHOLE_RENDER_TYPE);
 		poseStack.popPose();
 		if (bufferSource instanceof MultiBufferSource.BufferSource bs)
 			bs.endBatch(JjkShaderManager.VOID_BLACKHOLE_RENDER_TYPE);
+	}
+
+	/**
+	 * Brush strokes lifted off the wall and into the volume.
+	 *
+	 * <p>The shell paints "information shards" onto its own surface, which from inside
+	 * reads as wallpaper — the strokes sit at the same depth however you move. These are
+	 * the same idea as real geometry: a fixed set of camera-facing quads scattered through
+	 * the sphere, so they pass between you and the wall as you walk.
+	 *
+	 * <p>All of them go out in one draw call. The stroke index rides in the V channel
+	 * ({@code v = id + sv * 0.5}) rather than in a uniform, so the shader can vary every
+	 * stroke without the renderer having to flush a batch per stroke.
+	 */
+	private void renderRibbons(DomainUVEntity entity, float radius, float partialTick, PoseStack poseStack, MultiBufferSource bufferSource) {
+		if (JjkShaderManager.VOID_RIBBON_RENDER_TYPE == null)
+			return;
+		// Nothing to see from outside — the shell's near face writes depth over all of it —
+		// so do not pay for the draw at all.
+		Vec3 camOffset = this.entityRenderDispatcher.camera.getPosition().subtract(entity.getPosition(partialTick));
+		if (camOffset.lengthSqr() > (radius * 1.05) * (radius * 1.05))
+			return;
+		float timeSeconds = (entity.tickCount + partialTick) / 20.0f;
+		int seed = entity.getShellSeed();
+		// Held back while the shell is still settling so the strokes arrive after the walls.
+		float alpha = entity.getPhase() == DomainPhase.SETTLING ? 0.85f * entity.getPhaseProgress() : 0.85f;
+		if (alpha <= 0.01f)
+			return;
+		if (!JjkShaderManager.beginVoidRibbonEffect(timeSeconds, seed * 0.001f + 1.0f, alpha, radius * 2.0f))
+			return;
+		VertexConsumer vc = bufferSource.getBuffer(JjkShaderManager.VOID_RIBBON_RENDER_TYPE);
+		for (int i = 0; i < RIBBON_COUNT; i++) {
+			float h1 = hash(seed, i, 0);
+			float h2 = hash(seed, i, 1);
+			float h3 = hash(seed, i, 2);
+			float h4 = hash(seed, i, 3);
+			float h5 = hash(seed, i, 4);
+			float h6 = hash(seed, i, 5);
+
+			// Uniform on the sphere of directions, then pulled inward so no stroke ever
+			// reaches the wall it is supposed to be floating in front of.
+			double azimuth = h1 * Math.PI * 2.0 + timeSeconds * (0.010 + h6 * 0.020);
+			double polar = Math.acos(1.0 - 2.0 * h2);
+			double dist = radius * (0.22 + 0.58 * h3);
+			double sinPolar = Math.sin(polar);
+			double bob = Math.sin(timeSeconds * (0.15 + h6 * 0.20) + i) * radius * 0.06;
+
+			float length = radius * (0.20f + 0.30f * h4);
+			float width = length * (0.10f + 0.10f * h5);
+
+			poseStack.pushPose();
+			poseStack.translate(dist * sinPolar * Math.cos(azimuth), dist * Math.cos(polar) + bob, dist * sinPolar * Math.sin(azimuth));
+			poseStack.mulPose(this.entityRenderDispatcher.cameraOrientation());
+			poseStack.mulPose(Axis.ZP.rotationDegrees(h5 * 360.0f + timeSeconds * (h6 - 0.5f) * 6.0f));
+
+			Matrix4f m = poseStack.last().pose();
+			float hx = length * 0.5f;
+			float hy = width * 0.5f;
+			float v0 = i;
+			float v1 = i + 0.5f;
+			vc.addVertex(m, -hx, -hy, 0.0f).setUv(0.0f, v0);
+			vc.addVertex(m, -hx, hy, 0.0f).setUv(0.0f, v1);
+			vc.addVertex(m, hx, hy, 0.0f).setUv(1.0f, v1);
+			vc.addVertex(m, hx, -hy, 0.0f).setUv(1.0f, v0);
+			poseStack.popPose();
+		}
+		if (bufferSource instanceof MultiBufferSource.BufferSource bs)
+			bs.endBatch(JjkShaderManager.VOID_RIBBON_RENDER_TYPE);
+	}
+
+	/** Stable per-domain, per-stroke noise, so the strokes do not reshuffle every frame. */
+	private static float hash(int seed, int index, int channel) {
+		int h = seed * 374761393 + index * 668265263 + channel * 1442695041;
+		h = (h ^ (h >>> 13)) * 1274126177;
+		return ((h ^ (h >>> 16)) & 0x7fffffff) / (float) 0x7fffffff;
 	}
 
 	private void renderRift(DomainUVEntity entity, float radius, float partialTick, PoseStack poseStack, MultiBufferSource bufferSource) {

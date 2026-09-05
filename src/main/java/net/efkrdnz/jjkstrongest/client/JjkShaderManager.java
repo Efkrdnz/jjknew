@@ -50,6 +50,8 @@ public class JjkShaderManager {
 	public static RenderType IMAGINARY_PURPLE_PROJECTILE_RENDER_TYPE;
 	public static ShaderInstance VOID_RIFT_SHADER;
 	public static RenderType VOID_RIFT_RENDER_TYPE;
+	public static ShaderInstance VOID_RIBBON_SHADER;
+	public static RenderType VOID_RIBBON_RENDER_TYPE;
 	public static ShaderInstance INFORMATION_OVERLOAD_OVERLAY_SHADER;
 	public static RenderType INFORMATION_OVERLOAD_OVERLAY_RENDER_TYPE;
 	public static ShaderInstance FUGA_DOMAIN_EXPLOSION_SHADER;
@@ -238,6 +240,17 @@ public class JjkShaderManager {
 			e.printStackTrace();
 		}
 		try {
+			event.registerShader(new ShaderInstance(event.getResourceProvider(), ResourceLocation.fromNamespaceAndPath("jjk_strongest", "void_ribbon"), DefaultVertexFormat.POSITION_TEX), shader -> {
+				VOID_RIBBON_SHADER = shader;
+				VOID_RIBBON_RENDER_TYPE = makeRenderType("void_ribbon", () -> VOID_RIBBON_SHADER);
+			});
+		} catch (Exception e) {
+			VOID_RIBBON_SHADER = null;
+			VOID_RIBBON_RENDER_TYPE = null;
+			System.err.println("[JJK Strongest] ✗ Failed to load Void Ribbon shader");
+			e.printStackTrace();
+		}
+		try {
 			event.registerShader(new ShaderInstance(event.getResourceProvider(), ResourceLocation.fromNamespaceAndPath("jjk_strongest", "information_overload_overlay"), DefaultVertexFormat.POSITION_TEX), shader -> {
 				INFORMATION_OVERLOAD_OVERLAY_SHADER = shader;
 				INFORMATION_OVERLOAD_OVERLAY_RENDER_TYPE = makeRenderType("information_overload_overlay", () -> INFORMATION_OVERLOAD_OVERLAY_SHADER);
@@ -423,6 +436,39 @@ public class JjkShaderManager {
 		return true;
 	}
 
+	/**
+	 * Camera-facing brush strokes drifting inside the shell.
+	 *
+	 * @param brushSeed per-domain seed, so two domains open side by side do not draw the
+	 *                  same strokes in the same places
+	 * @param alpha     global strength, faded with the domain's phase
+	 * @param fadeFar   distance at which a stroke has faded out entirely; the renderer
+	 *                  passes the sphere's diameter so nothing survives past the far wall
+	 */
+	public static boolean beginVoidRibbonEffect(float timeSeconds, float brushSeed, float alpha, float fadeFar) {
+		if (VOID_RIBBON_SHADER == null)
+			return false;
+		setUniformIfExistsVoidRibbon("Time", timeSeconds);
+		setUniformIfExistsVoidRibbon("BrushSeed", brushSeed);
+		setUniformIfExistsVoidRibbon("Alpha", alpha);
+		setUniformIfExistsVoidRibbon("FadeFar", fadeFar);
+		return true;
+	}
+
+	private static void setUniformIfExistsVoidRibbon(String name, float... values) {
+		var uniform = VOID_RIBBON_SHADER.getUniform(name);
+		if (uniform != null) {
+			if (values.length == 1)
+				uniform.set(values[0]);
+			else if (values.length == 2)
+				uniform.set(values[0], values[1]);
+			else if (values.length == 3)
+				uniform.set(values[0], values[1], values[2]);
+			else if (values.length == 4)
+				uniform.set(values[0], values[1], values[2], values[3]);
+		}
+	}
+
 	public static boolean beginVoidBrushEffect(float timeSeconds, float brushSeed, float intensity) {
 		return beginVoidBrushEffect(timeSeconds, brushSeed, intensity, 30.0f, 1.0f, 2.0f, 0.0f, 0.0f, 0.0f);
 	}
@@ -485,10 +531,15 @@ public class JjkShaderManager {
 	}
 
 	public static boolean beginInformationOverloadOverlayEffect(float timeSeconds, float strength) {
+		return beginInformationOverloadOverlayEffect(timeSeconds, strength, 1.0f);
+	}
+
+	public static boolean beginInformationOverloadOverlayEffect(float timeSeconds, float strength, float alpha) {
 		if (INFORMATION_OVERLOAD_OVERLAY_SHADER == null)
 			return false;
 		setUniformIfExistsInformationOverloadOverlay("Time", timeSeconds);
 		setUniformIfExistsInformationOverloadOverlay("Strength", strength);
+		setUniformIfExistsInformationOverloadOverlay("Alpha", alpha);
 		return true;
 	}
 

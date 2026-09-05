@@ -2,6 +2,9 @@
 
 uniform float Time;
 uniform float Strength;
+// Lets the caller fade the whole overlay in and out without altering its character;
+// Strength drives the pattern's symmetry and colour, so it cannot double as opacity.
+uniform float Alpha;
 
 in vec2 texCoord;
 out vec4 fragColor;
@@ -162,7 +165,7 @@ void main() {
 	float alpha = (wires * (0.16 + 0.52 * k) + glow * (0.12 + 0.46 * k)) * vign;
 	alpha += snap * vign;
 
-	alpha = clamp(alpha, 0.0, 0.86);
+	alpha = clamp(alpha, 0.0, 0.86) * Alpha;
 
 	fragColor = vec4(col, alpha);
 }

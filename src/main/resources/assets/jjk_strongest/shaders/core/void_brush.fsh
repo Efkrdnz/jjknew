@@ -122,16 +122,29 @@ float shatterMask(vec2 uv, float localDamage, float globalDamage) {
     return clamp(crackLocal + crackGlobal, 0.0, 1.0);
 }
 
-vec3 palette(float x){
-    // deep blue -> violet -> cold white
-    vec3 a = vec3(0.02, 0.03, 0.10);
-    vec3 b = vec3(0.12, 0.18, 0.36);
-    vec3 c = vec3(0.22, 0.10, 0.38);
-    vec3 d = vec3(0.75, 0.85, 1.00);
-    vec3 col = mix(a, b, clamp(x, 0.0, 1.0));
-    col = mix(col, c, clamp(x * x, 0.0, 1.0) * 0.65);
-    col = mix(col, d, clamp(x * x * x, 0.0, 1.0) * 0.35);
-    return col;
+/**
+ * Ink and bone carry the structure; colour only turns up with distance.
+ *
+ * The domain used to run deep blue through violet to cold white at every depth, which
+ * made it read as a coloured nebula. Keeping the near layers monochrome and letting blue
+ * and violet bleed in only as the march goes deeper means colour becomes a depth cue
+ * rather than decoration — and it puts the interior in the same register as the near-black
+ * shell and white shatter seen from outside, so the domain finally reads as one object.
+ *
+ * @param x     density at this sample
+ * @param depth 0 at the nearest march layer, 1 at the furthest
+ */
+vec3 palette(float x, float depth){
+    vec3 ink  = vec3(0.014, 0.015, 0.019);
+    vec3 bone = vec3(0.92, 0.93, 0.96);
+    vec3 mono = mix(ink, bone, clamp(x, 0.0, 1.0));
+    mono = mix(mono, bone, clamp(x * x * x, 0.0, 1.0) * 0.45);
+
+    vec3 deepBlue = vec3(0.05, 0.10, 0.30);
+    vec3 violet   = vec3(0.16, 0.07, 0.32);
+    vec3 bleed = mix(deepBlue, violet, clamp(x * x, 0.0, 1.0));
+
+    return mix(mono, mono * 0.32 + bleed, clamp(depth, 0.0, 1.0) * 0.85);
 }
 
 void main() {
@@ -208,7 +221,7 @@ void main() {
 
         float w = exp(-fi * 0.34);
 
-        vec3 layerCol = palette(density);
+        vec3 layerCol = palette(density, fi * 0.25);
         layerCol *= (0.85 + density * 0.55);
 
         float a = density * (0.34 * w);
@@ -262,8 +275,10 @@ void main() {
     colAcc += starC * midStars * 0.95;
     colAcc += starC * bigStars * 1.25;
 
+    // Barely there now. The old shimmer tinted every highlight, which fought the
+    // monochrome structure the palette above is built on.
     float highlight = clamp((dot(colAcc, vec3(0.333)) - 0.35) * 1.8, 0.0, 1.0);
-    vec3 tint = vec3(0.05, -0.02, 0.08) * (0.5 + 0.5 * sin(t * 1.7 + aAcc * 7.0));
+    vec3 tint = vec3(0.012, -0.004, 0.022) * (0.5 + 0.5 * sin(t * 1.7 + aAcc * 7.0));
     colAcc += tint * highlight;
 
     float pulse = sin(t * 0.55) * 0.08 + 0.92;
