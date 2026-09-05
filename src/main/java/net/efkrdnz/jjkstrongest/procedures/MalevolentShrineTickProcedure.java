@@ -250,10 +250,10 @@ public class MalevolentShrineTickProcedure {
 			Vec3 dir = intentDirection(world);
 			boolean cleave = world.random.nextInt(100) < 10;
 			float length = 30.0f + world.random.nextFloat() * 30.0f;
-			float width = 0.6f + world.random.nextFloat() * 0.8f;
+			float width = 0.35f + world.random.nextFloat() * 0.45f;
 			if (cleave) {
 				length *= 1.4f;
-				width *= 1.6f;
+				width *= 1.4f;
 			}
 			emitSlash(world, at, dir, length, width, cleave ? STYLE_CLEAVE : STYLE_DISMANTLE, SLASH_LIFETIME, rivalSphere, rivalShell, domainUUID, centerX, centerY, centerZ);
 		}
@@ -267,7 +267,7 @@ public class MalevolentShrineTickProcedure {
 				float length = 30.0f + world.random.nextFloat() * 20.0f;
 				// A blade's position is its centre; put its origin at the volley's.
 				Vec3 at = origin.add(dir.scale(length * 0.5));
-				emitSlash(world, at, dir, length, 0.7f + world.random.nextFloat() * 0.6f, STYLE_DISMANTLE, SLASH_LIFETIME, rivalSphere, rivalShell, domainUUID, centerX, centerY, centerZ);
+				emitSlash(world, at, dir, length, 0.4f + world.random.nextFloat() * 0.4f, STYLE_DISMANTLE, SLASH_LIFETIME, rivalSphere, rivalShell, domainUUID, centerX, centerY, centerZ);
 			}
 			SoundEvent swoosh = BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("jjk_strongest:kai"));
 			if (swoosh != null)
@@ -371,7 +371,7 @@ public class MalevolentShrineTickProcedure {
 					Vec3 at = new Vec3(target.getX() + (world.random.nextDouble() - 0.5) * target.getBbWidth() * 0.6, target.getY() + target.getBbHeight() * (0.3 + 0.6 * world.random.nextDouble()),
 							target.getZ() + (world.random.nextDouble() - 0.5) * target.getBbWidth() * 0.6);
 					float length = 3.0f + target.getBbHeight() * 2.0f;
-					emitSlash(serverLevel, at, intentDirection(serverLevel), length, 0.5f, STYLE_STRIKE, STRIKE_LIFETIME, null, null, domainUUID, centerX, centerY, centerZ);
+					emitSlash(serverLevel, at, intentDirection(serverLevel), length, 0.35f, STYLE_STRIKE, STRIKE_LIFETIME, null, null, domainUUID, centerX, centerY, centerZ);
 				}
 			}
 			Vec3 originalVelocity = target.getDeltaMovement();
