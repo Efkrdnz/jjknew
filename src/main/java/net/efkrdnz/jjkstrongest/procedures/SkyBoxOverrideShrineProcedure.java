@@ -24,6 +24,10 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.Minecraft;
 
 import net.efkrdnz.jjkstrongest.entity.MalevolentShrineEntity;
+import net.efkrdnz.jjkstrongest.domain.DomainRegistry;
+import net.efkrdnz.jjkstrongest.client.renderer.SkyMesh;
+import net.efkrdnz.jjkstrongest.client.ShrineAtmosphereRenderer;
+import net.efkrdnz.jjkstrongest.client.JjkShaderManager;
 
 import javax.annotation.Nullable;
 
@@ -503,28 +507,78 @@ public class SkyBoxOverrideShrineProcedure {
 		execute(null, world, entity);
 	}
 
+	/**
+	 * The sky, every frame, for whoever is looking.
+	 *
+	 * <p>The vanilla sky is drawn first, always. Over it, when a shrine is near, goes the
+	 * shrine's own dome — a shader, not a texture — with an alpha that is the shrine's
+	 * intensity at the eye: up over the forty-tick expansion, down over the collapse, and
+	 * falling off with distance from forty blocks outside the field to ten inside it. So the
+	 * sky reddens as you walk toward a shrine instead of snapping at a boundary, and the
+	 * domain opening paints the sky in rather than switching it.
+	 *
+	 * <p>The shrine is found on the registry, not by a 200-block entity scan per frame, and
+	 * inside a closed domain nothing is drawn over the vanilla sky: the Void paints its own
+	 * on its walls.
+	 */
 	private static void execute(@Nullable Event event, LevelAccessor world, Entity entity) {
-		if (entity == null)
+		if (!(entity instanceof Player))
 			return;
-		if (entity instanceof Player) {
-			// check if player is inside malevolent shrine
-			List<MalevolentShrineEntity> shrines = world.getEntitiesOfClass(MalevolentShrineEntity.class, AABB.ofSize(new Vec3(entity.getX(), entity.getY(), entity.getZ()), 200, 200, 200), e -> true);
-			if (!shrines.isEmpty()) {
-				MalevolentShrineEntity shrine = shrines.get(0);
-				double distSq = entity.distanceToSqr(shrine.getX(), shrine.getY(), shrine.getZ());
-				// inside domain radius (100 blocks)
-				if (distSq <= 100 * 100) {
-					// full replacement - only sukuna skybox
-					RenderSystem.setShaderTexture(0, ResourceLocation.parse("jjk_strongest:textures/sukunadomainsky.png"));
-					renderSkybox(0, 0, 0, 255 << 24 | 255 << 16 | 255 << 8 | 255, true);
-				} else {
-					// outside domain - render normal sky
-					renderSky(true, true, true, true, true, true);
-				}
-			} else {
-				// no domain nearby - render normal sky
-				renderSky(true, true, true, true, true, true);
-			}
+		renderSky(true, true, true, true, true, true);
+
+		Minecraft minecraft = Minecraft.getInstance();
+		ClientLevel level = minecraft.level;
+		if (level == null || DomainRegistry.activeCount == 0)
+			return;
+		Vec3 eye = entity.getEyePosition(partialTick);
+		if (DomainRegistry.sphereAt(level, eye.x, eye.y, eye.z) != null)
+			return;
+		MalevolentShrineEntity shrine = ShrineAtmosphereRenderer.nearest(level, eye.x, eye.y, eye.z);
+		if (shrine == null)
+			return;
+		float intensity = ShrineAtmosphereRenderer.intensity(shrine, eye.x, eye.y, eye.z);
+		if (intensity <= 0.01f)
+			return;
+		renderShrineDome(intensity, (shrine.getUUID().hashCode() & 0xffff) / 65535.0f);
+	}
+
+	/** The dome mesh the shrine's sky is painted on, built once from the shared sphere. */
+	private static VertexBuffer domeBuffer = null;
+
+	/**
+	 * Draws the shrine's sky over whatever is already there, at the given alpha. Uses the
+	 * same inward-wound unit sphere as the Void's interior, scaled up to the far distance the
+	 * skybox has always used, and drawn with depth writes off like everything in the sky.
+	 */
+	private static void renderShrineDome(float intensity, float seed) {
+		Minecraft minecraft = Minecraft.getInstance();
+		float time = (ticks + partialTick) / 20.0f;
+		if (!JjkShaderManager.beginShrineSky(time, intensity, seed))
+			return;
+		if (domeBuffer == null) {
+			BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+			float[] mesh = SkyMesh.UNIT_SPHERE;
+			for (int i = 0; i < mesh.length; i += 5)
+				bufferBuilder.addVertex(mesh[i], mesh[i + 1], mesh[i + 2]).setUv(mesh[i + 3], mesh[i + 4]);
+			domeBuffer = new VertexBuffer(VertexBuffer.Usage.STATIC);
+			domeBuffer.bind();
+			domeBuffer.upload(bufferBuilder.buildOrThrow());
+		} else {
+			domeBuffer.bind();
 		}
+		float size = (float) (minecraft.options.getEffectiveRenderDistance() << 6);
+		RenderSystem.enableBlend();
+		RenderSystem.defaultBlendFunc();
+		RenderSystem.depthMask(false);
+		RenderSystem.disableCull();
+		RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+		poseStack.pushPose();
+		poseStack.scale(size, size, size);
+		domeBuffer.drawWithShader(poseStack.last().pose(), projectionMatrix, JjkShaderManager.SHRINE_SKY_SHADER);
+		poseStack.popPose();
+		VertexBuffer.unbind();
+		RenderSystem.enableCull();
+		RenderSystem.depthMask(true);
+		RenderSystem.disableBlend();
 	}
 }

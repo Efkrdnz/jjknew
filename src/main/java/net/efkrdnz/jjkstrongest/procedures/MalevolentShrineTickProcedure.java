@@ -14,7 +14,9 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundSource;
 
 import net.efkrdnz.jjkstrongest.network.SpawnDomainSlashPacket;
 import net.efkrdnz.jjkstrongest.network.DomainSlashNetworkHandler;
@@ -45,8 +47,23 @@ public class MalevolentShrineTickProcedure {
 	private static final double RADIUS_SQ = RADIUS * RADIUS;
 	private static final int DAMAGE_INTERVAL = 4;
 	private static final int OWNER_CHECK_INTERVAL = 20;
-	private static final int BASE_SLASH_COUNT = 60;
-	private static final int SLASH_VARIANCE = 20;
+	/**
+	 * Fewer, bigger, deliberate. Sixty to eighty a tick was a swarm of streaks nobody could
+	 * read — and more than the client would keep, so it evicted them as fast as they came.
+	 * A dozen to twenty, each thirty to sixty blocks and oriented with intent, plus a fanned
+	 * volley from one point every half second, is a barrage. Live count settles near 220.
+	 */
+	private static final int BASE_SLASH_COUNT = 12;
+	private static final int SLASH_VARIANCE = 9;
+	private static final int VOLLEY_INTERVAL = 10;
+	private static final int VOLLEY_COUNT = 30;
+	private static final double VOLLEY_SPREAD = Math.toRadians(35.0);
+	private static final int SLASH_LIFETIME = 14;
+	private static final int STRIKE_LIFETIME = 8;
+	/** Style codes the client decodes; see MalevolentShrineSlashManager and shrine_cleave.fsh. */
+	private static final int STYLE_CLEAVE = 0;
+	private static final int STYLE_DISMANTLE = 1;
+	private static final int STYLE_STRIKE = 2;
 	/** What one slash stopped by a barrier costs that barrier. Small — pressure does the real work. */
 	private static final float IMPACT_DAMAGE = 0.35f;
 
@@ -92,7 +109,7 @@ public class MalevolentShrineTickProcedure {
 		int lifetimeTicks = data.getInt("domainLifetimeTicks");
 		// slashes always fire — but filtered to exclude inside UV during clash
 		int slashCount = BASE_SLASH_COUNT + world.random.nextInt(SLASH_VARIANCE);
-		spawnSlashesViaPackets((ServerLevel) world, owner, x, y, z, slashCount, shrine, isClashing);
+		spawnSlashesViaPackets((ServerLevel) world, owner, x, y, z, slashCount, lifetimeTicks % VOLLEY_INTERVAL == 0, shrine, isClashing);
 		// damage every 4 ticks — also filtered during clash
 		if (lifetimeTicks % DAMAGE_INTERVAL == 0) {
 			damageEntitiesOptimized(world, owner, x, y, z, isClashing, shrine);
@@ -212,7 +229,7 @@ public class MalevolentShrineTickProcedure {
 		return false;
 	}
 
-	private static void spawnSlashesViaPackets(ServerLevel world, Entity owner, double centerX, double centerY, double centerZ, int count, Entity domainEntity, boolean isClashing) {
+	private static void spawnSlashesViaPackets(ServerLevel world, Entity owner, double centerX, double centerY, double centerZ, int count, boolean volley, Entity domainEntity, boolean isClashing) {
 		String domainUUID = domainEntity.getStringUUID();
 		// Resolved once per tick. This used to be a fresh 300-block entity scan for
 		// every one of the sixty-odd slash candidates, i.e. up to eighty world scans
@@ -222,54 +239,103 @@ public class MalevolentShrineTickProcedure {
 		DomainUVEntity rival = DomainClashManagerProcedure.rivalVoid(world, domainEntity);
 		DomainSphere rivalSphere = rival != null ? rival.volume() : null;
 		DomainShell rivalShell = rival != null ? rival.shell() : null;
-		double radiusSq = RADIUS * RADIUS;
-		double twoPI = Math.PI * 2;
 		// Only a gate now: if nobody can see the domain there is no reason to do any of the
 		// slash maths at all. The packets themselves go out as one broadcast per slash.
 		if (world.getEntitiesOfClass(ServerPlayer.class, new AABB(centerX - 150, centerY - 150, centerZ - 150, centerX + 150, centerY + 150, centerZ + 150)).isEmpty())
 			return;
+
+		// Scattered cuts, oriented with intent. One in ten is a Cleave: white-hot, and bigger.
 		for (int i = 0; i < count; i++) {
-			double angle = world.random.nextDouble() * twoPI;
-			double radius = Math.sqrt(world.random.nextDouble()) * RADIUS;
-			double offsetX = Math.cos(angle) * radius;
-			double offsetZ = Math.sin(angle) * radius;
-			double horizontalDistSq = offsetX * offsetX + offsetZ * offsetZ;
-			double maxHeight = Math.sqrt(Math.max(0, radiusSq - horizontalDistSq));
-			double offsetY = world.random.nextDouble() * maxHeight;
-			double slashX = centerX + offsetX;
-			double slashY = centerY + offsetY;
-			double slashZ = centerZ + offsetZ;
-			Vec3 randomDir = new Vec3(world.random.nextDouble() - 0.5, world.random.nextDouble() - 0.5, world.random.nextDouble() - 0.5).normalize();
-			int styleRoll = world.random.nextInt(100);
-			int style = styleRoll < 30 ? 0 : 1;
-			float length = 25.0f + world.random.nextFloat() * 10.0f;
-			float width = 1.5f + world.random.nextFloat() * 1.5f;
-			float roll = world.random.nextFloat() * 6.2831853f;
-			// A rival barrier stops the slash at its surface rather than letting it cut
-			// through. What the barrier absorbs, it pays for in integrity.
-			if (rivalSphere != null) {
-				DomainOcclusion.Clip clip = DomainOcclusion.clip(new Vec3(slashX, slashY, slashZ), randomDir, roll, length, rivalSphere);
-				if (clip.impact() != null && rivalShell != null)
-					rivalShell.applyImpact(clip.impact().subtract(rivalSphere.center()), IMPACT_DAMAGE);
-				if (clip.blocked())
-					continue;
-				slashX = clip.position().x;
-				slashY = clip.position().y;
-				slashZ = clip.position().z;
-				length = (float) clip.length();
+			Vec3 at = randomInField(world, centerX, centerY, centerZ);
+			Vec3 dir = intentDirection(world);
+			boolean cleave = world.random.nextInt(100) < 10;
+			float length = 30.0f + world.random.nextFloat() * 30.0f;
+			float width = 0.6f + world.random.nextFloat() * 0.8f;
+			if (cleave) {
+				length *= 1.4f;
+				width *= 1.6f;
 			}
-			float seed = world.random.nextFloat() * 1000.0f;
-			float r, g, b;
-			if (style == 0) {
-				r = g = b = 1.0f;
-			} else {
-				r = 1.0f;
-				g = 0.1f + world.random.nextFloat() * 0.15f;
-				b = 0.1f + world.random.nextFloat() * 0.15f;
-			}
-			SpawnDomainSlashPacket packet = new SpawnDomainSlashPacket(slashX, slashY, slashZ, randomDir.x, randomDir.y, randomDir.z, length, width, style, roll, seed, r, g, b, 12, domainUUID);
-			DomainSlashNetworkHandler.sendToNearby(world, centerX, centerY, centerZ, 150.0, packet);
+			emitSlash(world, at, dir, length, width, cleave ? STYLE_CLEAVE : STYLE_DISMANTLE, SLASH_LIFETIME, rivalSphere, rivalShell, domainUUID, centerX, centerY, centerZ);
 		}
+
+		// The volley: a fan from one point, the barrage that is the shrine's signature.
+		if (volley) {
+			Vec3 origin = randomInField(world, centerX, centerY, centerZ);
+			Vec3 axis = intentDirection(world);
+			for (int i = 0; i < VOLLEY_COUNT; i++) {
+				Vec3 dir = perturb(world, axis, VOLLEY_SPREAD);
+				float length = 30.0f + world.random.nextFloat() * 20.0f;
+				// A blade's position is its centre; put its origin at the volley's.
+				Vec3 at = origin.add(dir.scale(length * 0.5));
+				emitSlash(world, at, dir, length, 0.7f + world.random.nextFloat() * 0.6f, STYLE_DISMANTLE, SLASH_LIFETIME, rivalSphere, rivalShell, domainUUID, centerX, centerY, centerZ);
+			}
+			SoundEvent swoosh = BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("jjk_strongest:kai"));
+			if (swoosh != null)
+				world.playSound(null, origin.x, origin.y, origin.z, swoosh, SoundSource.HOSTILE, 1.4f, 0.85f + world.random.nextFloat() * 0.3f);
+		}
+	}
+
+	/** A point uniformly in the field's upper half-ball, as the slashes have always been placed. */
+	private static Vec3 randomInField(ServerLevel world, double cx, double cy, double cz) {
+		double angle = world.random.nextDouble() * Math.PI * 2.0;
+		double radius = Math.sqrt(world.random.nextDouble()) * RADIUS;
+		double ox = Math.cos(angle) * radius;
+		double oz = Math.sin(angle) * radius;
+		double maxHeight = Math.sqrt(Math.max(0.0, RADIUS_SQ - (ox * ox + oz * oz)));
+		return new Vec3(cx + ox, cy + world.random.nextDouble() * maxHeight, cz + oz);
+	}
+
+	/**
+	 * A direction with intent: half near-horizontal, a third steep diagonal, the rest
+	 * vertical, yaw uniform. Random-in-a-ball is what made the old field read as noise.
+	 */
+	private static Vec3 intentDirection(ServerLevel world) {
+		double r = world.random.nextDouble();
+		double pitch;
+		if (r < 0.5)
+			pitch = (world.random.nextDouble() * 2.0 - 1.0) * Math.toRadians(25.0);
+		else if (r < 0.8)
+			pitch = (world.random.nextBoolean() ? 1.0 : -1.0) * Math.toRadians(40.0 + world.random.nextDouble() * 25.0);
+		else
+			pitch = (world.random.nextBoolean() ? 1.0 : -1.0) * Math.toRadians(80.0 + world.random.nextDouble() * 10.0);
+		double yaw = world.random.nextDouble() * Math.PI * 2.0;
+		double c = Math.cos(pitch);
+		return new Vec3(c * Math.cos(yaw), Math.sin(pitch), c * Math.sin(yaw));
+	}
+
+	/** A unit direction within {@code spread} radians of the axis, uniform in area around it. */
+	private static Vec3 perturb(ServerLevel world, Vec3 axis, double spread) {
+		Vec3 ref = Math.abs(axis.y) < 0.9 ? new Vec3(0.0, 1.0, 0.0) : new Vec3(1.0, 0.0, 0.0);
+		Vec3 e1 = axis.cross(ref).normalize();
+		Vec3 e2 = axis.cross(e1);
+		double around = world.random.nextDouble() * Math.PI * 2.0;
+		double tilt = Math.sqrt(world.random.nextDouble()) * spread;
+		return axis.scale(Math.cos(tilt)).add(e1.scale(Math.sin(tilt) * Math.cos(around))).add(e2.scale(Math.sin(tilt) * Math.sin(around))).normalize();
+	}
+
+	/**
+	 * One slash to everyone in range, through the rival barrier's clip first. {@code at} is the
+	 * blade's centre. A rival barrier stops the slash at its surface rather than letting it cut
+	 * through, and what the barrier absorbs it pays for in integrity.
+	 *
+	 * <p>The packet's roll carries a per-slash jitter now, and its colour fields nothing at
+	 * all: the look is decided by style, client side. The codec is unchanged.
+	 */
+	private static void emitSlash(ServerLevel world, Vec3 at, Vec3 dir, float length, float width, int style, int lifetime, DomainSphere rivalSphere, DomainShell rivalShell, String domainUUID, double cx,
+			double cy, double cz) {
+		float roll = world.random.nextFloat() * 6.2831853f;
+		if (rivalSphere != null) {
+			DomainOcclusion.Clip clip = DomainOcclusion.clip(at, dir, roll, length, rivalSphere);
+			if (clip.impact() != null && rivalShell != null)
+				rivalShell.applyImpact(clip.impact().subtract(rivalSphere.center()), IMPACT_DAMAGE);
+			if (clip.blocked())
+				return;
+			at = clip.position();
+			length = (float) clip.length();
+		}
+		float seed = world.random.nextFloat() * 1000.0f;
+		SpawnDomainSlashPacket packet = new SpawnDomainSlashPacket(at.x, at.y, at.z, dir.x, dir.y, dir.z, length, width, style, roll, seed, 1.0f, 1.0f, 1.0f, lifetime, domainUUID);
+		DomainSlashNetworkHandler.sendToNearby(world, cx, cy, cz, 150.0, packet);
 	}
 
 	private static void damageEntitiesOptimized(Level world, Entity owner, double centerX, double centerY, double centerZ, boolean isClashing, Entity domainEntity) {
@@ -296,13 +362,16 @@ public class MalevolentShrineTickProcedure {
 			// during clash: skip entities inside UV's barrier — they're protected
 			if (rivalSphere != null && rivalSphere.contains(target.getX(), target.getY(), target.getZ()))
 				continue;
-			int slashCount = 2 + world.random.nextInt(2);
+			// The hit, shown as what it is: two or three short blades through the body, drawn
+			// in an instant and gone. Not sweep particles.
 			if (world instanceof ServerLevel serverLevel) {
-				for (int i = 0; i < slashCount; i++) {
-					double offsetX = (world.random.nextDouble() - 0.5) * target.getBbWidth();
-					double offsetY2 = world.random.nextDouble() * target.getBbHeight();
-					double offsetZ = (world.random.nextDouble() - 0.5) * target.getBbWidth();
-					serverLevel.sendParticles(ParticleTypes.SWEEP_ATTACK, target.getX() + offsetX, target.getY() + offsetY2, target.getZ() + offsetZ, 2, 0.1, 0.4, 0.1, 1);
+				int strikes = 2 + world.random.nextInt(2);
+				String domainUUID = domainEntity.getStringUUID();
+				for (int i = 0; i < strikes; i++) {
+					Vec3 at = new Vec3(target.getX() + (world.random.nextDouble() - 0.5) * target.getBbWidth() * 0.6, target.getY() + target.getBbHeight() * (0.3 + 0.6 * world.random.nextDouble()),
+							target.getZ() + (world.random.nextDouble() - 0.5) * target.getBbWidth() * 0.6);
+					float length = 3.0f + target.getBbHeight() * 2.0f;
+					emitSlash(serverLevel, at, intentDirection(serverLevel), length, 0.5f, STYLE_STRIKE, STRIKE_LIFETIME, null, null, domainUUID, centerX, centerY, centerZ);
 				}
 			}
 			Vec3 originalVelocity = target.getDeltaMovement();

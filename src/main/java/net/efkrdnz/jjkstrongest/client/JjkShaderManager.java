@@ -19,6 +19,11 @@ import com.mojang.blaze3d.pipeline.TextureTarget;
 public class JjkShaderManager {
 	public static ShaderInstance DISMANTLE_SHADER;
 	public static RenderType DISMANTLE_RENDER_TYPE;
+	/** The Shrine's own cuts: one batch, per-slash state in the vertex colour. */
+	public static ShaderInstance SHRINE_CLEAVE_SHADER;
+	public static RenderType SHRINE_CLEAVE_RENDER_TYPE;
+	/** The Shrine's sky, drawn straight from the sky hook with drawWithShader; no render type. */
+	public static ShaderInstance SHRINE_SKY_SHADER;
 	private static TextureTarget SCENE_COPY;
 	private static int lastW = -1;
 	private static int lastH = -1;
@@ -80,6 +85,24 @@ public class JjkShaderManager {
 			DISMANTLE_SHADER = null;
 			DISMANTLE_RENDER_TYPE = null;
 			System.err.println("[JJK Strongest] Failed to load Dismantle shader");
+			e.printStackTrace();
+		}
+		try {
+			event.registerShader(new ShaderInstance(event.getResourceProvider(), ResourceLocation.fromNamespaceAndPath("jjk_strongest", "shrine_cleave"), DefaultVertexFormat.POSITION_TEX_COLOR), shader -> {
+				SHRINE_CLEAVE_SHADER = shader;
+				SHRINE_CLEAVE_RENDER_TYPE = makeRenderType("shrine_cleave", DefaultVertexFormat.POSITION_TEX_COLOR, () -> SHRINE_CLEAVE_SHADER);
+			});
+		} catch (Exception e) {
+			SHRINE_CLEAVE_SHADER = null;
+			SHRINE_CLEAVE_RENDER_TYPE = null;
+			System.err.println("[JJK Strongest] ✗ Failed to load the shrine cleave shader");
+			e.printStackTrace();
+		}
+		try {
+			event.registerShader(new ShaderInstance(event.getResourceProvider(), ResourceLocation.fromNamespaceAndPath("jjk_strongest", "shrine_sky"), DefaultVertexFormat.POSITION_TEX), shader -> SHRINE_SKY_SHADER = shader);
+		} catch (Exception e) {
+			SHRINE_SKY_SHADER = null;
+			System.err.println("[JJK Strongest] ✗ Failed to load the shrine sky shader");
 			e.printStackTrace();
 		}
 		// hollow purple shader
@@ -277,7 +300,11 @@ public class JjkShaderManager {
 	}
 
 	private static RenderType makeRenderType(String name, java.util.function.Supplier<ShaderInstance> shaderSup) {
-		return RenderType.create(name, DefaultVertexFormat.POSITION_TEX, VertexFormat.Mode.QUADS, 256, false, true,
+		return makeRenderType(name, DefaultVertexFormat.POSITION_TEX, shaderSup);
+	}
+
+	private static RenderType makeRenderType(String name, VertexFormat format, java.util.function.Supplier<ShaderInstance> shaderSup) {
+		return RenderType.create(name, format, VertexFormat.Mode.QUADS, 256, false, true,
 				RenderType.CompositeState.builder().setShaderState(new RenderStateShard.ShaderStateShard(shaderSup)).setDepthTestState(new RenderStateShard.DepthTestStateShard("lequal", 515)).setCullState(new RenderStateShard.CullStateShard(false))
 						.setWriteMaskState(new RenderStateShard.WriteMaskStateShard(true, false)).setTransparencyState(new RenderStateShard.TransparencyStateShard("translucent_transparency", () -> {
 							com.mojang.blaze3d.systems.RenderSystem.enableBlend();
@@ -288,6 +315,44 @@ public class JjkShaderManager {
 						})).setOutputState(new RenderStateShard.OutputStateShard("main_target", () -> {
 						}, () -> {
 						})).createCompositeState(true));
+	}
+
+	/**
+	 * Readies the shrine's cut shader for one frame: the scene copied ONCE, and the only two
+	 * uniforms that are genuinely per-frame. Everything per-slash rides in the vertices.
+	 */
+	public static boolean beginShrineCleave(float timeSeconds) {
+		if (SHRINE_CLEAVE_SHADER == null)
+			return false;
+		Minecraft mc = Minecraft.getInstance();
+		if (mc.level == null)
+			return false;
+		com.mojang.blaze3d.pipeline.RenderTarget main = mc.getMainRenderTarget();
+		int w = main.width;
+		int h = main.height;
+		if (w <= 0 || h <= 0)
+			return false;
+		ensureSceneCopy(w, h);
+		copyMainToSceneCopy(main, SCENE_COPY, w, h);
+		try {
+			SHRINE_CLEAVE_SHADER.setSampler("SceneSampler", SCENE_COPY.getColorTextureId());
+		} catch (Exception ignored) {
+		}
+		setUniform(SHRINE_CLEAVE_SHADER, "OutSize", (float) w, (float) h);
+		setUniform(SHRINE_CLEAVE_SHADER, "Time", timeSeconds);
+		reportMissingUniformsOnce(SHRINE_CLEAVE_SHADER, "shrine_cleave", "OutSize", "Time");
+		return true;
+	}
+
+	/** The shrine's sky dome. The caller draws with {@code drawWithShader}, which sets the matrices. */
+	public static boolean beginShrineSky(float timeSeconds, float alpha, float seed) {
+		if (SHRINE_SKY_SHADER == null)
+			return false;
+		setUniform(SHRINE_SKY_SHADER, "Time", timeSeconds);
+		setUniform(SHRINE_SKY_SHADER, "Alpha", alpha);
+		setUniform(SHRINE_SKY_SHADER, "Seed", seed);
+		reportMissingUniformsOnce(SHRINE_SKY_SHADER, "shrine_sky", "Time", "Alpha", "Seed");
+		return true;
 	}
 
 	public static boolean beginFrameCaptureDismantle(float timeSeconds, int style, float seed, float slashLength, float slashWidth, float r, float g, float b) {

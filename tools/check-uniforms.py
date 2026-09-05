@@ -45,15 +45,30 @@ def check(name, const):
     for n in declared:
         if n not in seen:
             bad.append(f'{n} declared in json but read by neither stage (driver will optimise it out)')
+    # attributes: every json attribute must be an `in` of the vertex stage, and vice versa
+    try:
+        vsh = open(BASE + name + '.vsh').read()
+        ins = set(re.findall(r'^in\s+\w+\s+(\w+)\s*;', vsh, re.M))
+        attrs = set(d.get('attributes', []))
+        for a in attrs - ins:
+            bad.append(f'attribute {a} declared in json but the vsh has no `in` for it')
+        for a in ins - attrs:
+            bad.append(f'vsh reads attribute {a} that the json does not declare')
+    except FileNotFoundError:
+        pass
     if const:
         src = open(JAVA).read()
         calls = {}
-        for m in re.finditer(r'setUniform\(%s,\s*"(\w+)"((?:,\s*[^;()]*|\([^()]*\))*)\);' % const, src):
-            depth = c = 0
-            for ch in m.group(2):
+        # Walk each setUniform(CONST, "name", ...) call by paren depth rather than by regex, so
+        # casts like (float) w inside the argument list count as one argument, not a stop.
+        for m in re.finditer(r'setUniform\(%s,\s*"(\w+)"' % const, src):
+            depth, c, i = 1, 0, m.end()
+            while i < len(src) and depth > 0:
+                ch = src[i]
                 if ch == '(': depth += 1
                 elif ch == ')': depth -= 1
-                elif ch == ',' and depth == 0: c += 1
+                elif ch == ',' and depth == 1: c += 1
+                i += 1
             calls[m.group(1)] = c
         for m in re.finditer(r'setUniformArray\(%s,\s*"(\w+)"' % const, src):
             calls[m.group(1)] = 'array'

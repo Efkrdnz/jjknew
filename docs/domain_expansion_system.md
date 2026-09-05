@@ -159,16 +159,14 @@ exchange comes out symmetric.
 
 Deliberately not shared, and deliberately not in the definition.
 
-`uv_interior` is one shader on one inward-wound 32 × 64 sphere, branching three ways:
+`uv_interior` is one shader on one inward-wound 32 × 64 sphere (`SkyMesh`) plus a floor disc,
+branching on which surface it is drawing:
 
-- **Outside** — a near-opaque black sphere with white shatter on it.
-- **The floor** — split off by a real ray-plane intersection, not a hemisphere test, because
-  the band of sphere between the floor plane and the equator is reachable by rays that never
-  cross the plane and has to show wall. Black lacquer: it reflects the analytic sky about the
-  plane with Fresnel from matte underfoot to mirror-bright at the horizon.
-- **The dome** — near-black going navy overhead, two star layers, a tilted dust band, three
-  hard-thresholded volume steps, twelve ink blots whose rims are all displaced by one shared
-  warp field, and pale-blue lens arcs.
+- **Outside** — an opaque black sphere with white shatter on it.
+- **The floor** — a real disc at the plane, translucent with depth (§ below).
+- **The dome** — deep space over a lit shore: round stars, a Milky Way with dust lanes, faint
+  nebulae and one drifting cobalt cloud, a horizon glow at eye level, and the black hole. Solid;
+  holes in the barrier are the only way to see out.
 
 The black hole is at infinity: a direction (`BhDir`, from the caster's facing at cast,
 synced as `HOLE_YAW`), an angular radius (`BhAng.x`, 35 degrees across) and a fixed disc
@@ -191,10 +189,35 @@ with `entityCentre = -CamOffset`. `uv_interior.vsh` adds `CamOffset` back and ha
 fragment stage domain-local blocks; `uv_shards.vsh` does the same before its sphere maths.
 Treating `Position` as a unit vector is what once cost the interior all its parallax.
 
-**Key files:** `client/renderer/DomainUVRenderer`, `client/JjkShaderManager`,
-`shaders/core/uv_interior.*`, `shaders/core/uv_shards.*`, `client/DomainFloorRipples`,
-`client/renderer/DomainUVLinesClientRenderer`, `client/DomainAtmosphereRenderer`,
-`client/DomainLightmap`, `client/DomainClashHudOverlay`
+**Malevolent Shrine** is the open domain, so it has no walls to paint; what it has is a sky,
+an atmosphere and its cuts, and one number drives all three. `ShrineAtmosphereRenderer.
+intensity` is the phase ramp (in over the expansion, out over the collapse) times a distance
+falloff from forty blocks outside the field to ten inside it; it is zero inside a closed
+domain, where the Void's atmosphere wins. `SkyBoxOverrideShrineProcedure` draws the vanilla
+sky and then the `shrine_sky` dome over it at that alpha — blood dusk, slow domain-warped
+clouds lit from beneath, six fixed scars cut across the sky — on the same `SkyMesh` sphere.
+The fog pulls in to the field's radius in the same blood colour, and `DomainLightmap` casts
+the field red and dim.
+
+The cuts are `shrine_cleave`: one draw call for every live slash, with each slash's life,
+style, seed, jitter and sweep packed into the vertex `Color` bytes (the layout is documented
+at the top of the fragment shader, beside the renderer that writes it). The frame is copied
+to the scene texture once, and the shader shears it apart across the cut so the world visibly
+splits along the line. Each quad is a cylindrical billboard around the blade's axis, so a
+slash is never seen edge-on. The technique's own Dismantle keeps `dismantle_slash` untouched.
+
+**The trap this replaced:** the old renderer set the shader's per-slash uniforms for each
+slash and flushed them all in one batch, so every slash on screen wore the last one's style
+and colour — and it copied the whole frame once per slash. If a per-instance parameter has
+to vary inside a batch, it goes in a vertex attribute, never a uniform.
+
+**Key files:** `client/renderer/DomainUVRenderer`, `client/renderer/SkyMesh`,
+`client/JjkShaderManager`, `shaders/core/uv_interior.*`, `shaders/core/uv_shards.*`,
+`client/DomainFloorRipples`, `client/renderer/DomainUVLinesClientRenderer`,
+`client/DomainAtmosphereRenderer`, `client/DomainLightmap`, `client/DomainClashHudOverlay`,
+`shaders/core/shrine_cleave.*`, `shaders/core/shrine_sky.*`,
+`client/renderer/MalevolentShrineSlashRenderer`, `client/MalevolentShrineSlashManager`,
+`client/ShrineAtmosphereRenderer`, `procedures/SkyBoxOverrideShrineProcedure`
 
 ---
 
