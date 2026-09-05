@@ -41,6 +41,25 @@ const vec3 PALEBLUE = vec3(0.52, 0.66, 0.90);
 const vec3 HORIZON  = vec3(0.62, 0.74, 0.95);
 const vec3 VIOLET   = vec3(0.45, 0.35, 0.80);
 
+// ---- knobs -----------------------------------------------------------------
+// The two switches are the revert: set either to false and the feature is gone, and the
+// compiler folds its code away with it. The numbers are what they were tuned to.
+
+/** Fraction of star cells that carry a star. Was 0.45 before the sky was thinned. */
+const float STAR_FILL = 0.26;
+
+/** One deep-blue cloud that drifts slowly around the sky. */
+const bool  DRIFT_NEBULA = true;
+/** Cobalt, on purpose: the horizon and the disc already own light blue. */
+const vec3  NEBULA_BLUE  = vec3(0.05, 0.14, 0.60);
+const vec3  NEBULA_CORE  = vec3(0.16, 0.30, 0.82);
+/** Radians per second about the vertical. A full lap of the sky in about seventeen minutes. */
+const float NEBULA_DRIFT = 0.006;
+
+/** A glowing gold ring just outside the photon ring. */
+const bool  GOLD_RING = true;
+const vec3  GOLD      = vec3(1.0, 0.82, 0.28);
+
 // ---- noise -----------------------------------------------------------------
 
 float hash11(float p) {
@@ -273,10 +292,13 @@ vec3 starLayer(vec3 d, float cells, float seed, float t) {
     vec2 f = uv - cell;
     vec2 id = cell + face * 131.0 + seed;
     float h = hash11(dot(id, vec2(12.9898, 78.233)) + seed);
-    if (h < 0.55)
+    // Most cells are empty. STAR_FILL is the one knob for how busy the sky is, and it thins
+    // every layer at once, the Milky Way's included.
+    float empty = 1.0 - STAR_FILL;
+    if (h < empty)
         return vec3(0.0);
     vec2 pos = random2(id) * 0.7 + 0.15;
-    float mag = (h - 0.55) / 0.45;
+    float mag = (h - empty) / STAR_FILL;
     float radius = 0.035 + 0.11 * mag * mag;
     float star = smoothstep(radius, radius * 0.25, length(f - pos));
     float twinkle = 0.85 + 0.15 * sin(t * (0.8 + 1.7 * h) + h * 40.0);
@@ -304,6 +326,31 @@ vec3 nebulae(vec3 d, float ang) {
     float a = smoothstep(0.50, 0.85, fbm3(d * 2.2 + BrushSeed + 3.1));
     float b = smoothstep(0.52, 0.86, fbm3(d * 1.9 - BrushSeed + 9.4));
     return (vec3(0.12, 0.08, 0.30) * a + vec3(0.05, 0.15, 0.30) * b) * 0.35 * away;
+}
+
+/**
+ * One cobalt cloud, a hand's width, that drifts around the sky.
+ *
+ * The direction is turned about the vertical before sampling, so the cloud moves along the
+ * horizon at a fixed height — slowly enough that you notice it has moved rather than that
+ * it is moving. Dark filaments through it are what make it read as gas rather than a spot,
+ * and it stands off the hole so the disc keeps its own colours. Switched by DRIFT_NEBULA.
+ */
+vec3 driftNebula(vec3 d, float ang, float t) {
+    float a = t * NEBULA_DRIFT;
+    vec3 dr = vec3(d.x * cos(a) - d.z * sin(a), d.y, d.x * sin(a) + d.z * cos(a));
+    vec3 home = normalize(vec3(0.62, 0.55, 0.56));
+    float core = smoothstep(0.72, 0.97, dot(dr, home));
+    if (core <= 0.0)
+        return vec3(0.0);
+    float body = fbm3(dr * 3.4 + BrushSeed * 0.7 + 21.0);
+    float wisp = fbm3(dr * 9.0 - BrushSeed * 0.4 + 5.0);
+    float dens = smoothstep(0.40, 0.80, body) * (0.55 + 0.45 * wisp);
+    float lane = 1.0 - 0.6 * smoothstep(0.50, 0.62, wisp);
+    float away = smoothstep(1.2 * BhAng.x, 2.0 * BhAng.x, ang);
+    vec3 col = NEBULA_BLUE * core * dens * lane * 0.9;
+    col += NEBULA_CORE * pow(core, 4.0) * dens * 0.25;
+    return col * away;
 }
 
 /**
@@ -341,6 +388,8 @@ vec3 skyAnalytic(vec3 d, float t, bool mirror) {
         col += starLayer(bent, 44.0, 5.0, t) * 0.8;
     col += milkyWay(bent, t);
     col += nebulae(bent, ang);
+    if (DRIFT_NEBULA)
+        col += driftNebula(bent, ang, t);
 
     // A basis around the line of sight to the hole, for anything that needs an azimuth.
     vec3 ref = abs(BhDir.y) < 0.9 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
@@ -374,6 +423,16 @@ vec3 skyAnalytic(vec3 d, float t, bool mirror) {
     float ring = exp(-pow((ang - BhAng.x * 1.02) / (BhAng.x * 0.02), 2.0)) * 2.5;
     float glow = exp(-max(ang - BhAng.x, 0.0) / (BhAng.x * 0.25)) * 0.35;
     col += mix(BONE, PALEBLUE, 0.15) * (ring + glow) * shadow;
+
+    if (GOLD_RING) {
+        // A second, gold ring a little outside the photon ring: a sharp core with a wide
+        // soft halo, which is as much glow as there is without a post pass. Under the near
+        // disc image like the photon ring, so the front of the disc crosses over it.
+        float gr = BhAng.x * 1.14;
+        float goldCore = exp(-pow((ang - gr) / (BhAng.x * 0.025), 2.0)) * 1.8;
+        float goldHalo = exp(-pow((ang - gr) / (BhAng.x * 0.14), 2.0)) * 0.45;
+        col += GOLD * (goldCore + goldHalo) * shadow;
+    }
 
     if (DiscStrength > 0.001) {
         // Near image: the unbent ray meets the plane before closest approach.
