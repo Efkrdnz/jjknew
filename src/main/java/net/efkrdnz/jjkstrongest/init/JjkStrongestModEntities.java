@@ -16,6 +16,7 @@ import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Entity;
 
+import net.efkrdnz.jjkstrongest.entity.DebugBotEntity;
 import net.efkrdnz.jjkstrongest.entity.SukunaEntity;
 import net.efkrdnz.jjkstrongest.entity.GojoEntity;
 import net.efkrdnz.jjkstrongest.entity.ReversalRedEntity;
@@ -82,6 +83,8 @@ public class JjkStrongestModEntities {
 	public static final DeferredHolder<EntityType<?>, EntityType<GojoEntity>> GOJO = register("gojo",
 			EntityType.Builder.<GojoEntity>of(GojoEntity::new, MobCategory.MONSTER).setShouldReceiveVelocityUpdates(true).setTrackingRange(128).setUpdateInterval(3)
 					.sized(0.6f, 1.8f));
+	public static final DeferredHolder<EntityType<?>, EntityType<DebugBotEntity>> DEBUG_BOT = register("debug_bot",
+			EntityType.Builder.<DebugBotEntity>of(DebugBotEntity::new, MobCategory.MISC).setShouldReceiveVelocityUpdates(true).setTrackingRange(128).setUpdateInterval(1).sized(0.6f, 1.8f));
 	public static final DeferredHolder<EntityType<?>, EntityType<BlueVortexEntity>> BLUE_VORTEX = register("blue_vortex", EntityType.Builder.<BlueVortexEntity>of(BlueVortexEntity::new, MobCategory.MISC).setShouldReceiveVelocityUpdates(true)
 			.setTrackingRange(64).setUpdateInterval(1).fireImmune().sized(0.2f, 0.2f));
 
@@ -125,5 +128,6 @@ public class JjkStrongestModEntities {
 		event.put(HOLLOW_NUKE.get(), HollowNukeEntity.createAttributes().build());
 		event.put(SUKUNA.get(), SukunaEntity.createAttributes().build());
 		event.put(GOJO.get(), GojoEntity.createAttributes().build());
+		event.put(DEBUG_BOT.get(), DebugBotEntity.createAttributes().build());
 	}
 }

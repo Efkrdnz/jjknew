@@ -41,6 +41,7 @@ public class JjkStrongestModEntityRenderers {
 		event.registerEntityRenderer(JjkStrongestModEntities.BF_ENTITY.get(), BFEntityRenderer::new);
 		event.registerEntityRenderer(JjkStrongestModEntities.MALEVOLENT_SHRINE.get(), MalevolentShrineRenderer::new);
 		event.registerEntityRenderer(JjkStrongestModEntities.DOMAIN_UV.get(), DomainUVRenderer::new);
+		event.registerEntityRenderer(JjkStrongestModEntities.DEBUG_BOT.get(), net.efkrdnz.jjkstrongest.client.renderer.DebugBotRenderer::new);
 		event.registerEntityRenderer(JjkStrongestModEntities.FLAME_ARROW.get(), FlameArrowRenderer::new);
 		event.registerEntityRenderer(JjkStrongestModEntities.FLAME_ARROW_EXPLOSION.get(), FlameArrowExplosionRenderer::new);
 		event.registerEntityRenderer(JjkStrongestModEntities.HOLLOW_PURPLE_BIG.get(), HollowPurpleBigRenderer::new);

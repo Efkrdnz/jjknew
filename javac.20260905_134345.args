@@ -1,0 +1,7 @@
+-proc:none
+-nowarn
+-Xmaxerrs
+100000
+-d
+/tmp/claude-0/-home-user-jjknew/19edfd0c-c7aa-560a-b2fe-f715c3f0ada8/scratchpad/parse/out
+@/tmp/claude-0/-home-user-jjknew/19edfd0c-c7aa-560a-b2fe-f715c3f0ada8/scratchpad/parse/all.txt
