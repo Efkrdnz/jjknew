@@ -107,6 +107,62 @@ public final class DomainShell {
 	}
 
 	/**
+	 * How much more of itself the far side of the shell keeps when a fracture is directed.
+	 *
+	 * <p>Enough that {@link #weakestDirection()} lands on the near face and the collapse
+	 * breaks from there, not so much that the back of the dome comes out of it uncracked.
+	 */
+	private static final double FRACTURE_BIAS = 0.8;
+
+	/**
+	 * Cracks the whole shell through without opening it, for a barrier about to be broken as
+	 * one piece rather than worn through.
+	 *
+	 * <p>Deliberately not {@link #applyPressure} with a large number. Pressure takes cells to
+	 * zero, and a cell at zero is a <em>hole</em> — which the collapse pass draws as nothing
+	 * at all, so a shell "shattered" that way would simply blink out instead of coming apart.
+	 * A dome has to still be there to shatter. Every cell is capped instead: low enough that
+	 * the shards carry cracks edge to edge, high enough that not one of them is a gap.
+	 *
+	 * <p>Cells already open stay open — there is nothing left of those to crack — and the cap
+	 * leans away from {@code from}, so the break starts where whatever broke it is standing.
+	 *
+	 * @param remaining fraction of full integrity to leave at the near face, clamped away from zero
+	 * @param from      offset from the shell's centre to the thing breaking it; null or zero cracks evenly
+	 */
+	public void fracture(float remaining, Vec3 from) {
+		float near = Math.max(0.02f, Math.min(1.0f, remaining)) * FULL;
+		double length = from == null ? 0.0 : from.length();
+		double nx = 0.0;
+		double ny = 0.0;
+		double nz = 0.0;
+		if (length > 1.0E-6) {
+			nx = from.x / length;
+			ny = from.y / length;
+			nz = from.z / length;
+		}
+		boolean changed = false;
+		for (int i = 0; i < CELLS; i++) {
+			float cap = near;
+			if (length > 1.0E-6) {
+				// +1 facing the breaker, -1 behind it; so the lean is 0 at the near face and
+				// 1 at the far one, and no cell is ever capped below the near face's share.
+				double align = CELL_DIRECTIONS[i * 3] * nx + CELL_DIRECTIONS[i * 3 + 1] * ny + CELL_DIRECTIONS[i * 3 + 2] * nz;
+				cap = (float) (near * (1.0 + FRACTURE_BIAS * (1.0 - align) * 0.5));
+			}
+			if (integrity[i] > cap) {
+				integrity[i] = cap;
+				// Held open the same way damage is, so the regen clock cannot start closing
+				// the cracks in the tick between this and the collapse taking over.
+				hold[i] = (short) profile.regenHoldTicks();
+				changed = true;
+			}
+		}
+		if (changed)
+			dirty = true;
+	}
+
+	/**
 	 * Wear concentrated on the face pointing one way, for a barrier being pressed on by
 	 * another barrier.
 	 *

@@ -276,6 +276,50 @@ public class GeomTest {
         check("a degenerate direction does nothing rather than NaN-ing the grid",
               near(untouched.totalIntegrity(), 1.0f, 1e-6), "integrity " + untouched.totalIntegrity());
 
+        System.out.println("\nfracture (broken as one piece, not worn through)");
+        // The collapse pass draws a cell below about an eighth as an opening and skips the
+        // shard sitting over it, so a shell "shattered" by taking every cell to zero would
+        // blink out instead of coming apart. These are the guard rails on that.
+        DomainShell cracked = new DomainShell(VOID_SHELL);
+        Vec3 breaker = new Vec3(0, 0, 25);
+        cracked.fracture(0.18f, breaker);
+        check("cracking the shell opens nothing", cracked.breachCount() == 0,
+              "breaches=" + cracked.breachCount());
+        float lowestCell = DomainShell.FULL;
+        float highestCell = 0.0f;
+        for (int cell = 0; cell < DomainShell.CELLS; cell++) {
+            lowestCell = Math.min(lowestCell, cracked.integrityAt(cell));
+            highestCell = Math.max(highestCell, cracked.integrityAt(cell));
+        }
+        check("every cell stays above the shard pass's hole threshold",
+              lowestCell > DomainShell.FULL * 0.13f, "lowest " + (lowestCell / DomainShell.FULL));
+        check("...and no part of it comes out uncracked",
+              highestCell < DomainShell.FULL * 0.4f, "highest " + (highestCell / DomainShell.FULL));
+        check("the shell as a whole reads as badly broken",
+              cracked.totalIntegrity() < 0.35f, "integrity " + cracked.totalIntegrity());
+        check("the break starts where whatever broke it is standing",
+              cracked.weakestDirection().normalize().dot(breaker.normalize()) > 0.9,
+              "break dir " + cracked.weakestDirection());
+        byte[] crackedWire = cracked.snapshot();
+        int openOnWire = 0;
+        for (byte b : crackedWire) if ((b & 0xFF) == 0) openOnWire++;
+        check("and the client is told about none of it as holes", openOnWire == 0,
+              openOnWire + " cells serialised as open");
+
+        DomainShell evenly = new DomainShell(VOID_SHELL);
+        evenly.fracture(0.18f, null);
+        check("with no direction it cracks evenly",
+              near(evenly.integrityAt(0), evenly.integrityAt(DomainShell.CELLS - 1), 1e-3),
+              evenly.integrityAt(0) + " vs " + evenly.integrityAt(DomainShell.CELLS - 1));
+
+        DomainShell alreadyOpen = new DomainShell(VOID_SHELL);
+        while (!alreadyOpen.isOpenTowards(spotH.x, spotH.y, spotH.z)) alreadyOpen.applyStrike(spotH, 26.0f, 2);
+        int openBefore = alreadyOpen.breachCount();
+        alreadyOpen.fracture(0.18f, spotH);
+        check("a hole that was already there stays a hole",
+              alreadyOpen.breachCount() == openBefore && alreadyOpen.isOpenTowards(spotH.x, spotH.y, spotH.z),
+              "breaches " + openBefore + " -> " + alreadyOpen.breachCount());
+
         System.out.println("\nDomainIntersect");
         DomainSphere uv = new DomainSphere(new Vec3(0,0,0), 30, -1000, DomainPhase.ACTIVE, 1f);
         DomainSphere shrineNear = DomainSphere.openField(new Vec3(20,0,0), 100);

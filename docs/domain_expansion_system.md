@@ -70,7 +70,7 @@ once against "a domain" rather than against two unrelated entity classes.
 
 `EXPANDING → SETTLING → ACTIVE → COLLAPSING`, driven from the definition's timings.
 `DomainPhase.isSealed()` is everything but COLLAPSING: a domain is a closed room from the
-moment it is cast, and the breaking shell at the end is the way out. See §9 for why collision
+moment it is cast, and the breaking shell at the end is the way out. See §10 for why collision
 uses the target radius rather than the shell's during EXPANDING.
 
 Both techniques run it. The Shrine used to keep its lifecycle in three pieces of persistent
@@ -177,7 +177,54 @@ exchange comes out symmetric.
 
 ---
 
-## 9. What it looks like
+## 9. Caught in the void
+
+Information Overload does not slow an NPC down; it takes it off the board. `domain/DomainSuppression`
+runs once a tick from `baseTick()` on the three fighters that have AI — Sukuna, Gojo and
+Mahoraga — and sets `setNoAi(true)` for as long as the effect is on them.
+
+That one call is the whole point. Each of those three already carried an overload guard inside
+its AI procedure, and every one of them leaked, because a guard part way down a tick only stops
+the part of the tick below it: Sukuna still faced you, still counter-punched out of his block
+and still healed 1.4 HP a tick. Mahoraga was worse — his guard runs from `baseTick()`, which
+vanilla runs *before* `serverAiStep()`, so his melee and stroll goals ticked afterwards and undid
+the `navigation.stop()` it had just issued. He walked up and hit you through a domain that had
+supposedly taken his mind apart. `Mob.isEffectiveAi()` is `super.isEffectiveAi() && !isNoAi()`,
+and that gate sits above sensing, both goal selectors, navigation, the three controls and
+`customServerAiStep()` — which is where Sukuna's and Gojo's AI is invoked from in the first
+place. The old guards stay in as belt and braces.
+
+Two things have to be handled around it. `noAi` is serialised, so the freeze is only ever ours
+to lift if we know we set it: a `jjk_uv_frozen` flag records that, and the restore runs from
+`baseTick()`, the one part of the tick vanilla runs regardless of `noAi`, so a mob that comes
+back from disk still frozen heals itself. And the boss bar used to be refreshed from
+`customServerAiStep()`, which no longer runs — so each of the three now refreshes it from
+`baseTick()` instead.
+
+`DebugBotEntity` is untouched: it is a `PathfinderMob` with no goals, `setNoAi(true)` already,
+and no AI procedure, so it stays fully driveable from `/jjk bot` inside a Void.
+
+**Mahoraga is the exception, as he should be.** He adapts his way out on a clock rather than on
+dice. `MahoragaEffectAdaptationEventsProcedure.tickVoidAdaptation` banks a tick in
+`maho_uv_adapt_ticks` for every tick the effect is actually on him, and at 200 — ten seconds —
+fills in the same `maho_eff_…` spin counter every other adaptation writes, which is what makes
+him permanently immune through the branch that was already there. The random roll skips
+Information Overload now; every other harmful effect still rolls exactly as it did. The counter
+is never cleared, so exposure broken across two domains still adds up.
+
+Then he breaks the barrier. `DomainShell.fracture` caps every cell at a fraction of full and
+leans that cap away from him, so `weakestDirection` points where he is standing and the collapse
+breaks from there. Deliberately a cap and not `applyPressure` with a large number: pressure takes
+cells to zero, and a cell at zero is a *hole*, which the shard pass draws as nothing at all — a
+shell shattered that way would blink out instead of coming apart. The snapshot is sent by hand
+because the per-tick sync lives in `tickShell`, which only runs while the domain is sealed.
+
+**Key files:** `domain/DomainSuppression`, `procedures/MahoragaEffectAdaptationEventsProcedure`,
+`domain/DomainShell#fracture`
+
+---
+
+## 10. What it looks like
 
 Deliberately not shared, and deliberately not in the definition.
 
@@ -242,7 +289,7 @@ Treating `Position` as a unit vector is what once cost the interior all its para
 
 ---
 
-## 10. Testing it
+## 11. Testing it
 
 Everything in this system was historically invisible from inside the game, which is how a
 barrier that was not there and a clash that never ran both shipped.

@@ -43,6 +43,8 @@ import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.nbt.CompoundTag;
 
 import net.efkrdnz.jjkstrongest.procedures.MahoragaOnEntityTickUpdateProcedure;
+import net.efkrdnz.jjkstrongest.procedures.MahoragaEffectAdaptationEventsProcedure;
+import net.efkrdnz.jjkstrongest.domain.DomainSuppression;
 import net.efkrdnz.jjkstrongest.init.JjkStrongestModEntities;
 
 public class MahoragaEntity extends Monster implements GeoEntity {
@@ -164,6 +166,16 @@ public class MahoragaEntity extends Monster implements GeoEntity {
 	public void baseTick() {
 		super.baseTick();
 		MahoragaOnEntityTickUpdateProcedure.execute(this.level(), this.getX(), this.getY(), this.getZ(), this);
+		// Both of these come after the state machine, not before it: whatever move he was
+		// committed to when the domain landed is still written in his persistent data, and
+		// the suppression has to be the last word on it or it resumes the instant the effect
+		// wears off. Running the adaptation clock first means the tick that completes it is
+		// also the tick the freeze lifts, rather than leaving him locked for one more.
+		MahoragaEffectAdaptationEventsProcedure.tickVoidAdaptation(this);
+		DomainSuppression.tick(this);
+		// The boss bar is refreshed from customServerAiStep() as well, which vanilla skips
+		// entirely while noAi is set. Without this line it would freeze along with him.
+		this.bossInfo.setProgress(this.getHealth() / this.getMaxHealth());
 		this.refreshDimensions();
 	}
 

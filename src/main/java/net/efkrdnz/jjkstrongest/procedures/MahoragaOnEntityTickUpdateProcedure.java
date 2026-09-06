@@ -9,7 +9,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.server.level.ServerLevel;
 
-import net.efkrdnz.jjkstrongest.init.JjkStrongestModMobEffects;
+import net.efkrdnz.jjkstrongest.domain.DomainSuppression;
 import net.efkrdnz.jjkstrongest.entity.MahoragaEntity;
 
 public class MahoragaOnEntityTickUpdateProcedure {
@@ -22,6 +22,17 @@ public class MahoragaOnEntityTickUpdateProcedure {
 			if (le.isDeadOrDying() || le.getHealth() <= 0)
 				return;
 		}
+
+		// ── Unlimited Void freeze ─────────────────────────────────────────────────
+		// Nothing below this line runs while Information Overload is on him. This guard used
+		// to sit two thirds of the way down, immediately above the state dispatch, so a
+		// Mahoraga "standing completely still" was still winding his cooldowns down and still
+		// healing 2.4% of his health a second off the passive regen — which is the whole of
+		// what waiting out the ten seconds costs you. The freeze proper — goals, navigation,
+		// and the melee attack that was reaching you through all of this — belongs to
+		// DomainSuppression, applied from baseTick once this has returned.
+		if (entity instanceof Mob frozen && DomainSuppression.isSuppressed(frozen))
+			return;
 
 		// ── Timer decrements ──────────────────────────────────────────────────────
 		decInt(entity, "maho_cd_global");
@@ -135,18 +146,6 @@ public class MahoragaOnEntityTickUpdateProcedure {
 			entity.getPersistentData().putString("maho_state", "DEFENSIVE");
 			entity.getPersistentData().putInt("maho_t", 0);
 			state = "DEFENSIVE";
-		}
-
-		// ── Unlimited Void freeze ─────────────────────────────────────────────────
-		// While INFORMATION_OVERLOAD is active, Mahoraga is overwhelmed and stands
-		// completely still. Wheel-spin adaptation continues via the event handler;
-		// movement is suppressed here until the effect is resisted or adapted to.
-		if (entity instanceof LivingEntity _uvLe &&
-				_uvLe.hasEffect(JjkStrongestModMobEffects.INFORMATION_OVERLOAD)) {
-			if (entity instanceof Mob _uvMob)
-				_uvMob.getNavigation().stop();
-			entity.setDeltaMovement(0, entity.getDeltaMovement().y, 0);
-			return;
 		}
 
 		// ── State dispatch ────────────────────────────────────────────────────────

@@ -23,6 +23,7 @@ import net.minecraft.server.level.ServerBossEvent;
 import net.minecraft.resources.ResourceLocation;
 
 import net.efkrdnz.jjkstrongest.procedures.GojoNPCTickProcedure;
+import net.efkrdnz.jjkstrongest.domain.DomainSuppression;
 import net.efkrdnz.jjkstrongest.init.JjkStrongestModEntities;
 import net.efkrdnz.jjkstrongest.init.JjkStrongestModMobEffects;
 
@@ -104,6 +105,21 @@ public class GojoEntity extends Monster {
 	public void stopSeenByPlayer(ServerPlayer player) {
 		super.stopSeenByPlayer(player);
 		this.bossInfo.removePlayer(player);
+	}
+
+	/**
+	 * Caught in the Void, Gojo stops.
+	 *
+	 * <p>The freeze itself lives in {@link DomainSuppression}; what has to happen here is the
+	 * boss bar. It used to be refreshed from {@code customServerAiStep()}, and vanilla skips
+	 * that entirely while {@code noAi} is set, so hitting a frozen Gojo would have left the
+	 * bar stuck at whatever it read when the domain landed.
+	 */
+	@Override
+	public void baseTick() {
+		super.baseTick();
+		DomainSuppression.tick(this);
+		this.bossInfo.setProgress(this.getHealth() / this.getMaxHealth());
 	}
 
 	@Override
