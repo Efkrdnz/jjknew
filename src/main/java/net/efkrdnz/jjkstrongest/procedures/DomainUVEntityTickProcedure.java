@@ -142,6 +142,13 @@ public class DomainUVEntityTickProcedure {
 
 		int duration = data.getInt("duration") - 1;
 		data.putInt("duration", duration);
+		// The hostile phase's own progress, which nothing advanced until now: the transition
+		// into ACTIVE set it to zero and it stayed there for the whole ten minutes. Anything
+		// reading it during ACTIVE was reading a constant — which is exactly what stranded
+		// the arrival ramp at nothing and left the room black after the rays. The Shrine has
+		// always maintained its own; this brings the Void into line.
+		int total = Math.max(1, def(domain).durationTicks());
+		domain.setPhaseProgress(Math.min(1.0f, (float) (total - duration) / total));
 		if (duration <= 0)
 			beginCollapse(domain);
 	}
