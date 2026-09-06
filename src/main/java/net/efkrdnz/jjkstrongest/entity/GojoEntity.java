@@ -110,16 +110,27 @@ public class GojoEntity extends Monster {
 	/**
 	 * Caught in the Void, Gojo stops.
 	 *
-	 * <p>The freeze itself lives in {@link DomainSuppression}; what has to happen here is the
-	 * boss bar. It used to be refreshed from {@code customServerAiStep()}, and vanilla skips
-	 * that entirely while {@code noAi} is set, so hitting a frozen Gojo would have left the
-	 * bar stuck at whatever it read when the domain landed.
+	 * <p>The freeze itself is {@link #isImmobile()}; what has to happen here is the boss bar.
+	 * It used to be refreshed from {@code customServerAiStep()}, which vanilla reaches only
+	 * through {@code serverAiStep()} — the very thing being skipped — so hitting a frozen Gojo
+	 * would have left the bar stuck at whatever it read when the domain landed.
 	 */
 	@Override
 	public void baseTick() {
 		super.baseTick();
 		DomainSuppression.tick(this);
 		this.bossInfo.setProgress(this.getHealth() / this.getMaxHealth());
+	}
+
+	/**
+	 * The freeze itself. {@code aiStep()} reads this and skips {@code serverAiStep()} entirely
+	 * — goals, navigation, the controls and {@code customServerAiStep()}, which is where Gojo's
+	 * AI runs — while leaving {@code travel()} alone, so gravity, drag and collision all keep
+	 * working and a Gojo caught in mid-air still falls.
+	 */
+	@Override
+	protected boolean isImmobile() {
+		return super.isImmobile() || DomainSuppression.isSuppressed(this);
 	}
 
 	@Override

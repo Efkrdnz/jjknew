@@ -173,8 +173,9 @@ public class MahoragaEntity extends Monster implements GeoEntity {
 		// also the tick the freeze lifts, rather than leaving him locked for one more.
 		MahoragaEffectAdaptationEventsProcedure.tickVoidAdaptation(this);
 		DomainSuppression.tick(this);
-		// The boss bar is refreshed from customServerAiStep() as well, which vanilla skips
-		// entirely while noAi is set. Without this line it would freeze along with him.
+		// The boss bar is refreshed from customServerAiStep() as well, which vanilla reaches
+		// only through serverAiStep() — the very thing isImmobile() skips. Without this line
+		// it would freeze along with him.
 		this.bossInfo.setProgress(this.getHealth() / this.getMaxHealth());
 		this.refreshDimensions();
 	}
@@ -199,6 +200,18 @@ public class MahoragaEntity extends Monster implements GeoEntity {
 	public void stopSeenByPlayer(ServerPlayer player) {
 		super.stopSeenByPlayer(player);
 		this.bossInfo.removePlayer(player);
+	}
+
+	/**
+	 * The freeze itself. {@code aiStep()} reads this and skips {@code serverAiStep()} entirely,
+	 * which is what finally stops the {@code MeleeAttackGoal} and {@code RandomStrollGoal}
+	 * above — they tick after {@code baseTick()}, so no guard written there could ever reach
+	 * them. It leaves {@code travel()} alone, so gravity, drag and collision keep working and a
+	 * Mahoraga caught mid sky-dive still falls.
+	 */
+	@Override
+	protected boolean isImmobile() {
+		return super.isImmobile() || DomainSuppression.isSuppressed(this);
 	}
 
 	@Override

@@ -179,27 +179,49 @@ exchange comes out symmetric.
 
 ## 9. Caught in the void
 
-Information Overload does not slow an NPC down; it takes it off the board. `domain/DomainSuppression`
-runs once a tick from `baseTick()` on the three fighters that have AI — Sukuna, Gojo and
-Mahoraga — and sets `setNoAi(true)` for as long as the effect is on them.
+Information Overload does not slow an NPC down; it takes it off the board. Each of the three
+fighters that have AI — Sukuna, Gojo and Mahoraga — overrides `isImmobile()` to consult
+`DomainSuppression.isSuppressed`, and each calls `DomainSuppression.tick` from `baseTick()`.
 
-That one call is the whole point. Each of those three already carried an overload guard inside
-its AI procedure, and every one of them leaked, because a guard part way down a tick only stops
-the part of the tick below it: Sukuna still faced you, still counter-punched out of his block
-and still healed 1.4 HP a tick. Mahoraga was worse — his guard runs from `baseTick()`, which
-vanilla runs *before* `serverAiStep()`, so his melee and stroll goals ticked afterwards and undid
-the `navigation.stop()` it had just issued. He walked up and hit you through a domain that had
-supposedly taken his mind apart. `Mob.isEffectiveAi()` is `super.isEffectiveAi() && !isNoAi()`,
-and that gate sits above sensing, both goal selectors, navigation, the three controls and
-`customServerAiStep()` — which is where Sukuna's and Gojo's AI is invoked from in the first
-place. The old guards stay in as belt and braces.
+`isImmobile()` is the switch that reaches everything. `LivingEntity#aiStep` reads it directly:
 
-Two things have to be handled around it. `noAi` is serialised, so the freeze is only ever ours
-to lift if we know we set it: a `jjk_uv_frozen` flag records that, and the restore runs from
-`baseTick()`, the one part of the tick vanilla runs regardless of `noAi`, so a mob that comes
-back from disk still frozen heals itself. And the boss bar used to be refreshed from
-`customServerAiStep()`, which no longer runs — so each of the three now refreshes it from
-`baseTick()` instead.
+```java
+if (this.isImmobile()) {
+    this.jumping = false; this.xxa = 0.0F; this.zza = 0.0F;
+} else if (this.isEffectiveAi()) {
+    this.serverAiStep();
+}
+```
+
+so sensing, both goal selectors, navigation, the three controls and `customServerAiStep()` stop
+together. That matters because each of those three already carried an overload guard inside its
+AI procedure and every one of them leaked — a guard part way down a tick only stops the part of
+the tick below it. Sukuna still faced you, still counter-punched out of his block and still
+healed 1.4 HP a tick. Mahoraga was worse: his guard runs from `baseTick()`, which vanilla runs
+*before* `serverAiStep()`, so his melee and stroll goals ticked afterwards and undid the
+`navigation.stop()` it had just issued. He walked up and hit you through a domain that had
+supposedly taken his mind apart. The old guards stay in as belt and braces.
+
+**It is deliberately not `setNoAi(true)`, which is what this was first written as.** That also
+freezes physics, and the reason is worth writing down because it is not obvious: the whole body
+of `LivingEntity#travel` sits inside `if (this.isControlledByLocalInstance())`, which resolves
+through `Entity#isControlledByLocalInstance` to `isEffectiveAi()`, which `Mob` overrides as
+`super.isEffectiveAi() && !isNoAi()`. So `noAi` takes out the gravity term, the drag and the
+`move()` call itself — and with `move()` goes `Entity#collide`, which is where this mod's own
+domain floor lives. A mob frozen in mid-air hung there and could not even fall onto the floor
+that would have caught it. `isImmobile()` leaves `isEffectiveAi()` alone and costs none of that;
+it is also computed live rather than serialised, so unlike `noAi` it cannot strand a mob that
+was saved to disk mid-freeze. `DomainSuppression` keeps one branch that clears a leftover
+`jjk_uv_frozen` flag and its `NoAi`, which frees anything the earlier version left inert.
+
+Around that, `DomainSuppression.tick` clears the target and aggression, stops navigation, clears
+`noGravity` — which is what drops Gojo out of his aerial mode, since the guard that used to do
+it lives in `customServerAiStep()` — zeroes horizontal velocity so a leap does not coast out,
+and clamps vertical velocity to at most zero so a mob frozen on the way up starts falling
+immediately. It also resets each fighter's own state key (`ai_action` and `suk_mode`,
+`gojo_mode`, `maho_state`), or the move it was committed to resumes the instant the effect
+wears off. And the boss bar used to be refreshed from `customServerAiStep()`, which no longer
+runs, so each of the three refreshes it from `baseTick()` instead.
 
 Damage mitigation is dropped alongside the AI, because otherwise the freeze makes them
 *tankier*. All three take triple damage under the effect; Gojo's Infinity already switched off
@@ -210,7 +232,8 @@ his guard while overloaded, and hits landed on him do not bank toward a parry fo
 domain lifts.
 
 `DebugBotEntity` is untouched: it is a `PathfinderMob` with no goals, `setNoAi(true)` already,
-and no AI procedure, so it stays fully driveable from `/jjk bot` inside a Void.
+no AI procedure and no `isImmobile()` override, so it stays fully driveable from `/jjk bot`
+inside a Void.
 
 **Mahoraga is the exception, as he should be.** He adapts his way out on a clock rather than on
 dice. `MahoragaEffectAdaptationEventsProcedure.tickVoidAdaptation` banks a tick in
