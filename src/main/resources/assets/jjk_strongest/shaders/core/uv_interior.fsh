@@ -60,6 +60,16 @@ const float NEBULA_DRIFT = 0.006;
 const bool  GOLD_RING = true;
 const vec3  GOLD      = vec3(1.0, 0.82, 0.28);
 
+/**
+ * Whether the black hole appears in the sea's reflection.
+ *
+ * False takes the whole of it out of the water — shadow, photon ring, gold ring, both disc
+ * images, the plane glow, the information streams, and the lensing that bends everything
+ * else around it — so the sea reflects stars, galaxy and nebulae over an unbent sky, and
+ * the giant hangs in the air with nothing under it. Set true to put it back.
+ */
+const bool  BH_IN_REFLECTION = false;
+
 // ---- noise -----------------------------------------------------------------
 
 float hash11(float p) {
@@ -366,15 +376,25 @@ vec3 driftNebula(vec3 d, float ang, float t) {
  * @param mirror true when this is the sea's reflection. The reflection is given more than
  *               the sky has: a third layer of stars, a brighter horizon, and information
  *               streams that flow the other way. Nothing else differs, so it reads as wrong
- *               rather than as broken — the water shows you more than the sky does.
+ *               rather than as broken — the water shows you more than the sky does. Unless
+ *               BH_IN_REFLECTION is off, in which case it is also given rather less: no
+ *               black hole at all.
  */
 vec3 skyAnalytic(vec3 d, float t, bool mirror) {
+    // Everything the hole does is gated on this one flag, so taking it out of the water
+    // takes ALL of it — there is no path that draws half a black hole.
+    bool showHole = !mirror || BH_IN_REFLECTION;
+
     float c = dot(d, BhDir);
     vec3 tangent = d - BhDir * c;
     float s = length(tangent);
     float ang = atan(s, c);   // two-argument: precision is worst exactly at the ring
     vec3 tangentDir = s > 1e-5 ? tangent / s : vec3(0.0);
-    vec3 bent = normalize(d + tangentDir * deflection(ang));
+    // No hole, no lensing: the reflected sky is sampled along the ray it came in on.
+    vec3 bent = showHole ? normalize(d + tangentDir * deflection(ang)) : d;
+    // The nebulae hold off the hole by angle. With no hole there is nothing to hold off,
+    // and an angle past every threshold is how you say that without a second code path.
+    float maskAng = showHole ? ang : 1.0e3;
 
     // L0: black overhead, a lift toward the horizon, and the horizon itself — the shore.
     vec3 col = mix(SPACE, SKY_LOW, exp(-max(d.y, 0.0) * 4.0) * 0.6);
@@ -387,9 +407,12 @@ vec3 skyAnalytic(vec3 d, float t, bool mirror) {
     if (mirror)
         col += starLayer(bent, 44.0, 5.0, t) * 0.8;
     col += milkyWay(bent, t);
-    col += nebulae(bent, ang);
+    col += nebulae(bent, maskAng);
     if (DRIFT_NEBULA)
-        col += driftNebula(bent, ang, t);
+        col += driftNebula(bent, maskAng, t);
+
+    if (!showHole)
+        return col;
 
     // A basis around the line of sight to the hole, for anything that needs an azimuth.
     vec3 ref = abs(BhDir.y) < 0.9 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);

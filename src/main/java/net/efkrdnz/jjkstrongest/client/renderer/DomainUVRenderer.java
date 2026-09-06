@@ -96,9 +96,13 @@ public class DomainUVRenderer extends MobRenderer<DomainUVEntity, Modelblank_ent
 
 	/**
 	 * The black hole is at infinity: a direction and an angular size, nothing else. Ahead of
-	 * the caster (the entity's synced yaw) and a little up; the shadow alone spans 35 degrees.
+	 * the caster (the entity's synced yaw) and up; the shadow alone spans 35 degrees.
+	 *
+	 * <p>Elevation was 20 degrees, which put the bottom of a 17.5-degree shadow within a
+	 * couple of degrees of the horizon — the giant sat on the sea rather than over it. At 35
+	 * it clears the water by about the shadow's own radius. Put 20 back to undo.
 	 */
-	private static final float HOLE_ELEVATION_DEG = 20.0f;
+	private static final float HOLE_ELEVATION_DEG = 35.0f;
 	private static final float SHADOW_RADIUS = 0.305f;
 
 	public DomainUVRenderer(EntityRendererProvider.Context context) {
