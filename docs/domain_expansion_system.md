@@ -16,8 +16,9 @@ query read it and nothing else. Before the rework there were eight unrelated har
 radii spread across gameplay and render code (25.2, 28.5, 29, 30, 35, 44, 72, 100), so the
 thing you could see was never quite the thing you could touch.
 
-The shape is a sphere cut by a flat floor plane at `floorY`. The dome above it is hollowed
-out; the hemisphere below is left alone and is what you stand on.
+The shape is a sphere cut by a flat floor plane at `floorY`. The whole ball is hollowed out,
+below the plane included, and what you stand on is the floor disc the renderer draws there —
+a mirror, which only works because there is nothing left under it.
 
 **Key files:** `domain/DomainSphere`, `domain/DomainPhase`, `domain/DomainDefinition`
 
@@ -68,8 +69,9 @@ once against "a domain" rather than against two unrelated entity classes.
 ## 4. The phase machine
 
 `EXPANDING → SETTLING → ACTIVE → COLLAPSING`, driven from the definition's timings.
-`DomainPhase.isSealed()` is `SETTLING || ACTIVE` — the only phases in which the shell is
-solid.
+`DomainPhase.isSealed()` is everything but COLLAPSING: a domain is a closed room from the
+moment it is cast, and the breaking shell at the end is the way out. See §9 for why collision
+uses the target radius rather than the shell's during EXPANDING.
 
 Both techniques run it. The Shrine used to keep its lifecycle in three pieces of persistent
 data with no logical-side guard, so both sides ran the arithmetic and happened to agree;
@@ -105,9 +107,11 @@ exactly as written, with no way to tell those two apart from inside the game.
 
 ## 6. Terrain
 
-`domain/DomainCarve` hollows the dome — the sphere above the floor plane — in budgeted
-slices, recording every block it removes into `domain/DomainSavedData` so collapse can put
-it all back. Blocks are written with `UPDATE_CLIENTS` only; neighbour notification across a
+`domain/DomainCarve` hollows the whole ball — floor to crown, down to the world's build
+limit — in budgeted slices, recording every block it removes into `domain/DomainSavedData` so
+collapse can put it all back. It stopped at the floor plane once, so you stood on real grass
+and stone; a mirror needs nothing underneath it, and anything caught below the plane is lifted
+onto it by the phase machine instead. Blocks are written with `UPDATE_CLIENTS` only; neighbour notification across a
 volume this size sets off gravity and redstone cascades for terrain that is coming back
 shortly.
 
