@@ -152,13 +152,18 @@ Void's shell; its slashes are clipped at the barrier by `domain/DomainOcclusion`
 themselves damaging it instead of cutting through. It is beaten by damaging its caster.
 
 How the Void loses is a fixed clock: pressure runs its shell down in 900 ticks (45 s) if it
-is never answered. How the Shrine loses is its caster being hit, and that number arrives
-*after* armour and mitigation — Sukuna alone stacks a quarter for blocking, a quarter for
-reverse cursed technique and twenty points of armour, which once made a clean swing worth
-about one percent of his pool and the clash unwinnable. The transfer is scaled and then held
-inside a band (`CLASH_SCALE`, `CLASH_MIN_PER_HIT`, `CLASH_MAX_PER_HIT`): the floor means every
-real hit is felt through the mitigation, the ceiling means an enormous weapon cannot end a
-clash in two swings. Roughly eight hits if you catch him open, twenty if he is blocking.
+is never answered. How the Shrine loses is its caster being hit, and the transfer is read from
+`LivingIncomingDamageEvent` — **before** armour — rather than `LivingDamageEvent.Pre`, which is
+after it. That distinction is the difference between a working mechanic and a decorative one:
+Sukuna's twenty armour is a flat three-quarters, and reading after it made a ten-damage swing
+and a twenty-damage swing arrive so small that both clamped to the same floor. His armour
+protects his body, not his grip on his domain. Blocking and reverse cursed technique are still
+priced in, because he applies those himself before any event sees the hit.
+
+The transfer is then scaled and banded (`CLASH_SCALE`, `CLASH_MIN_PER_HIT`,
+`CLASH_MAX_PER_HIT`): the floor means every real hit is felt through the mitigation, the
+ceiling means an enormous weapon cannot end a clash in two swings. Roughly five hits with a
+heavy weapon on an open guard, twenty with a light one on a closed guard.
 
 Note what does **not** help: Sukuna takes triple damage under Information Overload, but the
 Void's sure-hit is deliberately skipped for the whole clash — the effect lands only if the

@@ -34,16 +34,21 @@ public class DomainClashManagerProcedure {
 	 * How a hit on the caster converts into their domain losing its grip.
 	 *
 	 * <p>The transfer is scaled and then held inside a band. Scaled, because a harder hit
-	 * should count for more; banded, because the raw number arrives <em>after</em> armour and
-	 * mitigation, and Sukuna stacks a quarter for blocking, a quarter for reverse cursed
-	 * technique and twenty points of armour on top. Unbanded, catching him blocking made a
-	 * clean swing worth about one percent of his pool and the clash could not be won at all.
-	 * The floor means every real hit is felt; the ceiling means a huge weapon cannot end a
-	 * clash in two swings.
+	 * should count for more; banded, because the number still carries the caster's own
+	 * mitigation — Sukuna takes a quarter for blocking and a quarter for reverse cursed
+	 * technique before anything sees it. The floor means every real hit is felt through that;
+	 * the ceiling means a huge weapon cannot end a clash in two swings.
+	 *
+	 * <p>Fitted to <em>pre-armour</em> damage. These were four times larger when the transfer
+	 * read the post-armour number, and at that scale every hit from a stick to a netherite axe
+	 * clamped to the floor: the gradient existed on paper and never once appeared in play. See
+	 * {@code DomainOwnerDamageProcedure} for why the reading moved earlier in the pipeline.
+	 * Roughly five hits with a heavy weapon on an open guard, twenty with a light one on a
+	 * closed guard, inside the 900-tick clock above.
 	 */
-	private static final float CLASH_SCALE = 4.0f;
+	private static final float CLASH_SCALE = 0.75f;
 	private static final float CLASH_MIN_PER_HIT = 3.0f;
-	private static final float CLASH_MAX_PER_HIT = 8.0f;
+	private static final float CLASH_MAX_PER_HIT = 12.0f;
 	private static final float MAX_CLASH_HP = 100f;
 	/** Damage the shrine's caster can absorb before they lose their grip on the domain. */
 	public static final float SHRINE_HOLD_POOL = 60f;
