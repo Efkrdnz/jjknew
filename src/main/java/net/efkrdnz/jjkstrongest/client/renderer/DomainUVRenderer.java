@@ -95,6 +95,12 @@ public class DomainUVRenderer extends MobRenderer<DomainUVEntity, Modelblank_ent
 	private static boolean mirrorDisabled;
 
 	/**
+	 * Ticks after the domain turns hostile for the whole arrival to finish. The void itself
+	 * fades in over the first quarter of it; the splashes land across the rest.
+	 */
+	private static final float REVEAL_TICKS = 80.0f;
+
+	/**
 	 * The black hole is at infinity: a direction and an angular size, nothing else. Ahead of
 	 * the caster (the entity's synced yaw) and up; the shadow alone spans 35 degrees.
 	 *
@@ -351,7 +357,30 @@ public class DomainUVRenderer extends MobRenderer<DomainUVEntity, Modelblank_ent
 
 		return JjkShaderManager.beginUvInterior(timeSeconds, entity.getShellSeed() * 0.001f + 1.0f, 0.9f, radius, progress, entity.getPhase().ordinal(), (float) camOffset.x, (float) camOffset.y,
 				(float) camOffset.z, entity.getFloorOffset(), inside, (float) holeDir.x, (float) holeDir.y, (float) holeDir.z, holeAngle, (float) holeDistance, (float) axis.x, (float) axis.y,
-				(float) axis.z, discStrength, entity.getShellIntegrity(), shellTexture, surface, ripples);
+				(float) axis.z, discStrength, entity.getShellIntegrity(), shellTexture, surface, ripples, reveal(entity, partialTick));
+	}
+
+	/**
+	 * How far the domain has finished arriving, 0..1.
+	 *
+	 * <p>Zero for the whole forming beat, so the room is black while the shell closes and the
+	 * rays burst; then climbing once it turns hostile, which is what brings the void in and
+	 * lands the splashes one at a time. One during the collapse — everything is already up by
+	 * then, and the phase fade is what takes it away.
+	 *
+	 * <p>Worked out here rather than in the shader so the GLSL never needs to know a tick
+	 * count or a phase duration.
+	 */
+	private static float reveal(DomainUVEntity entity, float partialTick) {
+		DomainPhase phase = entity.getPhase();
+		if (phase == DomainPhase.EXPANDING || phase == DomainPhase.SETTLING)
+			return 0.0f;
+		if (phase == DomainPhase.COLLAPSING)
+			return 1.0f;
+		// ACTIVE: phase progress is the fraction of the hostile duration elapsed, so this
+		// recovers the ticks since it went hostile without the shader knowing either number.
+		float activeTicks = entity.getPhaseProgress() * entity.definition().durationTicks() + partialTick;
+		return Math.min(1.0f, Math.max(0.0f, activeTicks / REVEAL_TICKS));
 	}
 
 	/** Rodrigues' rotation of v about the unit axis k by angle radians. */

@@ -1,8 +1,8 @@
 {
   "blend": {
-      "func": "add",
-      "srcrgb": "srcalpha",
-      "dstrgb": "1-srcalpha"
+    "func": "add",
+    "srcrgb": "srcalpha",
+    "dstrgb": "1-srcalpha"
   },
   "vertex": "jjk_strongest:uv_interior",
   "fragment": "jjk_strongest:uv_interior",
@@ -29,6 +29,7 @@
     { "name": "BhAxis", "type": "float", "count": 3, "values": [ 0.0, 1.0, 0.0 ] },
     { "name": "DiscStrength", "type": "float", "count": 1, "values": [ 1.0 ] },
     { "name": "Surface", "type": "float", "count": 1, "values": [ 0.0 ] },
-    { "name": "RippleData", "type": "float", "count": 64, "values": [ 0.0 ] }
+    { "name": "RippleData", "type": "float", "count": 64, "values": [ 0.0 ] },
+    { "name": "Reveal", "type": "float", "count": 1, "values": [ 0.0 ] }
   ]
 }

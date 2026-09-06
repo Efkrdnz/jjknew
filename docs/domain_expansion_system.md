@@ -184,6 +184,28 @@ emptied. It reflects the analytic sky and, because every entity in the room is d
 mirrored under the plane before it, the room too. Footsteps ripple it (`RippleField`,
 `DomainFloorRipples`, the `RippleData` uniform array).
 
+**The forming beat.** A domain is a closed room from the moment it is cast —
+`DomainPhase.isSealed()` covers EXPANDING, and `DomainUVEntity.sphere()` reports the target
+radius during that phase so collision is full size from tick one while only the visible wall
+rushes out. Without that split everyone caught in the cast would be crushed into a ball at the
+centre as the shell grew, because the capture pass gathers from thirty-five blocks and leaves
+people where they stand.
+
+Nothing hostile happens during it: the sure-hit and the pull both live inside `tickActive`, so
+EXPANDING and SETTLING are a pure loading beat. The room is black for all of it — one uniform,
+`Reveal`, is zero until the domain turns hostile, and `skyAnalytic` returns near-black with a
+slow pulse in it while that holds, so the dome and the sea go dark together for free. The rays
+(`DomainUVLinesClientRenderer`) burst through SETTLING in purple, crimson and blue, each ray a
+fixed line for the whole beat because the seed is the domain's UUID and the tick count is
+deliberately not in it.
+
+Then `Reveal` climbs: the void fades in over its first quarter, and fourteen white splashes
+land on the barrier one at a time across the rest. They are keyed on `normalize(localPos)` —
+the direction of the SURFACE POINT, not the view ray — which is the whole difference between
+paint on the wall and a mark on the sky: you walk past them, and they drift on their own axes
+over minutes. The sea does not carry them, because the sea reflects the sky and they are not
+in it.
+
 **The one trap:** the renderer bakes its PoseStack into the vertex on the CPU, and the entity
 dispatcher has already translated that stack to the domain's camera-relative position. So
 `Position` in these shaders is *not* the unit sphere: it is `entityCentre + surface point`,

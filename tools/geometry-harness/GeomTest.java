@@ -286,6 +286,19 @@ public class GeomTest {
         check("far apart does not intersect",
               !DomainIntersect.intersects(uv, DomainSphere.openField(new Vec3(500,0,0), 100)), "reported touching");
 
+        System.out.println("\nsealed from the moment it is cast");
+        Vec3 outward = new Vec3(0, 0, 40);
+        for (DomainPhase ph : new DomainPhase[]{DomainPhase.EXPANDING, DomainPhase.SETTLING, DomainPhase.ACTIVE}) {
+            DomainSphere s2 = new DomainSphere(new Vec3(0, 0, 0), 30, -1000, ph, 0.5f);
+            Vec3 from = new Vec3(0, 0, 20);
+            Vec3 moved = s2.clampMovement(from, 0.3, outward, null);
+            check(ph + " holds you in", from.add(moved).length() <= 30.5,
+                  "ended at " + from.add(moved).length());
+        }
+        check("COLLAPSING is not sealed, so the shell is the way out",
+              !DomainPhase.COLLAPSING.isSealed(), "still sealed");
+        check("...and EXPANDING is", DomainPhase.EXPANDING.isSealed(), "not sealed");
+
         System.out.println("\nRippleField (the footstep ring buffer)");
         RippleField ripples = new RippleField();
         float[] packed = new float[RippleField.FLOATS];

@@ -16,6 +16,13 @@ uniform vec2  BhAng;          // (angular radius, distance)
 uniform vec3  BhAxis;         // accretion disc normal
 uniform float DiscStrength;   // 0 takes the disc away entirely
 uniform float Surface;        // 0 the dome, 1 the floor disc
+/**
+ * How far the domain has finished arriving, 0..1. Zero for the whole forming beat — the
+ * room is black while the shell closes and the rays burst — then climbing once the domain
+ * turns hostile. The void fades in over the first quarter of it and the splashes land one
+ * by one across the rest. Computed in DomainUVRenderer so the shader knows no tick counts.
+ */
+uniform float Reveal;
 uniform float RippleData[64]; // 16 x (dx, dz, birth seconds, strength), see RippleField
 uniform sampler2D ShellSampler; // 32x16 per-direction integrity, matching DomainShell
 
@@ -70,6 +77,16 @@ const vec3  GOLD      = vec3(1.0, 0.82, 0.28);
  */
 const bool  BH_IN_REFLECTION = false;
 
+/**
+ * White paint on the barrier: how many, and the Reveal by which the last has landed.
+ *
+ * They are on the wall, so the sea does not carry them — the sea reflects the sky, and the
+ * marks are not in the sky. Set SPLASHES to 0 to take them away entirely.
+ */
+const int   SPLASHES = 14;
+const float SPLASH_START = 0.25;
+const float SPLASH_END = 1.0;
+
 // ---- noise -----------------------------------------------------------------
 
 float hash11(float p) {
@@ -118,6 +135,14 @@ float fbm3(vec3 p) {
         amp *= 0.5;
     }
     return sum;
+}
+
+/** A stable direction per index. Recovered from the ink blots this replaces. */
+vec3 hashDir(float i, float seed) {
+    float a = hash11(i * 1.37 + seed) * 2.0 - 1.0;
+    float b = hash11(i * 2.91 + seed * 1.7 + 5.0) * PI * 2.0;
+    float r = sqrt(max(0.0, 1.0 - a * a));
+    return vec3(r * cos(b), a, r * sin(b));
 }
 
 // ---- barrier damage --------------------------------------------------------
@@ -396,6 +421,17 @@ vec3 skyAnalytic(vec3 d, float t, bool mirror) {
     // and an angle past every threshold is how you say that without a second code path.
     float maskAng = showHole ? ang : 1.0e3;
 
+    // The void arrives over the first quarter of the reveal. Gating it here rather than at
+    // the call sites means the dome and the sea agree for nothing: a black room has a black
+    // mirror, and both bloom on the same beat.
+    float voidIn = smoothstep(0.0, 0.25, Reveal);
+    if (voidIn <= 0.001) {
+        // Forming. Near-black, with a slow breath in it so the dark reads as something
+        // loading rather than as a shader that has failed.
+        float pulse = 0.5 + 0.5 * sin(t * 1.6 - fbm3(d * 1.8) * 6.0);
+        return SPACE * (0.6 + 0.8 * pulse);
+    }
+
     // L0: black overhead, a lift toward the horizon, and the horizon itself — the shore.
     vec3 col = mix(SPACE, SKY_LOW, exp(-max(d.y, 0.0) * 4.0) * 0.6);
     float horizon = exp(-abs(d.y) * 9.0) * 0.55 + exp(-abs(d.y) * 2.5) * 0.12;
@@ -412,7 +448,7 @@ vec3 skyAnalytic(vec3 d, float t, bool mirror) {
         col += driftNebula(bent, maskAng, t);
 
     if (!showHole)
-        return col;
+        return col * voidIn;
 
     // A basis around the line of sight to the hole, for anything that needs an azimuth.
     vec3 ref = abs(BhDir.y) < 0.9 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
@@ -466,7 +502,56 @@ vec3 skyAnalytic(vec3 d, float t, bool mirror) {
                 col += discShade(d * tn, d, t) * DiscStrength;
         }
     }
-    return col;
+    return col * voidIn;
+}
+
+/**
+ * White paint thrown at the inside of the barrier.
+ *
+ * <p>Two things make this read as paint on the wall rather than as a mark on the sky. The
+ * first is the argument: {@code wall} is the direction of the SURFACE POINT from the centre,
+ * not the view ray. A splash is therefore pinned to its patch of barrier and you walk past
+ * it, where anything keyed on the view ray would sit at infinity and follow you around. The
+ * second is that every rim is displaced by one shared warp field, which is what made the ink
+ * this replaces read as marks on a single sheet rather than as a dozen circles.
+ *
+ * <p>They land one at a time after the void has arrived, each blooming out fast and
+ * overshooting slightly so it reads as thrown, then drifting for the rest of the domain's
+ * life — a lap of the sphere takes minutes, so you notice they have moved rather than that
+ * they are moving. Nothing keeps them clear of the black hole: they are paint on the glass
+ * in front of the window, and crossing it is the point.
+ */
+float splashes(vec3 wall, float t, float reveal) {
+    if (SPLASHES <= 0 || reveal <= SPLASH_START)
+        return 0.0;
+    // One field for every rim, drifting slowly: the shared paper texture.
+    float warp = fbm3(wall * 5.5 + BrushSeed + t * 0.02);
+    float wobble = (warp - 0.5) * 0.055;
+    float paint = 0.0;
+    for (int i = 0; i < SPLASHES; i++) {
+        float fi = float(i);
+        float born = SPLASH_START + (SPLASH_END - SPLASH_START) * (fi / float(SPLASHES));
+        float age = reveal - born;
+        if (age <= 0.0)
+            continue;
+        // Thrown, not faded up: out fast, overshoot, settle.
+        float grow = smoothstep(0.0, 0.06, age);
+        float settle = 1.0 + 0.30 * exp(-age * 45.0) * sin(age * 70.0);
+
+        // Drift, about this splash's own axis. Rodrigues written out; GLSL 150 has no helper.
+        vec3 site = hashDir(fi, BrushSeed);
+        vec3 axis = normalize(hashDir(fi + 61.0, BrushSeed * 1.7) + vec3(1.0e-4));
+        float turn = t * (0.006 + 0.010 * hash11(fi + 11.3));
+        float cs = cos(turn);
+        float sn = sin(turn);
+        site = normalize(site * cs + cross(axis, site) * sn + axis * dot(axis, site) * (1.0 - cs));
+
+        // Hard edges, as ink on paper has. The wobble is what makes them ragged.
+        float a = 1.0 - dot(wall, site);
+        float rad = (0.012 + 0.060 * hash11(fi + 7.3)) * grow * settle;
+        paint = max(paint, smoothstep(rad + 0.005, rad - 0.005, a + wobble));
+    }
+    return clamp(paint, 0.0, 1.0);
 }
 
 // ---- the sea ---------------------------------------------------------------
@@ -622,6 +707,9 @@ void main() {
 
     // Solid. The wall used to sit at three-quarters alpha and the moon came through it.
     vec3 col = skyAnalytic(dir, t, false);
+    // Paint on the barrier, over everything the void shows through it. Keyed on the surface
+    // point, so it stays on its patch of wall as you move.
+    col = mix(col, BONE, splashes(normalize(surf), t, Reveal) * 0.94);
     col += BONE * shatter * 0.45;
     fragColor = vec4(col * Intensity, (1.0 - hole) * phaseFade);
 }

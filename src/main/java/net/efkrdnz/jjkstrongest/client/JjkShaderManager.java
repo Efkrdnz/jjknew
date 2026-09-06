@@ -431,15 +431,17 @@ public class JjkShaderManager {
 	 * @param integrity    whole-barrier integrity, 0..1
 	 * @param shellTexture GL id of the per-direction damage grid, or -1 if none yet
 	 * @param surface      0 for the dome, 1 for the floor disc — one shader, two surfaces
+	 * @param reveal       0 while the domain is still forming, climbing to 1 once it is up
 	 * @param ripples      {@link net.efkrdnz.jjkstrongest.domain.RippleField#FLOATS} floats of
 	 *                     packed ripples for the floor, or null for a still sea
 	 */
 	public static boolean beginUvInterior(float timeSeconds, float seed, float intensity, float radius, float progress, float phase, float camX, float camY, float camZ, float floorY, boolean inside,
 			float bhX, float bhY, float bhZ, float bhAngularRadius, float bhDistance, float axisX, float axisY, float axisZ, float discStrength, float integrity, int shellTexture, float surface,
-			float[] ripples) {
+			float[] ripples, float reveal) {
 		if (UV_INTERIOR_SHADER == null)
 			return false;
 		setUniform(UV_INTERIOR_SHADER, "Surface", surface);
+		setUniform(UV_INTERIOR_SHADER, "Reveal", reveal);
 		setUniformArray(UV_INTERIOR_SHADER, "RippleData", ripples == null ? NO_RIPPLES : ripples);
 		setUniform(UV_INTERIOR_SHADER, "Time", timeSeconds);
 		setUniform(UV_INTERIOR_SHADER, "BrushSeed", seed);
@@ -465,7 +467,7 @@ public class JjkShaderManager {
 			}
 		}
 		reportMissingUniformsOnce(UV_INTERIOR_SHADER, "uv_interior", "Time", "BrushSeed", "Intensity", "Radius", "Progress", "Phase", "CamOffset", "FloorY", "Inside", "BhDir", "BhAng", "BhAxis",
-				"DiscStrength", "Integrity", "HasShell", "Surface", "RippleData");
+				"DiscStrength", "Integrity", "HasShell", "Surface", "RippleData", "Reveal");
 		return true;
 	}
 

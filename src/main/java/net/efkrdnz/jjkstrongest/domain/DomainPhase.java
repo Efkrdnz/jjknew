@@ -24,8 +24,18 @@ public enum DomainPhase {
 		return ordinal >= 0 && ordinal < VALUES.length ? VALUES[ordinal] : EXPANDING;
 	}
 
-	/** True once the shell is at full size, i.e. the domain is a closed room. */
+	/**
+	 * True while the domain is a closed room, which is from the moment it is cast.
+	 *
+	 * <p>EXPANDING used to be excluded, on the reasoning that a shell still growing is not
+	 * yet a wall. In play that gave you a forty-tick window to simply walk out of a domain
+	 * being opened on you, which is the opposite of what a sure-hit is. The room is its final
+	 * size for collision from the first tick now — see {@code DomainUVEntity.sphere()} — and
+	 * only the visible wall rushes out to meet it.
+	 *
+	 * <p>COLLAPSING is still open: the shell is breaking and the way out is the point.
+	 */
 	public boolean isSealed() {
-		return this == SETTLING || this == ACTIVE;
+		return this == EXPANDING || this == SETTLING || this == ACTIVE;
 	}
 }

@@ -38,6 +38,15 @@ public class DomainUVLinesClientRenderer {
 	private static final int RAY_COUNT = 48;
 	private static final float OUTER_WIDTH = 0.045f;
 	private static final float INNER_WIDTH = 0.018f;
+	/**
+	 * The three tints a ray can be: deep purple, crimson, electric blue.
+	 *
+	 * <p>Raw cursed energy writing the domain into the world, before the void it becomes.
+	 * Each ray picks one and keeps it, because the pick comes out of the same fixed
+	 * per-domain sequence as its direction — the burst is chaotic in colour and completely
+	 * still in composition, which is what tells you it is one event rather than static.
+	 */
+	private static final float[][] RAY_TINTS = {{0.55f, 0.15f, 0.85f}, {0.90f, 0.10f, 0.20f}, {0.20f, 0.45f, 1.00f}};
 	private static final RenderType LINE_RENDER_TYPE = RenderType.create("domain_uv_lines", DefaultVertexFormat.NEW_ENTITY, VertexFormat.Mode.QUADS, 256, false, true,
 			RenderType.CompositeState.builder().setShaderState(new RenderStateShard.ShaderStateShard(GameRenderer::getRendertypeEntityTranslucentShader)).setTextureState(new RenderStateShard.TextureStateShard(LINE_TEXTURE, false, false))
 					.setTransparencyState(new RenderStateShard.TransparencyStateShard("domain_uv_lines_transparency", () -> {
@@ -91,8 +100,8 @@ public class DomainUVLinesClientRenderer {
 	 *
 	 * <p>Now: half as many rays, seeded from the domain's UUID and nothing else, so each
 	 * ray is a fixed line in space for the whole beat. What changes is their length, driven
-	 * off the phase with an ease-out, so the burst throws outward and retracts. Bone-white
-	 * core, cold blue glow — the same two colours as everything else in here.
+	 * off the phase with an ease-out, so the burst throws outward and retracts. The three
+	 * colours are back — they were the right idea, reshuffling them every frame was not.
 	 */
 	private static void renderDomainLines(DomainUVEntity domain, PoseStack poseStack, MultiBufferSource bufferSource, float partialTick, Vec3 cameraPos) {
 		float progress = domain.getPhaseProgress();
@@ -122,13 +131,24 @@ public class DomainUVLinesClientRenderer {
 			Vec3 dir = randomUnitDirection(random);
 			// A little variety in length, fixed per ray because the seed is fixed.
 			float scale = 0.55f + random.nextFloat() * 0.45f;
+			// Same reason: drawn from the fixed sequence, so this ray is this colour for the
+			// whole beat rather than a different one every frame.
+			float[] tint = RAY_TINTS[random.nextInt(RAY_TINTS.length)];
 			Vec3 start = dir.scale(1.2);
 			Vec3 end = dir.scale(Math.max(1.4f, reach * scale));
-			// Cold blue glow around a bone-white core: the shell's palette, not a third one.
-			renderBillboardQuadColor(poseStack, buffer, start, end, OUTER_WIDTH, 0.22f, 0.30f, 0.52f, 0.10f, 0.16f, 0.34f, alpha * 0.65f, cameraPos, domain.position());
-			renderBillboardQuadColor(poseStack, buffer, start, end, INNER_WIDTH, 0.92f, 0.94f, 0.98f, 0.62f, 0.72f, 0.92f, alpha, cameraPos, domain.position());
+			// The glow is the tint, fading darker along the ray; the core is the same hue
+			// pushed most of the way to white at the root, so a ray reads as hot at the
+			// centre and coloured at the tip.
+			renderBillboardQuadColor(poseStack, buffer, start, end, OUTER_WIDTH, tint[0] * 0.55f, tint[1] * 0.55f, tint[2] * 0.55f, tint[0] * 0.22f, tint[1] * 0.22f, tint[2] * 0.22f, alpha * 0.65f, cameraPos,
+					domain.position());
+			renderBillboardQuadColor(poseStack, buffer, start, end, INNER_WIDTH, lift(tint[0]), lift(tint[1]), lift(tint[2]), tint[0], tint[1], tint[2], alpha, cameraPos, domain.position());
 		}
 		poseStack.popPose();
+	}
+
+	/** Most of the way to white, keeping the hue: the hot root of a ray. */
+	private static float lift(float channel) {
+		return channel + (1.0f - channel) * 0.72f;
 	}
 
 	private static Vec3 randomUnitDirection(Random r) {

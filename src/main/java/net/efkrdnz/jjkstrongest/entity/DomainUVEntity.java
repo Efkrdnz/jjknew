@@ -106,7 +106,24 @@ public class DomainUVEntity extends PathfinderMob implements DomainSource {
 	 * the renderer, the collision hook, the carve and the fog all read.
 	 */
 	public DomainSphere sphere() {
-		return new DomainSphere(this.position(), getShellRadius(), this.getY() + getFloorOffset(), getPhase(), getPhaseProgress());
+		return new DomainSphere(this.position(), roomRadius(), this.getY() + getFloorOffset(), getPhase(), getPhaseProgress());
+	}
+
+	/**
+	 * How big the room is, as against how big the wall currently looks.
+	 *
+	 * <p>They differ for one phase only. The domain is sealed from the moment it is cast, but
+	 * its shell starts at nothing and grows; if collision followed the shell, everyone caught
+	 * in the cast would be crushed into a ball at the centre as it opened — the capture pass
+	 * gathers entities from thirty-five blocks out and leaves them where they stand
+	 * horizontally, so they are genuinely spread across the floor when it starts.
+	 *
+	 * <p>So while EXPANDING the room is already its final size and only the wall you can see
+	 * is still on its way out. The renderer draws {@link #getShellRadius()} directly and is
+	 * unaffected.
+	 */
+	private float roomRadius() {
+		return getPhase() == DomainPhase.EXPANDING ? Math.max(getShellRadius(), getTargetRadius()) : getShellRadius();
 	}
 
 	@Override

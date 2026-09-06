@@ -35,6 +35,9 @@ public class DomainUVEntityTickProcedure {
 	 * second technique is a {@link DomainDefinition} and a renderer, not a second copy of
 	 * everything below.
 	 */
+	/** How much of the expansion the visible wall takes to reach full size. */
+	private static final float WALL_GROW_FRACTION = 0.3f;
+
 	private static DomainDefinition def(DomainUVEntity domain) {
 		return domain.definition();
 	}
@@ -104,8 +107,12 @@ public class DomainUVEntityTickProcedure {
 		}
 
 		float progress = Math.min(1.0f, (float) tick / def(domain).expansionTicks());
-		// ease-out so the shell slams outward and settles, rather than crawling
-		float eased = 1.0f - (1.0f - progress) * (1.0f - progress);
+		// The wall reaches full size in the first third of the phase, not at the end of it.
+		// Collision is already at full size from tick one (the domain is sealed the moment it
+		// is cast), so a wall that crawled outward for two seconds left a widening gap between
+		// where the room ended and where it looked like it ended. Ease-out, so it slams.
+		float grow = Math.min(1.0f, progress / WALL_GROW_FRACTION);
+		float eased = 1.0f - (1.0f - grow) * (1.0f - grow);
 		domain.setShellRadius(domain.getTargetRadius() * eased);
 		domain.setPhaseProgress(progress);
 
