@@ -73,6 +73,21 @@ public class SukunaEntity extends Monster {
 		// he is completely overwhelmed until his domain counter fires.
 		if (this.hasEffect(net.efkrdnz.jjkstrongest.init.JjkStrongestModMobEffects.INFORMATION_OVERLOAD))
 			amount *= 3.0f;
+		// ...and his guard drops with the rest of him. Blocking is armed from in here rather
+		// than from the AI, so it is the one piece of him DomainSuppression cannot reach — and
+		// a man who cannot move should not be parrying. It also very nearly undid the triple
+		// above: three quarters off a tripled hit lands under a normal one, so a frozen Sukuna
+		// was harder to kill than an awake one the moment you got three swings in. Reverse
+		// cursed technique goes with it; the AI cannot start a burst while frozen, but one
+		// already running would have kept mitigating.
+		if (DomainSuppression.isSuppressed(this)) {
+			this.getPersistentData().putBoolean("is_blocking", false);
+			this.getPersistentData().putInt("ai_block_timer", 0);
+			// Hits landed on a man who cannot answer them do not add up to a parry the moment
+			// the domain drops.
+			this.getPersistentData().putInt("consecutive_hits", 0);
+			return super.hurt(damagesource, amount);
+		}
 		// hit counter for block trigger
 		long now = this.level().getGameTime();
 		long lastHit = this.getPersistentData().getLong("last_hit_time");

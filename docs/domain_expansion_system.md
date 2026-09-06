@@ -201,6 +201,14 @@ back from disk still frozen heals itself. And the boss bar used to be refreshed 
 `customServerAiStep()`, which no longer runs — so each of the three now refreshes it from
 `baseTick()` instead.
 
+Damage mitigation is dropped alongside the AI, because otherwise the freeze makes them
+*tankier*. All three take triple damage under the effect; Gojo's Infinity already switched off
+in the same branch and Mahoraga has none, but Sukuna's block is armed from `hurt()` rather than
+from his AI, so `DomainSuppression` could not reach it — and three quarters off a tripled hit
+lands under a normal one, which made a frozen Sukuna harder to kill than an awake one. He drops
+his guard while overloaded, and hits landed on him do not bank toward a parry for when the
+domain lifts.
+
 `DebugBotEntity` is untouched: it is a `PathfinderMob` with no goals, `setNoAi(true)` already,
 and no AI procedure, so it stays fully driveable from `/jjk bot` inside a Void.
 
