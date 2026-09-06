@@ -18,6 +18,7 @@ import net.efkrdnz.jjkstrongest.client.DomainFloorRipples;
 import net.efkrdnz.jjkstrongest.client.DomainShellTexture;
 import net.efkrdnz.jjkstrongest.client.JjkShaderManager;
 import net.efkrdnz.jjkstrongest.client.model.Modelblank_entity;
+import net.efkrdnz.jjkstrongest.domain.DomainDefinition;
 import net.efkrdnz.jjkstrongest.domain.DomainPhase;
 import net.efkrdnz.jjkstrongest.domain.DomainShell;
 import net.efkrdnz.jjkstrongest.domain.DomainSource;
@@ -96,9 +97,10 @@ public class DomainUVRenderer extends MobRenderer<DomainUVEntity, Modelblank_ent
 
 	/**
 	 * Ticks after the domain turns hostile for the whole arrival to finish. The void itself
-	 * fades in over the first quarter of it; the splashes land across the rest.
+	 * fades in over the first quarter of it; the splashes land across the rest. Shared with
+	 * the sure-hit, which waits for exactly this before it touches anyone.
 	 */
-	private static final float REVEAL_TICKS = 80.0f;
+	private static final float REVEAL_TICKS = DomainDefinition.ARRIVAL_TICKS;
 
 	/**
 	 * The black hole is at infinity: a direction and an angular size, nothing else. Ahead of

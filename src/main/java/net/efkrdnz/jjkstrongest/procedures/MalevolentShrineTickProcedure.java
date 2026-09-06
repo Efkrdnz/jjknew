@@ -69,8 +69,12 @@ public class MalevolentShrineTickProcedure {
 			return;
 		}
 
-		// The clash freezes the shrine's life, exactly as it freezes the Void's.
-		if (!isClashing) {
+		// The clash freezes the shrine's hostile life, exactly as it freezes the Void's — but
+		// only once it HAS one. A clash beginning while the shrine was still opening used to
+		// pin it in EXPANDING for the whole clash, and the guard below then killed the rest of
+		// its tick every time: no slashes, no damage, no carve, for as long as the rival stood
+		// there. Letting the counter run until it is hostile costs the clash nothing.
+		if (!isClashing || shrine.phase() != DomainPhase.ACTIVE) {
 			int lifetimeTicks = data.getInt("domainLifetimeTicks") + 1;
 			data.putInt("domainLifetimeTicks", lifetimeTicks);
 			if (lifetimeTicks % OWNER_CHECK_INTERVAL == 0 && !validateOwner(world, data, x, y, z)) {
@@ -89,12 +93,16 @@ public class MalevolentShrineTickProcedure {
 			beginCollapse(shrine);
 			return;
 		}
-		int lifetimeTicks = data.getInt("domainLifetimeTicks");
 		// slashes always fire — but filtered to exclude inside UV during clash
 		int slashCount = BASE_SLASH_COUNT + world.random.nextInt(SLASH_VARIANCE);
 		spawnSlashesViaPackets((ServerLevel) world, owner, x, y, z, slashCount, shrine, isClashing);
-		// damage every 4 ticks — also filtered during clash
-		if (lifetimeTicks % DAMAGE_INTERVAL == 0) {
+		// Damage every four ticks, off the entity's own clock rather than the lifetime
+		// counter. The lifetime counter freezes during a clash, so this modulo was a CONSTANT
+		// for the whole clash: a one-in-four chance the shrine cut everyone every single tick,
+		// and a three-in-four chance it cut nobody at all, decided by whichever tick the rival
+		// happened to come into range on. The slashes kept drawing either way, so it looked
+		// fully active while dealing nothing.
+		if (shrine.tickCount % DAMAGE_INTERVAL == 0) {
 			damageEntitiesOptimized(world, owner, x, y, z, isClashing, shrine);
 		}
 	}

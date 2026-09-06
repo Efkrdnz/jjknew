@@ -9,6 +9,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.efkrdnz.jjkstrongest.domain.DomainIntersect;
 import net.efkrdnz.jjkstrongest.domain.DomainRegistry;
 import net.efkrdnz.jjkstrongest.domain.DomainSource;
+import net.efkrdnz.jjkstrongest.domain.DomainPhase;
 import net.efkrdnz.jjkstrongest.domain.DomainShell;
 import net.efkrdnz.jjkstrongest.domain.DomainSphere;
 import net.efkrdnz.jjkstrongest.entity.MalevolentShrineEntity;
@@ -22,7 +23,27 @@ public class DomainClashManagerProcedure {
 	 * the whole surface. Tuned so a shrine left unopposed shatters a full shell in about
 	 * twenty-two seconds — a Void now has to be defended, not merely cast.
 	 */
-	private static final float PRESSURE_PER_TICK = DomainShell.FULL / 440f;
+	/**
+	 * The Void's shell loses this much per cell per tick while an open domain presses on it,
+	 * so a clash it never answers kills it in this many ticks flat. Was 440 — twenty-two
+	 * seconds, unopposed, which is not long enough to cross a hundred-block field and land
+	 * the hits that are supposed to be the counterplay.
+	 */
+	private static final float PRESSURE_PER_TICK = DomainShell.FULL / 900f;
+	/**
+	 * How a hit on the caster converts into their domain losing its grip.
+	 *
+	 * <p>The transfer is scaled and then held inside a band. Scaled, because a harder hit
+	 * should count for more; banded, because the raw number arrives <em>after</em> armour and
+	 * mitigation, and Sukuna stacks a quarter for blocking, a quarter for reverse cursed
+	 * technique and twenty points of armour on top. Unbanded, catching him blocking made a
+	 * clean swing worth about one percent of his pool and the clash could not be won at all.
+	 * The floor means every real hit is felt; the ceiling means a huge weapon cannot end a
+	 * clash in two swings.
+	 */
+	private static final float CLASH_SCALE = 4.0f;
+	private static final float CLASH_MIN_PER_HIT = 3.0f;
+	private static final float CLASH_MAX_PER_HIT = 8.0f;
 	private static final float MAX_CLASH_HP = 100f;
 	/** Damage the shrine's caster can absorb before they lose their grip on the domain. */
 	public static final float SHRINE_HOLD_POOL = 60f;
@@ -96,7 +117,10 @@ public class DomainClashManagerProcedure {
 		double overlapThreshold = uvRadius + 100.0;
 		double thresholdSq = overlapThreshold * overlapThreshold;
 		for (MalevolentShrineEntity shrine : DomainRegistry.shrinesIn(level)) {
-			if (!shrine.isAlive())
+			// A shrine that has already lost stays alive for its collapse. Counting it as a
+			// rival meant the Void kept taking pressure for those twenty ticks after it had
+			// won — punished for winning.
+			if (!shrine.isAlive() || shrine.phase() == DomainPhase.COLLAPSING)
 				continue;
 			if (uvPos.distanceToSqr(shrine.position()) <= thresholdSq) {
 				// found active rival — run clash logic and reset grace counter
@@ -179,7 +203,11 @@ public class DomainClashManagerProcedure {
 		if (shrine == null)
 			return;
 		CompoundTag data = shrine.getPersistentData();
-		float hp = (data.contains("shrineClashHP") ? data.getFloat("shrineClashHP") : SHRINE_HOLD_POOL) - amount;
+		float bite = Math.min(CLASH_MAX_PER_HIT, Math.max(CLASH_MIN_PER_HIT, amount * CLASH_SCALE));
+		float hp = (data.contains("shrineClashHP") ? data.getFloat("shrineClashHP") : SHRINE_HOLD_POOL) - bite;
+		// Clamped at the floor: it used to be allowed to run negative and stay there, so a
+		// shrine could be re-entered at a pool that was already past dead.
+		hp = Math.max(0.0f, hp);
 		data.putFloat("shrineClashHP", hp);
 		shrine.setClashHP(Math.max(0f, hp / SHRINE_HOLD_POOL * MAX_CLASH_HP));
 		// The shrine has no barrier to break, so this is how it loses: its caster is worn

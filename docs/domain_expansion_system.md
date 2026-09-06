@@ -151,6 +151,19 @@ and play differently:
 Void's shell; its slashes are clipped at the barrier by `domain/DomainOcclusion` and spend
 themselves damaging it instead of cutting through. It is beaten by damaging its caster.
 
+How the Void loses is a fixed clock: pressure runs its shell down in 900 ticks (45 s) if it
+is never answered. How the Shrine loses is its caster being hit, and that number arrives
+*after* armour and mitigation — Sukuna alone stacks a quarter for blocking, a quarter for
+reverse cursed technique and twenty points of armour, which once made a clean swing worth
+about one percent of his pool and the clash unwinnable. The transfer is scaled and then held
+inside a band (`CLASH_SCALE`, `CLASH_MIN_PER_HIT`, `CLASH_MAX_PER_HIT`): the floor means every
+real hit is felt through the mitigation, the ceiling means an enormous weapon cannot end a
+clash in two swings. Roughly eight hits if you catch him open, twenty if he is blocking.
+
+Note what does **not** help: Sukuna takes triple damage under Information Overload, but the
+Void's sure-hit is deliberately skipped for the whole clash — the effect lands only if the
+Void wins — so the clash has to be winnable without it, and the band is what makes it so.
+
 **Closed versus closed.** `domain/DomainIntersect` gives the radical plane where two spheres
 actually meet, and each shell takes pressure concentrated on the cells facing its rival,
 scaled by overlap depth. The contact face holes first and the domain fails inward from that

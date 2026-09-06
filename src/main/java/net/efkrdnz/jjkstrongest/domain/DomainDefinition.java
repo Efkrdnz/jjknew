@@ -43,6 +43,16 @@ public record DomainDefinition(String id, DomainBarrierKind barrierKind, float r
 		int maxLifetimeTicks, @Nullable DomainShellProfile shell, CollapseRules collapse, @Nullable SureHit sureHit) {
 
 	/**
+	 * Ticks after a domain turns hostile before it has finished arriving.
+	 *
+	 * <p>One number, read by two sides that must agree: the renderer ramps the void in and
+	 * lands the paint across it, and the sure-hit waits for it to elapse before touching
+	 * anyone. Kept here rather than duplicated because the day they disagree is the day the
+	 * effect starts while the room is still black, which is exactly what it is here to stop.
+	 */
+	public static final int ARRIVAL_TICKS = 80;
+
+	/**
 	 * When a damaged barrier stops being able to hold.
 	 *
 	 * <p>{@code breachThreshold} is a <em>fraction of the shell</em>, not a count. It used to
@@ -82,7 +92,7 @@ public record DomainDefinition(String id, DomainBarrierKind barrierKind, float r
 	 * {@link DomainShell}, and the sure-hit's effect and level inline in the argument list
 	 * of the procedure that applies it.
 	 */
-	public static final DomainDefinition UNLIMITED_VOID = new DomainDefinition("unlimited_void", DomainBarrierKind.CLOSED, 30.0f, -1.0f, 40, 40, 50, 600, 1200,
+	public static final DomainDefinition UNLIMITED_VOID = new DomainDefinition("unlimited_void", DomainBarrierKind.CLOSED, 30.0f, -1.0f, 40, 40, 50, 1200, 2400,
 			new DomainShellProfile(140, 1.5f, 1.0f, 140), new CollapseRules(0.6f, 80), new SureHit(JjkStrongestModMobEffects.INFORMATION_OVERLOAD, 1, 200, 20));
 
 	/**

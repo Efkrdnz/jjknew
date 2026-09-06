@@ -41,6 +41,14 @@ public class UVDomainSureHitProcedure {
 		// An open domain, or a closed one whose output is not an effect, has nothing to do here.
 		if (sureHit == null || level.getGameTime() % Math.max(1, sureHit.cadenceTicks()) != 0)
 			return;
+		// Nothing until the domain has finished arriving. The effect used to land on the very
+		// first hostile tick, which is four seconds before the void has bloomed in and the
+		// paint has landed — so you were overwhelmed by a room you could not yet see. The
+		// count comes off the same duration counter the tick procedure maintains, and the
+		// threshold is shared with the renderer's arrival ramp so the two cannot drift apart.
+		int elapsed = domain.definition().durationTicks() - domain.getPersistentData().getInt("duration");
+		if (elapsed < DomainDefinition.ARRIVAL_TICKS)
+			return;
 		String owner = domain.getPersistentData().getString("ownerUUID");
 
 		for (LivingEntity target : level.getEntitiesOfClass(LivingEntity.class, sphere.bounds(), e -> true)) {
